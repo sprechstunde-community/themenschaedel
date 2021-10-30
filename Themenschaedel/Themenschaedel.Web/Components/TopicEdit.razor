@@ -1,0 +1,11 @@
+@using System.ComponentModel.DataAnnotations
+@using Themenschaedel.Shared.Props
+@inherits Themenschaedel.Components.TopicEdit
+
+<button class="default-button" @onclick="AddTopic"><i class="ti ti-plus"></i>Add Topic</button>
+
+
+@for (int i = 0; i < localTopics.Count; i++)
+{
+    <TopicEditCard Topic="localTopics[i]" RemoveTopic="RemoveTopic" RemoveSubtopic="RemoveSubtopic" TopicCallback="SendTopic"></TopicEditCard>
+}

@@ -1,0 +1,94 @@
+﻿@page "/Login"
+@using Themenschaedel.Web.Services.Interfaces
+@using Themenschaedel.Web.Services
+@using Themenschaedel.Shared.Props
+@using Blazored.Toast.Configuration
+@inject IJSRuntime JS;
+@inject NavigationManager NavigationManager;
+@layout EmptyLayout
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel="stylesheet" href="/css/login.css">
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="10"
+                ShowProgressBar="true"/>
+
+<div id="container">
+    <div id="inviteContainer">
+        <div class="logoContainer">
+            <img class="logo" src="/assets/Themenschaedel2.png"/><img class="text" src="/assets/Logo.png"/>
+        </div>
+        <div class="acceptContainer">
+            <EditForm Model="@tokenRequest" OnValidSubmit="@HandleValidSubmit">
+                <h1>WELCOME BACK!</h1>
+                <div class="formContainer">
+                    <div class="formDiv form__input-field" style="transition-delay: 0.2s">
+                        <i class="ti ti-user"></i>
+                        <InputText id="username" placeholder="Username" @bind-Value="tokenRequest.username" required/>
+                    </div>
+                    <div class="formDiv form__input-field" style="transition-delay: 0.4s">
+                        <i class="ti ti-lock"></i>
+                        <InputText type="password" id="password" placeholder="Password" @bind-Value="tokenRequest.password" required/>
+                    </div>
+                    <div class="formDiv" style="transition-delay: 0.6s">
+                        <button class="form__submit" type="submit">Login</button>
+                    </div>
+                    <div class="formDiv" style="transition-delay: 0.8s">
+                        <a class="forgotPas" href="#">FORGOT YOUR PASSWORD?</a>
+                    </div>
+                    <div class="formDiv" style="transition-delay: 1s">
+                        <input id="KeepLoggedIn" type="checkbox" @onclick="() => { keepLoggedIn = !keepLoggedIn; }"></input>
+                        <label for="KeepLoggedIn">Keep logged in</label>
+                    </div>
+                    <div class="formDiv" style="transition-delay: 1.2s; padding-top: 0px;">
+                        <a class="forgotPas" href="https://account.schaedel.rocks/register">
+                            DON'T HAVE AN ACCOUNT?
+                            <p style="font-size: 8px">Let's fix that!</p>
+                        </a>
+                    </div>
+                </div>
+
+                <DataAnnotationsValidator/>
+                <ValidationSummary/>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code{
+
+    [Inject]
+    private IData _apiData { get; set; }
+
+    [Inject]
+    private ISession _session { get; set; }
+
+    TokenRequest tokenRequest = new TokenRequest();
+
+    protected bool keepLoggedIn = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (await _session.IsLoggedInAsync())
+            {
+                NavigationManager.NavigateTo($"/");
+            }
+            await JS.InvokeVoidAsync("loginAnimation");
+            await base.OnAfterRenderAsync(firstRender);
+        }
+    }
+
+    protected async Task HandleValidSubmit()
+    {
+        await _apiData.Login(tokenRequest.username, tokenRequest.password, keepLoggedIn);
+        await Task.Delay(1500);
+        if (await _session.IsLoggedInAsync())
+        {
+            NavigationManager.NavigateTo($"/");
+        }
+    }
+
+}

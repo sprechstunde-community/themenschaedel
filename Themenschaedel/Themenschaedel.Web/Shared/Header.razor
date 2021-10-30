@@ -1,0 +1,74 @@
+﻿@using Themenschaedel.Web.Services.Interfaces
+@using Themenschaedel.Shared.Props
+@using Sentry
+@inject ISession _session
+@inject IToastService _toastService
+@inject NavigationManager NavigationManager
+
+<div class="search-bar">
+    <input type="text" placeholder="Search">
+</div>
+<div class="user-settings">
+    @if (isLoggedIn && CurrentlyLoggedInUser != null)
+    {
+        <img class="user-img" src="@CurrentlyLoggedInUser.profile_picture" alt="">
+        <div class="dropdown">
+            <div class="user-name">@CurrentlyLoggedInUser.username</div>
+            <i class="ti ti-chevron-down"></i>
+            <div class="dropdown-content">
+                @*<a href="#">Settings</a>*@
+                <a @onclick="Logout">Logout</a>
+            </div>
+        </div>
+        <div class="notify">
+            <div class="notification"></div>
+            <i class="ti ti-bell icon"></i>
+        </div>
+    }
+    else
+    {
+        <button class="login-button" @onclick="LoginButtonClick">Login</button>
+    }
+</div>
+
+@code{
+
+    protected bool isLoggedIn = false;
+
+    private ShortUser CurrentlyLoggedInUser = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isLoggedIn = await _session.IsLoggedInAsync();
+            if (isLoggedIn)
+            {
+                CurrentlyLoggedInUser = await _session.GetCurrentlyLoggedInUser();
+            }
+            this.StateHasChanged();
+        }
+    }
+
+    protected void LoginButtonClick()
+    {
+        NavigationManager.NavigateTo($"login");
+    }
+
+    protected void Logout()
+    {
+        try
+        {
+            _session.Logout();
+            isLoggedIn = false;
+            _toastService.ShowInfo("Logged out.");
+        }
+        catch (Exception e)
+        {
+            _toastService.ShowError("Error: unable to log out.");
+            SentrySdk.CaptureException(e);
+            Console.WriteLine(e);
+        }
+    }
+
+}

@@ -1,0 +1,43 @@
+@using Themenschaedel.Shared.Props
+@using System.ComponentModel.DataAnnotations
+<div class="topic-view-card container">
+    <div class="topic-view-card-title item-big-space">
+        <p>@topic.name</p>
+    </div>
+    <div class="topic-view-card-times item">
+        <p>@topic.GetStartTimestamp() - @topic.GetEndTimestamp(startOfNextTopic)</p>
+    </div>
+    <div class="item">
+        Ad: @(topic.ad ? "Ja" : "Nein")
+        <br/>
+        Community Thema: @(topic.ad ? "Ja" : "Nein")
+    </div>
+    <div class="item-small-space">
+        <h4>Subtopics:</h4>
+    </div>
+    <div class="item">
+        @for (int i = 0; i < topic.subtopics.Count; i++)
+        {
+            @topic.subtopics[i].name
+            if (i + 1 != i)
+            {
+                <br/>
+            }
+        }
+    </div>
+    <div class="item playbutton">
+        <i class="iconly-Play icbo button" alt="Play button"></i>
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    [Required]
+    public Topic topic { get; set; }
+
+    [Parameter]
+    public int startOfNextTopic { get; set; }
+
+
+}

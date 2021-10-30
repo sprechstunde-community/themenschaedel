@@ -1,0 +1,26 @@
+@using Themenschaedel.Shared.Props
+@using Humanizer;
+@inherits Themenschaedel.Components.TopicView
+
+<style>
+    .subtopic{
+        color: yellow;
+        font-size: 11px;
+    }
+</style>
+
+<div>
+    <h3>Themen</h3>
+
+    @for (int i = 0; i < topics.Count; i++)
+    {
+        if (i + 1 != topics.Count)
+        {
+            <TopicCard topic=topics[i] startOfNextTopic=topics[i].start></TopicCard>
+        }
+        else
+        {
+            <TopicCard topic=topics[i] startOfNextTopic=episode.duration></TopicCard>
+        }
+    }
+</div>

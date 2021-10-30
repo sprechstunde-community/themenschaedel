@@ -1,0 +1,55 @@
+﻿@page "/"
+@using Microsoft.Extensions.Configuration
+@namespace Themenschaedel.Web.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@inject IConfiguration _configuration
+@{
+    Layout = null;
+    //string offenID = _configuration.GetValue<string>("Config:OffenUserID");
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Themenschaedel.Web</title>
+    <base href="~/"/>
+    <link rel="stylesheet" href="css/Style.css"/>
+    <link rel="stylesheet" href="css/tabler-icons.css"/>
+    <link href="_content/Blazored.Toast/blazored-toast.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.transit/0.9.12/jquery.transit.js" integrity="sha256-mkdmXjMvBcpAyyFNCVdbwg4v+ycJho65QLDwVE3ViDs=" crossorigin="anonymous"></script>
+    <script src="/js/login.js"></script>
+</head>
+<body>
+<component type="typeof(App)" render-mode="ServerPrerendered"/>
+
+@*<div id="blazor-error-ui">
+            <environment include="Staging,Production">
+                An error has occurred. This application may no longer respond until reloaded.
+            </environment>
+            <environment include="Development">
+                An unhandled exception has occurred. See browser dev tools for details.
+            </environment>
+            <a href="" class="reload">Reload</a>
+            <a class="dismiss">🗙</a>
+        </div>*@
+
+<script async defer data-domain="thisisapreviewbecauseiwaspressuredtopublish.alyra.dev" src="https://plausible.alyra.dev/js/plausible.js"></script>
+
+<script src="/js/InfiniteScroll.js"></script>
+<script>
+        window.ScrollList = {
+            Init: function (ele, ref) {
+                window.ScrollList.ifs = new InfiniteScroll(ele, ref);
+            },
+            RemoveListener: function () {
+                window.ScrollList.ifs.RemoveListener();
+            }
+        }
+    </script>
+
+<script src="_framework/blazor.server.js"></script>
+</body>
+</html>

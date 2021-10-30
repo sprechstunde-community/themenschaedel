@@ -1,0 +1,230 @@
+@using Microsoft.AspNetCore.Components
+@using Themenschaedel.Shared.Props
+@using System.ComponentModel.DataAnnotations
+<div>
+    <EditForm class="topic-view-card container" Model="@Topic" OnValidSubmit="SendTopic" EditContext="InputChanged()">
+        <DataAnnotationsValidator/>
+        <ValidationSummary/>
+        <div class="item-small-space">
+            @switch (State)
+            {
+                case TopicState.Saved:
+                    <div data-tooltip="Saved">
+                        <i class="ti ti-square-check saved"></i>
+                    </div>
+                    break;
+                case TopicState.Saving:
+                    <div data-tooltip="Saving...">
+                        <i class="ti ti-clock saving"></i>
+                    </div>
+                    break;
+                case TopicState.Unsaved:
+                    <div data-tooltip="Unsaved">
+                        <i class="ti ti-square-x unsaved"></i>
+                    </div>
+                    break;
+            }
+        </div>
+        <div class="topic-view-card-title item-big-space">
+            Name: <InputText disabled="@IsSaving" id="name" @bind-Value="Topic.name"/>
+        </div>
+
+        <div class="topic-view-card-times item">
+            Start: <InputText disabled="@IsSaving" placeholder="00:00:00" id="start" @bind-Value="StartTimeProxy"/>
+            <br/>
+            End: <InputText disabled="@IsSaving" placeholder="00:00:00" id="end" @bind-Value="EndTimeProxy"/>
+        </div>
+
+        <div class="item">
+            Webung? <InputCheckbox disabled="@IsSaving" id="ad" @bind-Value="Topic.ad"/>
+            <br/>
+            Community Thema? <InputCheckbox disabled="@IsSaving" id="community_topic" @bind-Value="Topic.community_contribution"/>
+        </div>
+
+        <div class="item-small-space">
+            <button disabled="@IsSaving" type="button" class="default-button" @onclick="AddSubtopic"><i class="ti ti-plus"></i> Add Subtopic</button>
+            <div class="item">
+                @for (int i = 0; i < Topic.subtopics.Count; i++)
+                {
+                    <SubtopicEdit Subtopic="Topic.subtopics[i]" Disabled="@IsSaving" Index="i" RemoveSubtopic="removeSubtopicTask" OnSubtopicChanged="SubtopicChanged"></SubtopicEdit>
+                }
+            </div>
+        </div>
+        <div class="item">
+            <button @onclick="DeleteTopic" type="button" class="default-button"><i class="ti ti-trash"></i>Remove Topic</button>
+            <button disabled="@IsSaving" type="submit" class="default-button"><i class="ti ti-device-floppy"></i>Save Topic</button>
+        </div>
+    </EditForm>
+</div>
+
+
+@code {
+
+    public enum TopicState
+    {
+        Saved,
+        Unsaved,
+        Saving
+    }
+
+    [Parameter]
+    [Required]
+    public Topic Topic { get; set; }
+
+    [Parameter]
+    public EventCallback<Topic> TopicCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<Topic> RemoveTopic { get; set; }
+
+    [Parameter]
+    public EventCallback<Subtopics> RemoveSubtopic { get; set; }
+
+    [Inject]
+    protected IToastService _toastService { get; set; }
+
+    public TopicState State = TopicState.Saved;
+    private Topic TopicServerState;
+    protected bool IsSaving => State == TopicState.Saving;
+
+    protected string StartTimeProxy
+    {
+        get => Topic.GetFullStartTimestamp();
+        set
+        {
+            bool worked = Topic.SetStartFromString(value);
+            if (!worked) _toastService.ShowError("Start time is wrong!");
+        }
+    }
+
+    protected string EndTimeProxy
+    {
+        get => Topic.GetFullEndTimestamp();
+        set
+        {
+            bool worked = Topic.SetEndFromString(value);
+            if (!worked) _toastService.ShowError("En time is wrong!");
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        PopulateTopicServerState();
+        State = TopicState.Saved;
+    }
+
+    private void PopulateTopicServerState()
+    {
+        TopicServerState = new Topic();
+        TopicServerState.name = Topic.name;
+        TopicServerState.id = Topic.id;
+        TopicServerState.ad = Topic.ad;
+        TopicServerState.end = Topic.end;
+        TopicServerState.start = Topic.start;
+        TopicServerState.community_contribution = Topic.community_contribution;
+        TopicServerState.user = Topic.user;
+        for (int i = 0; i < Topic.subtopics.Count; i++)
+        {
+            TopicServerState.subtopics.Add(new Subtopics() { name = Topic.subtopics[i].name, id = Topic.subtopics[i].id });
+        }
+    }
+
+    protected async Task AddSubtopic()
+    {
+        Topic.subtopics.Add(new Subtopics());
+        State = TopicState.Unsaved;
+        this.StateHasChanged();
+    }
+
+    protected async Task removeSubtopicTask(Subtopics subtopic)
+    {
+        await RemoveSubtopic.InvokeAsync(subtopic);
+        Topic.subtopics.Remove(subtopic);
+        int index = TopicServerState.subtopics.FindIndex(x => x.id == subtopic.id);
+        if (index != -1) TopicServerState.subtopics.RemoveAt(index);
+        this.StateHasChanged();
+        CheckSaveState();
+    }
+
+    protected async Task DeleteTopic()
+    {
+        await RemoveTopic.InvokeAsync(Topic);
+    }
+
+    protected async Task SendTopic()
+    {
+        State = TopicState.Saving;
+        this.StateHasChanged();
+        await TopicCallback.InvokeAsync(Topic);
+        State = TopicState.Saved;
+        PopulateTopicServerState();
+        this.StateHasChanged();
+    }
+
+    protected EditContext InputChanged()
+    {
+        CheckSaveState();
+        return null;
+    }
+
+    private void CheckSaveState()
+    {
+        if (State == TopicState.Saving) return;
+
+        if (TopicServerState.name == Topic.name &&
+            TopicServerState.ad == Topic.ad &&
+            TopicServerState.start == Topic.start &&
+            TopicServerState.end == Topic.end &&
+            TopicServerState.community_contribution == Topic.community_contribution
+            )
+        {
+            State = TopicState.Saved;
+        }
+        else
+        {
+            State = TopicState.Unsaved;
+            return;
+        }
+
+        if (TopicServerState.subtopics.Count == Topic.subtopics.Count)
+        {
+            for (int i = 0; i < TopicServerState.subtopics.Count; i++)
+            {
+    // stop if there is already an unsaved entry
+                if (State != TopicState.Unsaved)
+                {
+    // Check if all subtopics are saved
+                    if (TopicServerState.subtopics[i].name == Topic.subtopics[i].name && TopicServerState.subtopics[i].id == Topic.subtopics[i].id)
+                    {
+                        State = TopicState.Saved;
+                    }
+                    else
+                    {
+                        State = TopicState.Unsaved;
+                        return;
+                    }
+                }
+            }
+        }
+        else
+        {
+            State = TopicState.Unsaved;
+            return;
+        }
+        return;
+    }
+
+    protected async Task SubtopicChanged(int index)
+    {
+        if (TopicServerState.subtopics[index] != Topic.subtopics[index])
+        {
+            State = TopicState.Unsaved;
+        }
+        else
+        {
+            State = TopicState.Saved;
+        }
+        CheckSaveState();
+    }
+
+}

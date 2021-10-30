@@ -1,0 +1,41 @@
+﻿@using Themenschaedel.Components.Controls
+@inherits Themenschaedel.Web.Shared.NavbarBase
+@inject NavigationManager NavigationManager
+
+<span class="logo">S</span>
+<a class="logo-expand" href="#">Themenschaedel</a>
+<div class="side-wrapper">
+    <div class="side-title">MENU</div>
+    <div class="side-menu">
+        <a class="sidebar-link discover is-active" href="/" @onclick="() => HomeClick()">
+            <i class="ti ti-home-2 sidebar-link is-active" fill="currentColor"></i>
+            Home
+        </a>
+    </div>
+</div>
+<div class="side-wrapper">
+    <div class="side-title">OFF-SITE</div>
+    <div class="side-menu">
+        <a class="sidebar-link" href="https://plausible.alyra.dev/themenschaedel.alyra.dev/">
+            <i fill="currentColor" class="ti ti-file-analytics sidebar-link is-active"></i>
+            Auditorium
+        </a>
+
+        <div class="quicksettings">
+            <p>Themenschaedel</p>
+            <p>Pre-Alpha v0.0.5</p>
+            @*<SwitchToggle Title="Sentry" IsChecked="@CheckedSentry" OnClick="OnSentryClick"/>*@
+        </div>
+        @* Brokey:  <SwitchToggle Title="Sentry" />*@
+    </div>
+</div>
+
+
+@code{
+
+    protected void HomeClick()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+}

@@ -1,0 +1,21 @@
+﻿@using Blazored.Toast.Configuration
+@inherits LayoutComponentBase
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="10"
+                ShowProgressBar="true" />
+
+<div class="container">
+    <nav class="sidebar">
+        <Navbar/>
+    </nav>
+
+    <div class="wrapper">
+        <div class="header">
+            <Header/>
+        </div>
+        <div class="main-container">
+            @Body
+        </div>
+    </div>
+</div>

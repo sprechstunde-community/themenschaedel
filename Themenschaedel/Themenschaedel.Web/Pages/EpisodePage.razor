@@ -1,0 +1,98 @@
+@page "/Episode/{Id:int}"
+@using Themenschaedel.Web.Services.Interfaces
+@using Themenschaedel.Shared.Props
+@using Humanizer
+@using Ganss.XSS
+
+<!-- thanks https://pavellaptev.medium.com/css-weekly-2-an-image-on-the-left-text-on-the-left-a5e59b2acdb5 -->
+<div class="episode-container">
+    <div class="episode-container__container">
+        <img class="episode-container__image" src="@episode.image">
+        <div class="episode-container__text">
+            <EpisodePills episodeId=@Id ClaimStatusCallback="RecieveClaimStatus"></EpisodePills>
+            <h2>@episode.title</h2>
+            @((MarkupString)sanitizedDescription)
+
+            <br/>
+            <p>Length: @TimeSpan.FromSeconds(episode.duration).Humanize(3, countEmptyUnits: true)</p>
+        </div>
+        @if (isLoggedIn && ClaimStatus == EpisodePills.EpisodeClaimStatus.not_claimed)
+        {
+            <button class="default-button" @onclick="ClaimEpisode"><i class="ti ti-bookmark"></i>Claim Episode</button>
+        }
+    </div>
+    @if (ClaimStatus != EpisodePills.EpisodeClaimStatus.not_claimed)
+    {
+        <hr/>
+    }
+    @if (isEditing && isLoggedIn)
+    {
+        <TopicEdit episodeId=@Id episode=episode></TopicEdit>
+    }
+    else if(ClaimStatus != EpisodePills.EpisodeClaimStatus.not_claimed)
+    {
+        <TopicView episodeId=@Id episode=episode></TopicView>
+    }
+</div>
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Inject]
+    private IData _apiData { get; set; }
+
+    [Inject]
+    private ISession _session { get; set; }
+
+    public Episode episode = new Episode();
+
+    public static string sanitizedDescription = "";
+
+    protected bool isLoggedIn = false;
+    protected bool isEditing = false;
+
+    protected EpisodePills.EpisodeClaimStatus ClaimStatus;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        episode = await _apiData.GetEpisode(Id);
+
+    // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
+    // cannot contain any xss exploits.
+        HtmlSanitizer sanitizer = new HtmlSanitizer();
+    // Replace unrelated API stuff
+        string tempDesc = episode.description.Replace("<br><hr><p>See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
+        tempDesc = tempDesc.Replace("<br><hr><p> See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
+        tempDesc = tempDesc.Replace("&nbsp;<br><hr><p>See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
+        sanitizedDescription = sanitizer.Sanitize(tempDesc);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            isLoggedIn = await _session.IsLoggedInAsync();
+            this.StateHasChanged();
+        }
+    }
+
+    // ToDo: there needs to be a way for me to check which episodes a user has claimed with the API
+    protected async Task ClaimEpisode()
+    {
+        isLoggedIn = await _session.IsLoggedInAsync();
+        if (isLoggedIn)
+        {
+            isEditing = true;
+            this.StateHasChanged();
+        }
+    }
+
+    protected async Task RecieveClaimStatus(EpisodePills.EpisodeClaimStatus claimStatus)
+    {
+        ClaimStatus = claimStatus;
+    }
+
+
+}
