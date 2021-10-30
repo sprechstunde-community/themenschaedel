@@ -512,6 +512,11 @@ body {
   grid-column-gap: 20px;
   grid-row-gap: 20px;
 
+  a {
+    color: var(--body-color);
+    text-decoration: none;
+  }
+
   /* Extra small devices (phones, 600px and down) */
   @media only screen and (max-width: 600px) {
     grid-template-columns: repeat(1, 1fr);
@@ -667,7 +672,6 @@ body {
   display: inline-flex;
   padding: 6px 16px 6px 16px;
   border-radius: 30px;
-  background-color: #ef2f2f;
   color: white;
   align-items: center;
   margin: 0 3px 0 3px;
@@ -678,6 +682,32 @@ body {
 
   &.purple {
     background-color: #9b0fff;
+  }
+
+  &.red{
+    background-color: #ef2f2f;
+  }
+}
+
+.transparent-tag{
+  display: inline-flex;
+  border-radius: 6px;
+  background: rgba(21, 13, 13, 0.44);
+  color: #fff;
+  padding: 3px 8px;
+  color: white;
+  align-items: center;
+
+  &.blue {
+    background-color: rgba(30, 144, 255, 0.44);
+  }
+
+  &.purple {
+    background-color: rgba(155, 15, 255, 0.44);
+  }
+  
+  &.red{
+    background-color: rgba(239, 47, 47, 0.44);
   }
 }
 

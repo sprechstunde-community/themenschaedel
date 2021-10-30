@@ -9,19 +9,19 @@
     <div class="episode-container__container">
         <img class="episode-container__image" src="@episode.image">
         <div class="episode-container__text">
-            <EpisodePills episodeId=@Id ClaimStatusCallback="RecieveClaimStatus"></EpisodePills>
+            <EpisodePills ClaimStatus=@episode.ClaimStatus StatusStyle="EpisodePills.Style.Default"></EpisodePills>
             <h2>@episode.title</h2>
             @((MarkupString)sanitizedDescription)
 
             <br/>
             <p>Length: @TimeSpan.FromSeconds(episode.duration).Humanize(3, countEmptyUnits: true)</p>
         </div>
-        @if (isLoggedIn && ClaimStatus == EpisodePills.EpisodeClaimStatus.not_claimed)
+        @if (isLoggedIn && episode.ClaimStatus == EpisodeClaimStatus.not_claimed)
         {
             <button class="default-button" @onclick="ClaimEpisode"><i class="ti ti-bookmark"></i>Claim Episode</button>
         }
     </div>
-    @if (ClaimStatus != EpisodePills.EpisodeClaimStatus.not_claimed)
+    @if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
     {
         <hr/>
     }
@@ -29,7 +29,7 @@
     {
         <TopicEdit episodeId=@Id episode=episode></TopicEdit>
     }
-    else if(ClaimStatus != EpisodePills.EpisodeClaimStatus.not_claimed)
+    else if(episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
     {
         <TopicView episodeId=@Id episode=episode></TopicView>
     }
@@ -52,8 +52,6 @@
 
     protected bool isLoggedIn = false;
     protected bool isEditing = false;
-
-    protected EpisodePills.EpisodeClaimStatus ClaimStatus;
     
     protected override async Task OnInitializedAsync()
     {
@@ -87,11 +85,6 @@
             isEditing = true;
             this.StateHasChanged();
         }
-    }
-
-    protected async Task RecieveClaimStatus(EpisodePills.EpisodeClaimStatus claimStatus)
-    {
-        ClaimStatus = claimStatus;
     }
 
 

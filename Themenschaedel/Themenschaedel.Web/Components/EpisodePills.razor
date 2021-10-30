@@ -1,58 +1,67 @@
 @using Themenschaedel.Web.Services.Interfaces
 @using Themenschaedel.Shared.Props
+@using System.ComponentModel.DataAnnotations
 
-@switch (isClaimed)
+@switch (ClaimStatus)
 {
     case EpisodeClaimStatus.claimed:
-        <div class="tag purple">
-            Claimed
-        </div>
+        @if (StatusStyle == Style.Transparent)
+        {
+            <div class="transparent-tag purple">
+                Claimed
+            </div>
+        }
+        else
+        {
+            <div class="tag purple">
+                Claimed
+            </div>
+        }
         break;
     case EpisodeClaimStatus.not_claimed:
-        <div class="tag purple">
-            Free to Claim
-        </div>
+        @if (StatusStyle == Style.Transparent)
+        {
+            <div class="transparent-tag purple">
+                Free to Claim
+            </div>
+        }
+        else
+        {
+            <div class="tag purple">
+                Free to Claim
+            </div>
+        }
         break;
     case EpisodeClaimStatus.done:
-        <div class="tag">
-            Done
-        </div>
+        @if (StatusStyle == Style.Transparent)
+        {
+            <div class="transparent-tag red">
+                Done
+            </div>
+        }
+        else
+        {
+            <div class="tag red">
+                Done
+            </div>
+        }
+
         break;
 }
 
 @code {
-    //ToDo: Add logic to this class (aka, get the data from the api)
 
-    public enum EpisodeClaimStatus { not_claimed, claimed, done }
-    
-    [Parameter]
-    public int episodeId { get; set; }
-    
-    [Parameter]
-    public EventCallback<EpisodeClaimStatus> ClaimStatusCallback { get; set; }
-
-    [Inject]
-    protected IData _data { get; set; }
-
-    protected EpisodeClaimStatus isClaimed = EpisodeClaimStatus.not_claimed;
-    
-    protected override async Task OnInitializedAsync()
+    public enum Style
     {
-        Episode ep = await _data.GetEpisode(episodeId);
-        if (ep.claimed)
-        {
-            isClaimed = EpisodeClaimStatus.claimed;
-        }
-        else if (ep.topics.Count > 0)
-        {
-            isClaimed = EpisodeClaimStatus.done;
-        }
-        else
-        {
-            isClaimed = EpisodeClaimStatus.not_claimed;
-        }
-        
-        await ClaimStatusCallback.InvokeAsync(isClaimed);
+        Default,
+        Transparent
     }
+
+    [Parameter]
+    [Required]
+    public EpisodeClaimStatus ClaimStatus { get; set; }
+
+    [Parameter]
+    public Style StatusStyle { get; set; } = Style.Default;
 
 }

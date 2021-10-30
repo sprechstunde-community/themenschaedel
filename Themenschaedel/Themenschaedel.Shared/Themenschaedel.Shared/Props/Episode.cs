@@ -4,6 +4,8 @@ using System.Text;
 
 namespace Themenschaedel.Shared.Props
 {
+    public enum EpisodeClaimStatus { not_claimed, claimed, done }
+
     public class MinimalEpisode
     {
         public int id { get; set; }
@@ -46,11 +48,28 @@ namespace Themenschaedel.Shared.Props
         public int downvotes { get; set; }
         public int flags { get; set; }
 
-
         //Data not from the API
         public string ThumbnailCSS { get; set; }
         public string VideoCSS { get; set; }
         public double AnimationDelay { get; set; }
         public string AnimationDelayCSS => $"--delay: {AnimationDelay.ToString()}ms";
+
+        public EpisodeClaimStatus ClaimStatus => GetClaimStatus();
+
+        private EpisodeClaimStatus GetClaimStatus()
+        {
+            if (claimed)
+            {
+                return EpisodeClaimStatus.claimed;
+            }
+            else if (topics.Count > 0)
+            {
+                return EpisodeClaimStatus.done;
+            }
+            else
+            {
+                return EpisodeClaimStatus.not_claimed;
+            }
+        }
     }
 }

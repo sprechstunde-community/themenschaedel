@@ -69,6 +69,14 @@
         z-index: 1;
         right: 8px;
     }
+    
+    .video-claim-status {
+        position: absolute;
+        font-size: 12px;
+        top: 10px;
+        z-index: 1;
+        left: 8px;
+    }
 
     .video:hover video {
         transform: scale(1.6);
@@ -76,6 +84,10 @@
     }
 
     .video:hover .video-time {
+        display: none;
+    }
+        
+    .video:hover .video-claim-status {
         display: none;
     }
 
@@ -104,22 +116,26 @@
         }
 </style>
 
-<div class="video anim" style="@item.AnimationDelayCSS">
-    <div class="video-time">@(item.duration/60)m</div>
-    <div class="video-wrapper" @onclick="@(e => EpisodeClick())">
-        <img class="thumbnail" src="@item.image" />
-        <div class="author-img__wrapper video-author">
-            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check feather feather-check" viewBox="0 0 24 24" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-               <path d="M5 12l5 5l10 -10"></path>
-            </svg>
-            <img class="author-img" src="">
+<a href="episode/@item.id">
+    <div class="video anim" style="@item.AnimationDelayCSS" @onclick="@(e => EpisodeClick())">
+        <div class="video-time">@(item.duration/60)m</div>
+        <div class="video-claim-status"><EpisodePills ClaimStatus=@item.ClaimStatus StatusStyle="EpisodePills.Style.Transparent"/></div>
+        <div class="video-wrapper" @onclick="@(e => EpisodeClick())">
+            <img class="thumbnail" src="@item.image" />
+            <div class="author-img__wrapper video-author">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check feather feather-check" viewBox="0 0 24 24" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                   <path d="M5 12l5 5l10 -10"></path>
+                </svg>
+                <img class="author-img" src="">
+            </div>
         </div>
+        <div class="video-by">Andy William</div>
+        <div class="video-name" @onclick="@(e => EpisodeClick())"><a href="episode/@item.id">@((MarkupString)item.title)</a></div>
+        <div class="video-view">@item.published_at.Humanize().ToString()</div>
     </div>
-    <div class="video-by">Andy William</div>
-    <div class="video-name" @onclick="@(e => EpisodeClick())"><a href="episode/@item.id">@((MarkupString)item.title)</a></div>
-    <div class="video-view">@item.published_at.Humanize().ToString()</div>
-</div>
+</a>
+
 
 @code {
 
