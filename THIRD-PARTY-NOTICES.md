@@ -20,10 +20,12 @@ This repo contains materials from third parties, supplied under the following li
 	-	[MIT] Copyright (c) 2020 Paweł Kuna
 	-	[MIT] Copyright (c) 2021 by javad (https://codepen.io/javadbat/pen/dyNwddd)
 	-	[MIT] Copyright (c) 2021 by Nadine Coelho (https://codepen.io/coelho-na/pen/NWgJwwx)
+	-	[MIT] Copyright (c) 2019 Blazored (https://github.com/Blazored/Typeahead)
 
 Copyright (c) 2021 by Aysenur Turk (https://codepen.io/TurkAysenur/pen/LYRKpWe)
 Copyright (c) 2021 by Nadine Coelho (https://codepen.io/coelho-na/pen/NWgJwwx)
 Copyright (c) 2020 Paweł Kuna
+Copyright (c) 2019 Blazored
 Copyright (c) 2021 by javad (https://codepen.io/javadbat/pen/dyNwddd)
 Copyright © Nicolas Gallagher and Jonathan Neal (https://github.com/necolas/normalize.css)
 Copyright (c) 2019 Shashikant Rudrawadi (https://github.com/wisne/InfiniteScroll-BlazorServer)

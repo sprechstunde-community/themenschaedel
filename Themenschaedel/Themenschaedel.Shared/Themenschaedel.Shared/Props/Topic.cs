@@ -180,4 +180,14 @@ namespace Themenschaedel.Shared.Props
     {
         public Topic data { get; set; }
     }
+
+    public class MinimalTopicResponse
+    {
+        public Topic data { get; set; }
+    }
+    
+    public class ListTopicResponse
+    {
+        public List<Topic> data { get; set; }
+    }
 }

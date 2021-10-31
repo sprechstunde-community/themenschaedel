@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Themenschaedel.Shared.Props
 {
     public class Subtopics
@@ -19,5 +21,15 @@ namespace Themenschaedel.Shared.Props
     {
         public User user { get; set; }
         public MinimalTopic topic { get; set; }
+    }
+
+    public class SubtopicsRepsonse
+    {
+        public Subtopics data { get; set; }
+    }
+    
+    public class ListSubtopicsRepsonse
+    {
+        public List<Subtopics> data { get; set; }
     }
 }

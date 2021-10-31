@@ -190,7 +190,7 @@ namespace Themenschaedel.Web.Services
             try
             {
                 HttpResponseMessage response = null;
-                
+
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Post,
                         $"{_httpClient.BaseAddress}topics/{topicID.ToString()}/subtopics"))
@@ -223,13 +223,13 @@ namespace Themenschaedel.Web.Services
 
             return null;
         }
-        
+
         private async Task<Subtopics> UpdateSubtopic(Subtopics subtopic)
         {
             try
             {
                 HttpResponseMessage response = null;
-                
+
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Put,
                         $"{_httpClient.BaseAddress}subtopics/{subtopic.id.ToString()}"))
@@ -287,7 +287,7 @@ namespace Themenschaedel.Web.Services
 
                     response = await _httpClient.SendAsync(requestMessage);
                 }
-                
+
                 if (response != null)
                 {
                     if (response.IsSuccessStatusCode)
@@ -296,7 +296,7 @@ namespace Themenschaedel.Web.Services
                         string json = response.Content.ReadAsStringAsync().Result;
                         TopicResponse topicResponse =
                             JsonConvert.DeserializeObject<TopicResponse>(json);
-                        
+
                         // Send Subtopics to API
                         foreach (Subtopics subtopic in topic.subtopics)
                         {
@@ -391,7 +391,7 @@ namespace Themenschaedel.Web.Services
 
             return null;
         }
-        
+
         public async Task DeleteTopic(Topic topic)
         {
             try
@@ -400,6 +400,7 @@ namespace Themenschaedel.Web.Services
                 {
                     await DeleteSubtopic(subtopic);
                 }
+
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Delete, $"{_httpClient.BaseAddress}topics/{topic.id.ToString()}"))
                 {
@@ -420,7 +421,8 @@ namespace Themenschaedel.Web.Services
             try
             {
                 using (var requestMessage =
-                    new HttpRequestMessage(HttpMethod.Delete, $"{_httpClient.BaseAddress}subtopics/{subtopic.id.ToString()}"))
+                    new HttpRequestMessage(HttpMethod.Delete,
+                        $"{_httpClient.BaseAddress}subtopics/{subtopic.id.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
                         new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
@@ -432,6 +434,125 @@ namespace Themenschaedel.Web.Services
             {
                 SentrySdk.CaptureException(e);
             }
+        }
+
+        public async Task<List<Search>> Search(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+                searchResult.AddRange(await SearchTopics(searchTerm));
+                searchResult.AddRange(await SearchEpisodes(searchTerm));
+                searchResult.AddRange(await SearchSubtopics(searchTerm));
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+
+        private async Task<List<Search>> SearchTopics(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+                var response =
+                    await _httpClient.GetAsync(
+                        $"{_httpClient.BaseAddress}search/topics?q={searchTerm}&page=1&per_page=999");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    ListTopicResponse topics = JsonConvert.DeserializeObject<ListTopicResponse>(json);
+
+                    foreach (Topic topic in topics.data)
+                    {
+                        searchResult.Add(new Search(await GetEpisode(topic.episode_id), topic));
+                    }
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _toastService.ShowError("Error 404: Backend server is offline.");
+                    SentrySdk.CaptureMessage("API: Error 404");
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+        
+        private async Task<List<Search>> SearchEpisodes(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+                
+                var response =
+                    await _httpClient.GetAsync(
+                        $"{_httpClient.BaseAddress}search/episodes?q={searchTerm}&page=1&per_page=999");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    ListEpisodeResponse ep = JsonConvert.DeserializeObject<ListEpisodeResponse>(json);
+                    
+                    foreach (Episode episode in ep.data)
+                    {
+                        searchResult.Add(new Search(episode));
+                    }
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _toastService.ShowError("Error 404: Backend server is offline.");
+                    SentrySdk.CaptureMessage("API: Error 404");
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+        
+        private async Task<List<Search>> SearchSubtopics(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+                
+                var response =
+                    await _httpClient.GetAsync(
+                        $"{_httpClient.BaseAddress}search/subtopics?q={searchTerm}&page=1&per_page=999");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    ListSubtopicsRepsonse subtopics = JsonConvert.DeserializeObject<ListSubtopicsRepsonse>(json);
+                    
+                    foreach (Subtopics subtopic in subtopics.data)
+                    {
+                        Topic topic = await GetTopic(subtopic.topic_id);
+                        searchResult.Add(new Search(await GetEpisode(topic.episode_id), topic, subtopic));
+                    }
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _toastService.ShowError("Error 404: Backend server is offline.");
+                    SentrySdk.CaptureMessage("API: Error 404");
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
         }
     }
 }

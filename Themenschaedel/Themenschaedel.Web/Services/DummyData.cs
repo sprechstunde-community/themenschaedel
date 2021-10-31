@@ -59,6 +59,11 @@ namespace Themenschaedel.Web.Services
             throw new NotImplementedException();
         }
 
+        public Task<List<Search>> Search(string searchTerm)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<Topic> AddTopic()
         {
             throw new NotImplementedException();

@@ -17,5 +17,6 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task<Topic> UpdateTopic(Topic topic);
         Task DeleteTopic(Topic topic);
         Task DeleteSubtopic(Subtopics subtopic);
+        Task<List<Search>> Search(string searchTerm);
     }
 }

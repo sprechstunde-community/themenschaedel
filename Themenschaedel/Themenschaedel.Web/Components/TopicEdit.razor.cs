@@ -45,7 +45,8 @@ namespace Themenschaedel.Components
 
             localTopics.Remove(topic);
             this.StateHasChanged();
-            _toastService.ShowSuccess($"Delted Topic: {topic.name}.");
+            if (String.IsNullOrEmpty(topic.name)) _toastService.ShowSuccess($"Delted Topic: [Unnamed Topic].");
+            else _toastService.ShowSuccess($"Delted Topic: {topic.name}.");
         }
 
         protected async Task RemoveSubtopic(Subtopics subtopic)
@@ -58,7 +59,8 @@ namespace Themenschaedel.Components
             }
 
             this.StateHasChanged();
-            _toastService.ShowSuccess($"Delted Topic: {subtopic.name}.");
+            if (String.IsNullOrEmpty(subtopic.name)) _toastService.ShowSuccess($"Delted Subtopic: [Unnamed Subtopic].");
+            else _toastService.ShowSuccess($"Delted Subtopic: {subtopic.name}.");
         }
 
 

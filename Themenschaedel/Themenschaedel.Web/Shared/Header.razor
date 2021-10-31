@@ -6,7 +6,63 @@
 @inject NavigationManager NavigationManager
 
 <div class="search-bar">
-    <input type="text" placeholder="Search">
+    <BlazoredTypeahead SearchMethod="Search" @bind-Value="SearchTerm" ConvertMethod="ConvertSearchResult" placeholder="Search for Topic, Subtopic or Episode...">
+        <SelectedTemplate Context="guid">
+            @{
+                LoadSelectedSearchResult(guid);
+            }
+        </SelectedTemplate>
+        <ResultTemplate Context="searchResult">
+            @switch (@searchResult.Type)
+            {
+                case SearchType.Topic:
+                    <div class="search-selected">
+                        <div class="item" max-width="150px" max-height="150px" width="150px" height="150px">
+                            <img src="@searchResult.Episode.image" max-width="150px" max-height="150px" width="150px" height="150px"/>
+                        </div>
+                        <div class="item">
+                            <p>Episode Name: @searchResult.Episode.title</p>
+                            <p>Episode Length: @(searchResult.Episode.duration / 60)m</p>
+                        </div>
+                        <div class="item">
+                            Search find: @searchResult.Topic.name
+                        </div>
+                    </div>
+                    break;
+                case SearchType.Subtopic:
+                    <div class="search-selected">
+                        <div class="item" max-width="150px" max-height="150px" width="150px" height="150px">
+                            <img src="@searchResult.Episode.image" max-width="150px" max-height="150px" width="150px" height="150px"/>
+                        </div>
+                        <div class="item">
+                            <p>Episode Name: @searchResult.Episode.title</p>
+                            <p>Episode Length: @(searchResult.Episode.duration / 60)m</p>
+                        </div>
+                        <div class="item">
+                            Search find: @searchResult.Subtopic.name
+                        </div>
+                    </div>
+                    break;
+                case SearchType.Episode:
+                    <div class="search-selected">
+                        <div class="item" max-width="150px" max-height="150px" width="150px" height="150px">
+                            <img src="@searchResult.Episode.image" max-width="150px" max-height="150px" width="150px" height="150px"/>
+                        </div>
+                        <div class="item">
+                            <p>Episode Name: @searchResult.Episode.title</p>
+                            <p>Episode Length: @(searchResult.Episode.duration / 60)m</p>
+                        </div>
+                        <div class="item">
+                            Search find: @searchResult.Episode.title
+                        </div>
+                    </div>
+                    break;
+            }
+        </ResultTemplate>
+        <NotFoundTemplate>
+            Sorry, there weren't any search results.
+        </NotFoundTemplate>
+    </BlazoredTypeahead>
 </div>
 <div class="user-settings">
     @if (isLoggedIn && CurrentlyLoggedInUser != null)
@@ -33,9 +89,16 @@
 
 @code{
 
+    [Inject]
+    private IData _data { get; set; }
+
     protected bool isLoggedIn = false;
 
     private ShortUser CurrentlyLoggedInUser = null;
+
+    protected string? SearchTerm { get; set; }
+
+    private List<Search> SearchResult;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -69,6 +132,22 @@
             SentrySdk.CaptureException(e);
             Console.WriteLine(e);
         }
+    }
+
+    private async Task<IEnumerable<Search>> Search(string searchText)
+    {
+        SearchResult = await _data.Search(searchText);
+        return await Task.FromResult(SearchResult);
+    }
+
+    private string? ConvertSearchResult(Search search) => search?.UniqueGuid;
+
+    private Search LoadSelectedSearchResult(string? guid)
+    {
+        int id = SearchResult.FirstOrDefault(x => x.UniqueGuid == guid).Episode.id;
+        NavigationManager.NavigateTo($"episode/{id}");
+        SearchTerm = null;
+        return null;
     }
 
 }

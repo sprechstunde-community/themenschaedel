@@ -4,7 +4,12 @@ using System.Text;
 
 namespace Themenschaedel.Shared.Props
 {
-    public enum EpisodeClaimStatus { not_claimed, claimed, done }
+    public enum EpisodeClaimStatus
+    {
+        not_claimed,
+        claimed,
+        done
+    }
 
     public class MinimalEpisode
     {
@@ -20,7 +25,7 @@ namespace Themenschaedel.Shared.Props
         public DateTimeOffset created_at { get; set; }
         public DateTimeOffset updated_at { get; set; }
     }
-    
+
     public class AlternateMinimalEpisode
     {
         public int id { get; set; }
@@ -38,7 +43,7 @@ namespace Themenschaedel.Shared.Props
         public DateTimeOffset created_at { get; set; }
         public DateTimeOffset updated_at { get; set; }
     }
-    
+
     public class Episode : MinimalEpisode
     {
         public List<Hosts> hosts { get; set; } = new List<Hosts>();
@@ -71,5 +76,15 @@ namespace Themenschaedel.Shared.Props
                 return EpisodeClaimStatus.not_claimed;
             }
         }
+    }
+
+    public class MinimalEpisodeResponse
+    {
+        public Episode data { get; set; }
+    }
+    
+    public class ListEpisodeResponse
+    {
+        public List<Episode> data { get; set; }
     }
 }

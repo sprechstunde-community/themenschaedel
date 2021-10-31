@@ -233,9 +233,7 @@ body {
   height: 34px;
   display: flex;
   width: 100%;
-  max-width: 450px;
-  float: left;
-
+  
   input {
     width: 100%;
     height: 100%;
@@ -1801,3 +1799,56 @@ input[type=time]::-webkit-clear-button {
   transform-origin: bottom;
 }
 
+.search{
+  
+  &-result{
+    
+    
+  }
+  &-selected{
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-self: stretch;
+    position: relative;
+    align-items: center;
+    
+    & .item {
+      flex: 1;
+
+      &-big-space {
+        flex: 3;
+      }
+
+      &-small-space {
+        flex: 0.5;
+
+        /* Large devices (laptops/desktops, 992px and up) */
+        @media only screen and (min-width: 992px) {
+          flex: 0.5;
+        }
+
+        /* Extra large devices (large laptops and desktops, 1200px and up) */
+        @media only screen and (min-width: 1200px) {
+          flex: 0.4;
+        }
+
+        /* Extra large devices (large laptops and desktops, 1800px and up) */
+        @media only screen and (min-width: 1800px) {
+          flex: 0.25;
+        }
+
+        /* Wide devices (wide screen desktops, 2000px and up) */
+        @media only screen and (min-width: 2000px) {
+          flex: 0.25;
+        }
+
+        /* Ultra wide devices (ultrawide screen desktops, 2400px and up) */
+        @media only screen and (min-width: 2900px) {
+          flex: 0.2;
+        }
+      }
+    }
+  }
+  
+}
