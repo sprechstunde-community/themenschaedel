@@ -120,15 +120,17 @@ body {
   }
 
   &-link {
+    margin-bottom: 10px;
+    
     &:hover,
     &.is-active {
       color: #fff;
       font-weight: 600;
-      
-      i {
-        margin-right: 5px;
-        font-size: 25px;
-      }
+    }
+    i {
+      margin-right: 5px;
+      margin-top: 5px;
+      font-size: 20px;
     }
   }
 
@@ -697,6 +699,10 @@ body {
   align-items: center;
 
   &.blue {
+    background-color: rgba(30, 144, 255, 0.44);
+  }
+
+  &.lightblue {
     background-color: rgba(30, 144, 255, 0.44);
   }
 
@@ -1848,6 +1854,78 @@ input[type=time]::-webkit-clear-button {
           flex: 0.2;
         }
       }
+    }
+  }
+  
+}
+
+
+
+.settings-container {
+  padding: 20px 40px 40px;
+
+  /* Wide devices (wide screen desktops, 2000px and up) */
+  @media only screen and (min-width: 2000px) {
+    margin-left: 4%;
+    margin-right: 4%;
+  }
+
+  /* Ultra wide devices (ultrawide screen desktops, 2400px and up) */
+  @media only screen and (min-width: 2900px) {
+    max-width: 2800px;
+    margin-left: 19%;
+    margin-right: 19%;
+  }
+
+  &__container {
+    display: inline-block;
+  }
+
+  &__image {
+    vertical-align: top;
+    min-width: 200px;
+    min-height: 200px;
+    max-height: 400px;
+    max-height: 400px;
+    float: left;
+    margin: 20px 30px 0 0;
+  }
+
+  &__text {
+    @media (max-width: 620px) {
+      width: 100%;
+    }
+  }
+}
+.platform-settings-icon{
+  color: #C6C6C6;
+  font-size: 50px;
+
+  &.spotify{
+    &:hover{
+      color: #1DB954;
+    }
+    &.is-active{
+      color: #1DB954;
+    }
+  }
+
+  &.apple{
+    &:hover{
+      color: #C6C6C6;
+      /* color: #000000; */
+    }
+    &.is-active{
+      color: #000000;
+    }
+  }
+
+  &.youtube{
+    &:hover{
+      color: #FF0000;
+    }
+    &.is-active{
+      color: #FF0000;
     }
   }
   

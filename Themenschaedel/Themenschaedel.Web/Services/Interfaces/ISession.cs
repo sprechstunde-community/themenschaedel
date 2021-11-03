@@ -12,5 +12,7 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task Logout();
         Task<bool> RecheckLoginAndClearIfInvalid();
         Task<Token> GetToken();
+        Task<Settings> GetSettings();
+        Task SetSettings(Settings settings);
     }
 }

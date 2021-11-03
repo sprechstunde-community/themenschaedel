@@ -12,6 +12,13 @@
             Home
         </a>
     </div>
+
+    <div class="side-menu">
+        <a class="sidebar-link discover is-active" href="/Settings" @onclick="() => SettingsClick()">
+            <i class="ti ti-settings sidebar-link is-active" fill="currentColor"></i>
+            SETTINGS
+        </a>
+    </div>
 </div>
 <div class="side-wrapper">
     <div class="side-title">OFF-SITE</div>
@@ -23,7 +30,7 @@
 
         <div class="quicksettings">
             <p>Themenschaedel</p>
-            <p>Pre-Alpha v0.0.5</p>
+            <p>Pre-Alpha v0.1.0</p>
             @*<SwitchToggle Title="Sentry" IsChecked="@CheckedSentry" OnClick="OnSentryClick"/>*@
         </div>
         @* Brokey:  <SwitchToggle Title="Sentry" />*@
@@ -32,10 +39,14 @@
 
 
 @code{
-
+    
     protected void HomeClick()
     {
         NavigationManager.NavigateTo("/");
     }
 
+    protected void SettingsClick()
+    {
+        NavigationManager.NavigateTo("/Settings");
+    }
 }

@@ -1,6 +1,62 @@
 @page "/Settings"
+@using Themenschaedel.Shared.Props
+@using Themenschaedel.Web.Services.Interfaces
+@inject ISession _session
 <h1>Settings</h1>
 
+<div class="settings-container">
+    <div class="settings-container__container">
+        <div style="display: inline;">
+            <div data-tooltip="Apple (not implemented yet)">
+                <a>
+                    <i class="@appleCSS"></i>
+                </a>
+            </div>
+
+            <div data-tooltip="Spotify">
+                <a>
+                    <i class="@spotifyCSS"></i>
+                </a>
+            </div>
+
+            <div data-tooltip="Youtube">
+                <a onclick="">
+                    <i class="@spotifyCSS"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @code {
-    
+    protected string appleCSS = "ti ti-brand-apple platform-settings-icon apple ";
+    protected string spotifyCSS = "ti ti-brand-spotify platform-settings-icon spotify ";
+    protected string youtubeCSS = "ti ti-brand-youtube platform-settings-icon youtube ";
+
+        private const string ACTIVE_CSS_STRING = "is-active";
+
+    protected Themenschaedel.Shared.Props.Settings UserSetttings;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UserSetttings = await _session.GetSettings();
+            switch (UserSetttings.Platform)
+            {
+                case Platforms.None:
+                    break;
+                case Platforms.Spotify:
+                    spotifyCSS += ACTIVE_CSS_STRING;
+                    break;
+                case Platforms.Youtube:
+                    youtubeCSS += ACTIVE_CSS_STRING;
+                    break;
+                case Platforms.Apple:
+                    appleCSS += ACTIVE_CSS_STRING;
+                    break;
+            }
+        }
+    }
+
 }

@@ -41,6 +41,13 @@ namespace Themenschaedel.Web.Services
             return await _sessionStorage.GetItemAsync<Token>("Token");
         }
 
+        public async Task<Settings> GetSettings() => await _sessionStorage.GetItemAsync<Settings>("Settings");
+
+        public async Task SetSettings(Settings settings)
+        {
+            await _sessionStorage.SetItemAsync("Settings", settings);
+        }
+
         private async Task<Token> GetLocalStorageTokenAndSetSessionToken()
         {
             Token token = await _localStorage.GetItemAsync<Token>("Token");
