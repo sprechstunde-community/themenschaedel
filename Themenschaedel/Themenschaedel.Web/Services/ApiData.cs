@@ -21,14 +21,14 @@ namespace Themenschaedel.Web.Services
         private const string APPLICATION_TITLE = "Themenschaedel-Web";
 
         private readonly HttpClient _httpClient;
-        private readonly Themenschaedel.Web.Services.Interfaces.ISession _session;
+        private readonly Themenschaedel.Web.Services.Interfaces.IUserSession _userSession;
         private readonly IToastService _toastService;
 
-        public ApiData(HttpClient httpClient, Themenschaedel.Web.Services.Interfaces.ISession session,
+        public ApiData(HttpClient httpClient, Themenschaedel.Web.Services.Interfaces.IUserSession userSession,
             IToastService toastService)
         {
             _httpClient = httpClient;
-            _session = session;
+            _userSession = userSession;
             _toastService = toastService;
         }
 
@@ -57,7 +57,7 @@ namespace Themenschaedel.Web.Services
         {
             try
             {
-                await _session.Logout();
+                await _userSession.Logout();
                 string json = "{ \"username\": \"" + username + "\", \"password\": \"" + password +
                               "\", \"application_name\": \"" + APPLICATION_TITLE + "\"}";
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -71,7 +71,7 @@ namespace Themenschaedel.Web.Services
                 }
                 else
                 {
-                    await _session.SetAuthenticationTokenAsync(responseObject, keepLoggedIn);
+                    await _userSession.SetAuthenticationTokenAsync(responseObject, keepLoggedIn);
                     return responseObject;
                 }
             }
@@ -115,7 +115,7 @@ namespace Themenschaedel.Web.Services
                         $"{_httpClient.BaseAddress}episodes/${episodeID.ToString()}/claim"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     await _httpClient.SendAsync(requestMessage);
                 }
@@ -138,7 +138,7 @@ namespace Themenschaedel.Web.Services
                         $"{_httpClient.BaseAddress}episodes/{episodeID.ToString()}/topics"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     string topicJson = JsonConvert.SerializeObject(new
                     {
@@ -196,7 +196,7 @@ namespace Themenschaedel.Web.Services
                         $"{_httpClient.BaseAddress}topics/{topicID.ToString()}/subtopics"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     string subtopicJson = JsonConvert.SerializeObject(new { name = subtopic.name });
                     StringContent stringContent = new StringContent(subtopicJson, Encoding.UTF8, "application/json");
@@ -235,7 +235,7 @@ namespace Themenschaedel.Web.Services
                         $"{_httpClient.BaseAddress}subtopics/{subtopic.id.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     string subtopicJson = JsonConvert.SerializeObject(new { name = subtopic.name });
                     StringContent stringContent = new StringContent(subtopicJson, Encoding.UTF8, "application/json");
@@ -274,7 +274,7 @@ namespace Themenschaedel.Web.Services
                     $"{_httpClient.BaseAddress}topics/{topic.id.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     string json = JsonConvert.SerializeObject(new
                     {
@@ -339,7 +339,7 @@ namespace Themenschaedel.Web.Services
                     new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}topics/{topicID.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     response = await _httpClient.SendAsync(requestMessage);
                 }
@@ -405,7 +405,7 @@ namespace Themenschaedel.Web.Services
                     new HttpRequestMessage(HttpMethod.Delete, $"{_httpClient.BaseAddress}topics/{topic.id.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     HttpResponseMessage response = await _httpClient.SendAsync(requestMessage);
                 }
@@ -425,7 +425,7 @@ namespace Themenschaedel.Web.Services
                         $"{_httpClient.BaseAddress}subtopics/{subtopic.id.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _session.GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).access_token);
 
                     await _httpClient.SendAsync(requestMessage);
                 }

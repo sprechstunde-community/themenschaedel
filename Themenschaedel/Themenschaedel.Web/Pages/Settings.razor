@@ -1,7 +1,7 @@
 @page "/Settings"
 @using Themenschaedel.Shared.Props
 @using Themenschaedel.Web.Services.Interfaces
-@inject ISession _session
+@inject IUserSession _userSession
 <h1>Settings</h1>
 
 <div class="settings-container">
@@ -41,7 +41,7 @@
     {
         if (firstRender)
         {
-            UserSetttings = await _session.GetSettings();
+            UserSetttings = await _userSession.GetSettings();
             switch (UserSetttings.Platform)
             {
                 case Platforms.None:

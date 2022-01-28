@@ -44,7 +44,7 @@
     private IData _apiData { get; set; }
 
     [Inject]
-    private ISession _session { get; set; }
+    private IUserSession UserSession { get; set; }
 
     public Episode episode = new Episode();
 
@@ -71,7 +71,7 @@
     {
         if (firstRender)
         {
-            isLoggedIn = await _session.IsLoggedInAsync();
+            isLoggedIn = await UserSession.IsLoggedInAsync();
             this.StateHasChanged();
         }
     }
@@ -79,7 +79,7 @@
     // ToDo: there needs to be a way for me to check which episodes a user has claimed with the API
     protected async Task ClaimEpisode()
     {
-        isLoggedIn = await _session.IsLoggedInAsync();
+        isLoggedIn = await UserSession.IsLoggedInAsync();
         if (isLoggedIn)
         {
             isEditing = true;

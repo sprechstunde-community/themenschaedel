@@ -1,0 +1,60 @@
+﻿using Dapper;
+using Themenschaedel.Shared.Models;
+
+namespace Themenschaedel.API.Services
+{
+    public class DatabaseService : IDatabaseService
+    {
+        private readonly DapperService _context;
+        public DatabaseService(DapperService context)
+        {
+            _context = context;
+        }
+
+        public void AddEpisodes(List<Episode> episodes)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                foreach (Episode item in episodes)
+                {
+                    var parameters = new { uuid = item.UUID, title = item.Title, episode_number = item.EpisodeNumber, subtitle = item.Subtitle, description = item.Description, media_file = item.MediaFile, spotify_file = item.SpotifyFile, duration = item.Duration, type = item.Type, image = item.Image, explicitItem = item.Explicit, published_at = item.PublishedAt, created_at = item.CreatedAt, updated_at = item.UpdatedAt};
+                    string processQuery = "INSERT INTO episodes (uuid,title,episode_number,subtitle,description,media_file,spotify_file,duration,type,image,explicit,published_at,created_at,updated_at) VALUES (@uuid,@title,@episode_number,@subtitle,@description,@media_file,@spotify_file,@duration,@type,@image,@explicitItem,@published_at,@created_at,@updated_at)";
+                    connection.Execute(processQuery, parameters);
+                }
+            }
+        }
+
+        public List<Episode> GetAllEpisodes()
+        {
+            var query = $"SELECT * FROM episodes ORDER BY published_at";
+            using (var connection = _context.CreateConnection())
+            {
+                var episodes = connection.Query<Episode>(query).ToList();
+                return episodes;
+            }
+        }
+
+        public async Task<List<Episode>> GetAllEpisodesAsync()
+        {
+            var query = $"SELECT * FROM episodes ORDER BY published_at";
+            using (var connection = _context.CreateConnection())
+            {
+                var episodes = await connection.QueryAsync<Episode>(query);
+                return episodes.ToList();
+            }
+        }
+
+        public async Task<List<Episode>> GetEpisodesAsync(int page, int per_page)
+        {
+            var parameters = new { Page = page, PerPage = per_page };
+            var query = $"SELECT * FROM episodes ORDER BY published_at DESC " +
+                        $"OFFSET @Page ROWS " +
+                        $"FETCH NEXT @PerPage ROWS ONLY";
+            using (var connection = _context.CreateConnection())
+            {
+                var episodes = await connection.QueryAsync<Episode>(query, parameters);
+                return episodes.ToList();
+            }
+        }
+    }
+}

@@ -62,7 +62,7 @@
     private IData _apiData { get; set; }
 
     [Inject]
-    private ISession _session { get; set; }
+    private IUserSession UserSession { get; set; }
 
     TokenRequest tokenRequest = new TokenRequest();
 
@@ -72,7 +72,7 @@
     {
         if (firstRender)
         {
-            if (await _session.IsLoggedInAsync())
+            if (await UserSession.IsLoggedInAsync())
             {
                 NavigationManager.NavigateTo($"/");
             }
@@ -85,7 +85,7 @@
     {
         await _apiData.Login(tokenRequest.username, tokenRequest.password, keepLoggedIn);
         await Task.Delay(1500);
-        if (await _session.IsLoggedInAsync())
+        if (await UserSession.IsLoggedInAsync())
         {
             NavigationManager.NavigateTo($"/");
         }

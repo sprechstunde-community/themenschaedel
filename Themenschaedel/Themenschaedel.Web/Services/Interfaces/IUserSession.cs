@@ -3,7 +3,7 @@ using Themenschaedel.Shared.Props;
 
 namespace Themenschaedel.Web.Services.Interfaces
 {
-    public interface ISession
+    public interface IUserSession
     {
         Task SetAuthenticationTokenAsync(Token authenticationToken, bool keepLoggedIn);
         bool IsLoggedIn();

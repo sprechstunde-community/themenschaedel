@@ -5,7 +5,7 @@ using Themenschaedel.Web.Services.Interfaces;
 
 namespace Themenschaedel.Web.Services
 {
-    public class Session : Themenschaedel.Web.Services.Interfaces.ISession
+    public class UserSession : Themenschaedel.Web.Services.Interfaces.IUserSession
     {
         private readonly ISessionAPI _sessionApi;
         private readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
@@ -14,7 +14,7 @@ namespace Themenschaedel.Web.Services
 
         private bool loggedIn = false;
 
-        public Session(ISessionAPI sessionApi, Blazored.SessionStorage.ISessionStorageService sessionStorage,
+        public UserSession(ISessionAPI sessionApi, Blazored.SessionStorage.ISessionStorageService sessionStorage,
             Blazored.LocalStorage.ILocalStorageService localStorage)
         {
             this._sessionApi = sessionApi;

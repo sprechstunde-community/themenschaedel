@@ -60,7 +60,7 @@ namespace Themenschaedel.Web
                 client.BaseAddress = new Uri("https://api.schaedel.rocks/");
             });
             
-            services.AddScoped<Themenschaedel.Web.Services.Interfaces.ISession, Themenschaedel.Web.Services.Session>();
+            services.AddScoped<Themenschaedel.Web.Services.Interfaces.IUserSession, Themenschaedel.Web.Services.UserSession>();
             
             services.AddHttpClient<IData, ApiData>(client =>
             {
