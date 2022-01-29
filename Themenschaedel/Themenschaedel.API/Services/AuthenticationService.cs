@@ -65,9 +65,20 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public Task<bool> VerifyEmail(string verificationId)
+        public async Task<bool> VerifyEmail(string verificationId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await _databaseService.VerifyEmailAddress(verificationId);
+                return true;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error during email verification. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
+
+            return false;
         }
 
 

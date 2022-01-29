@@ -10,14 +10,24 @@ namespace Themenschaedel.API.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
+        private readonly ILogger<AuthenticationController> _logger;
         private readonly IAuthenticationService _authenticationService;
         private readonly IDatabaseService _databaseService;
 
-        public AuthenticationController(IAuthenticationService authenticationService, IDatabaseService databaseService)
+        public AuthenticationController(ILogger<AuthenticationController> logger, IAuthenticationService authenticationService, IDatabaseService databaseService)
         {
+            _logger = logger;
             _authenticationService = authenticationService;
             _databaseService = databaseService;
         }
+
+
+        // ToDo:
+        //  Add Login
+        //  Make sure login checks if the email_verified_at database entry is not empty => User email was verified
+        //  Create random bearer token
+        //  Enter random bearer token into token table with valid_until of +24 Hours
+        //  Create Token Clear worker that clears all tokens that were created 96 Hours ago.
 
         /*
         // POST api/<EpisodesController>
@@ -43,6 +53,23 @@ namespace Themenschaedel.API.Controllers
             
     }
         */
+
+
+        // POST api/<EpisodesController>
+        [HttpGet("verify/{verificationId}")]
+        public async Task<string> Get(string verificationId)
+        {
+            bool isEmailVerified = await _authenticationService.VerifyEmail(verificationId);
+
+            if (isEmailVerified)
+            {
+                return "Email verified.";
+            }
+            else
+            {
+                return "An error occured.";
+            }
+        }
 
 
         // POST api/<EpisodesController>

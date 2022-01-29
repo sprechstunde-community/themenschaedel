@@ -86,7 +86,17 @@ namespace Themenschaedel.API.Services
             {
                 var parameters = new { username = user.Username, email = user.Email, email_verification_id = user.EmailValidationId, password = user.Password, salt = user.Salt, created_at = DateTime.Now };
                 string processQuery = "INSERT INTO users (username,email,email_verification_id,password,salt,created_at) VALUES (@username,@email,@email_verification_id,@password,@salt,@created_at)";
-                connection.Execute(processQuery, parameters);
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task VerifyEmailAddress(string verificationId)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { email_verification_id = verificationId, new_id = "", email_verified_at = DateTime.Now };
+                string processQuery = "UPDATE users SET email_verification_id=@new_id,email_verified_at=@email_verified_at WHERE email_verification_id=@email_verification_id;";
+                await connection.ExecuteAsync(processQuery, parameters);
             }
         }
     }

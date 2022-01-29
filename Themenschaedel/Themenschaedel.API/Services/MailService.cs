@@ -28,7 +28,7 @@ namespace Themenschaedel.API.Services
 
         public async Task SendMail(string mailTo, string verificationId)
         {
-            string mailJson = "{\"Messages\":[{\"From\":{\"Email\":\"mailjet@yiuo.me\",\"Name\":\"Themenschaedel Projekt\"},\"To\":[{\"Email\":\"" + mailTo + "\",\"Name\":\"User\"}],\"Subject\":\"Themenschaedel Verification\",\"TextPart\":\"Themenschaedel Verification\",\"HTMLPart\":\"<p>Hi, here is the verification email for the Themenschaedel Project.<br/><br/><br/>Please click on this link to verify your email:<br/><a href=\'" + BaseURL +"verify/"+ verificationId +"\'>Verification link</a></p>\",\"CustomID\":\"VerificationEmail\"}]}";
+            string mailJson = "{\"Messages\":[{\"From\":{\"Email\":\"mailjet@yiuo.me\",\"Name\":\"Themenschaedel Projekt\"},\"To\":[{\"Email\":\"" + mailTo + "\",\"Name\":\"User\"}],\"Subject\":\"Themenschaedel Verification\",\"TextPart\":\"Themenschaedel Verification\",\"HTMLPart\":\"<p>Hi, here is the verification email for the Themenschaedel Project.<br/><br/><br/>Please click on this link to verify your email:<br/><a href=\'" + BaseURL + "api/auth/verify/" + verificationId +"\'>Verification link</a></p>\",\"CustomID\":\"VerificationEmail\"}]}";
             var response = await _httpClient.PostAsync(MailjetAPIUrl, new StringContent(mailJson));
         }
     }
