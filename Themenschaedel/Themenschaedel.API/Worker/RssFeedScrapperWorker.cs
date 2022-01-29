@@ -65,7 +65,13 @@ namespace Themenschaedel.API.Worker
                         if (ele.Name.LocalName == "episodeId") episode.UUID = ele.Value;
                         if (ele.Name.LocalName == "episodeType") episode.Type = ele.Value;
                         if (ele.Name.LocalName == "episode") episode.EpisodeNumber = Int32.Parse(ele.Value);
-                        if (ele.Name.LocalName == "image") episode.Image = ele.Value;
+                        if (ele.Name.LocalName == "image")
+                        {
+                            foreach (XAttribute attribute in ele.Attributes())
+                            {
+                                if (attribute.Name == "href") episode.Image = attribute.Value;
+                            }
+                        }
                         if (ele.Name.LocalName == "summary") episode.Description = ele.Value;
                     }
                     // Only add episode if it is not in the database yet

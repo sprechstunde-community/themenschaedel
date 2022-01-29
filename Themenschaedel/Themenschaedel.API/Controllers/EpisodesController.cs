@@ -7,7 +7,7 @@ using Themenschaedel.Shared.Models;
 
 namespace Themenschaedel.API.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/episodes")]
     [ApiController]
     public class EpisodesController : ControllerBase
     {

@@ -7,6 +7,11 @@ builder.WebHost.UseSentry("https://5e34602797cf4674aefaed441f03092b@sentry.alyra
 // Add services to the container.
 builder.Services.AddSingleton<DapperService>();
 builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+builder.Services.AddHttpClient<IMailService, MailService>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["MailjetURL"]);
+});
+builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
 // Add Workers
 builder.Services.AddHostedService<RssFeedScrapperWorker>();
 builder.Services.AddControllers();
