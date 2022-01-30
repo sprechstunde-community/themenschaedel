@@ -36,7 +36,7 @@ namespace Themenschaedel.API.Services
             return cachedToken.User;
         }
 
-        public async Task<Token> Login(string username, string email, string password)
+        public async Task<TokenExtended> Login(string username, string password)
         {
             User user = null;
             TokenCache cachedToken = await CheckForValidTokenByUsername(username);
@@ -56,13 +56,15 @@ namespace Themenschaedel.API.Services
             byte[] salt = user.Salt;
             string hashedPassword = HashPassword(tempPassword, salt);
 
-            Token token = null;
+            TokenExtended token = null;
 
             if (hashedPassword == user.Password)
             {
-                if (!validTokenCached) return new Token(cachedToken);
+                if (!validTokenCached) return new TokenExtended(cachedToken);
 
                 token = await CreateToken(user.Id);
+                await _databaseService.CreateRefreshToken(token);
+
                 TokenCache.Add(new TokenCache(token, user));
             }
             else
@@ -72,6 +74,7 @@ namespace Themenschaedel.API.Services
 
             return token;
         }
+
 
         private async Task<TokenCache> CheckForValidTokenByUsername(string username)
         {
@@ -117,10 +120,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        private async Task<Token> CreateToken(int userId)
+        private async Task<TokenExtended> CreateToken(int userId)
         {
-            Token token = new Token();
+            TokenExtended token = new TokenExtended();
+            token.UserId = userId;
             token.Value = RandomStringWithSpecialChars(128);
+            token.RefreshToken = RandomStringWithSpecialChars(256);
             token.ValidUntil = DateTime.Now.AddDays(1);
             token.CreatedAt = DateTime.Now;
             return token;
@@ -128,7 +133,12 @@ namespace Themenschaedel.API.Services
 
         public async Task<bool> Logout(string token)
         {
-            throw new NotImplementedException();
+            TokenCache cachedToken = await CheckForValidTokenByToken(token);
+            if (cachedToken == null)
+            {
+                throw new TokenDoesNotExistException();
+            }
+            return TokenCache.Remove(cachedToken);
         }
 
         public async Task<bool> Register(UserRegistration user)
@@ -212,6 +222,36 @@ namespace Themenschaedel.API.Services
                 prf: KeyDerivationPrf.HMACSHA256,
                 iterationCount: 100000,
                 numBytesRequested: 256 / 8));
+        }
+
+        public async Task LogoutAll(string token)
+        {
+            TokenCache cachedToken = TokenCache.Find(x => x.Value == token);
+            List<TokenCache> cachedTokens = TokenCache.FindAll(x => x.UserId == cachedToken.UserId);
+            if (cachedTokens.Count == 0)
+            {
+                throw new TokenDoesNotExistException();
+            }
+
+            for (int i = 0; i < cachedTokens.Count; i++)
+            {
+                TokenCache.Remove(cachedTokens[i]);
+            }
+
+            // maybe add, if refresh token exists
+            await _databaseService.ClearAllToken(cachedTokens[0].UserId);
+        }
+
+        public async Task<Token> RefreshToken(RefreshTokenRequest refreshTokenRequest)
+        {
+            User user = await _databaseService.GetUserByUserId(refreshTokenRequest.UserId);
+            TokenCache token = await _databaseService.GetRefreshToken(refreshTokenRequest.RefreshToken);
+            TokenExtended extendedToken = await CreateToken(user.Id);
+            extendedToken.RefreshToken = refreshTokenRequest.RefreshToken;
+            TokenCache cacheToken = new TokenCache(extendedToken, user);
+            TokenCache.Add(cacheToken);
+            Token newToken = new Token(cacheToken);
+            return newToken;
         }
     }
 }

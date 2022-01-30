@@ -11,6 +11,10 @@ namespace Themenschaedel.API.Services
         public Task<bool> IsRegistrationEmailUnique(string email); // Checks if there are any other users with the same email
         public Task VerifyEmailAddress(string verificationId);
         public Task<User> GetUserByUsername(string username);
+        public Task<User> GetUserByUserId(int userId);
+        public Task CreateRefreshToken(TokenExtended token);
+        public Task<TokenCache> GetRefreshToken(string refreshToken);
+        public Task ClearAllToken(int userId);
 
         // Epsiodes
         public Task<List<Episode>> GetEpisodesAsync(int page, int per_page);

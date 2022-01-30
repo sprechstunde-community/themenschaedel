@@ -26,6 +26,57 @@ namespace Themenschaedel.API.Controllers
             _databaseService = databaseService;
         }
 
+        [HttpDelete("logout")]
+        public async Task<IActionResult> Delete()
+        {
+            var authorization = Request.Headers[HeaderNames.Authorization];
+            string token = null;
+
+            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {
+                var scheme = headerValue.Scheme;
+                token = headerValue.Parameter;
+            }
+
+            if (token == null) return Unauthorized();
+
+            bool logoutWorked = await _authenticationService.Logout(token);
+            if (logoutWorked)
+            {
+                return Ok();
+            }
+
+            return Problem();
+        }
+
+        [HttpDelete("logout/all")]
+        public async Task<IActionResult> DeleteAll()
+        {
+            var authorization = Request.Headers[HeaderNames.Authorization];
+            string token = null;
+
+            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {
+                var scheme = headerValue.Scheme;
+                token = headerValue.Parameter;
+            }
+
+            if (token == null) return Unauthorized();
+
+            try
+            {
+                await _authenticationService.LogoutAll(token);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("Error while trying to delete all tokens. Error:\n" + e.Message);
+                SentrySdk.CaptureException(e);
+                return Problem();
+            }
+
+            return Ok();
+        }
+
         // POST api/<EpisodesController>
         [HttpPost("login")]
         public async Task<ActionResult<LoginResponse>> Post([FromBody] UserLogin user)
@@ -37,7 +88,7 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
-                Token token = await _authenticationService.Login(user.Username, null, user.Password);
+                TokenExtended token = await _authenticationService.Login(user.Username, user.Password);
 
                 if (token != null)
                 {
@@ -45,6 +96,7 @@ namespace Themenschaedel.API.Controllers
                     response.AccessToken = token.Value;
                     response.TokenType = "Bearer";
                     response.ValidUntil = token.ValidUntil;
+                    response.RefreshToken = token.RefreshToken;
                     return Ok(response);
                 }
                 else
@@ -63,6 +115,35 @@ namespace Themenschaedel.API.Controllers
             catch (UserDoesNotExistException e)
             {
                 return BadRequest("User does not exist!");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error while a user was trying to login. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
+
+            return Problem();
+        }
+
+        [HttpPost("refresh_token")]
+        public async Task<ActionResult<LoginResponse>> PostRefreshToken([FromBody] RefreshTokenRequest refreshTokenRequest)
+        {
+            if (refreshTokenRequest.UserId == null) return BadRequest("UserId cannot be null!");
+            if (refreshTokenRequest.UserId == 0) return BadRequest("UserId cannot be 0!");
+            if (refreshTokenRequest.RefreshToken.Length == 0 || refreshTokenRequest.RefreshToken == "") return BadRequest("RefreshToken cannot be empty!");
+            if (String.IsNullOrWhiteSpace(refreshTokenRequest.RefreshToken)) return BadRequest("RefreshToken cannot be empty!");
+
+            try
+            {
+                return Ok(await _authenticationService.RefreshToken(refreshTokenRequest));
+            }
+            catch (UserDoesNotExistException e)
+            {
+                return BadRequest("User does not exist!");
+            }
+            catch (RefreshTokenDoesNotExist e)
+            {
+                return BadRequest("Refresh token does not exist");
             }
             catch (Exception e)
             {
@@ -100,6 +181,8 @@ namespace Themenschaedel.API.Controllers
                 var scheme = headerValue.Scheme;
                 token = headerValue.Parameter;
             }
+
+            if (token == null) return Unauthorized();
 
             try
             {

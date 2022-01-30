@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Themenschaedel.Shared.Models.Request
 {
@@ -15,6 +16,8 @@ namespace Themenschaedel.Shared.Models.Request
     {
         public string UUID { get; set; }
         public byte[] Salt { get; set; }
+
+        [JsonPropertyName("email_validation_id")]
         public string EmailValidationId { get; set; }
     }
 }

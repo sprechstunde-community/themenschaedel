@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Shared.Models.Response;
 
 namespace Themenschaedel.API.Services
 {
@@ -22,6 +23,26 @@ namespace Themenschaedel.API.Services
                     string processQuery = "INSERT INTO episodes (uuid,title,episode_number,subtitle,description,media_file,spotify_file,duration,type,image,explicit,published_at,created_at,updated_at) VALUES (@uuid,@title,@episode_number,@subtitle,@description,@media_file,@spotify_file,@duration,@type,@image,@explicitItem,@published_at,@created_at,@updated_at)";
                     connection.Execute(processQuery, parameters);
                 }
+            }
+        }
+
+        public async Task ClearAllToken(int userId)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { id_users = userId };
+                string processQuery = "DELETE FROM token WHERE id_users=@id_users";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task CreateRefreshToken(TokenExtended token)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { value = token.RefreshToken, created_at = token.CreatedAt, id_users = token.UserId };
+                string processQuery = "INSERT INTO token (value,created_at,id_users) VALUES (@value,@created_at,@id_users)";
+                await connection.ExecuteAsync(processQuery, parameters);
             }
         }
 
@@ -58,21 +79,21 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<User> GetUserByUsername(string username)
+        public async Task<TokenCache> GetRefreshToken(string refreshToken)
         {
-            var parameters = new { username = username };
-            var query = $"SELECT * FROM users WHERE username=@username";
+            var parameters = new { tokenVal = refreshToken };
+            var query = $"SELECT * FROM token WHERE value=@tokenVal";
             using (var connection = _context.CreateConnection())
             {
-                var users = await connection.QueryAsync<User>(query, parameters);
-                List<User> user = users.ToList();
-                if (user.Count != 0)
+                var token = await connection.QueryAsync<TokenCache>(query, parameters);
+                List<TokenCache> tokenList = token.ToList();
+                if (tokenList.Count == 0)
                 {
-                    return users.ToList()[0];
+                    throw new RefreshTokenDoesNotExist();
                 }
                 else
                 {
-                    throw new UserDoesNotExistException();
+                    return token.ToList()[0];
                 }
             }
         }
@@ -116,6 +137,44 @@ namespace Themenschaedel.API.Services
                 var parameters = new { email_verification_id = verificationId, new_id = "", email_verified_at = DateTime.Now };
                 string processQuery = "UPDATE users SET email_verification_id=@new_id,email_verified_at=@email_verified_at WHERE email_verification_id=@email_verification_id;";
                 await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task<User> GetUserByUsername(string username)
+        {
+            var parameters = new { username = username };
+            var query = $"SELECT * FROM users WHERE username=@username";
+            using (var connection = _context.CreateConnection())
+            {
+                var users = await connection.QueryAsync<User>(query, parameters);
+                List<User> user = users.ToList();
+                if (user.Count != 0)
+                {
+                    return users.ToList()[0];
+                }
+                else
+                {
+                    throw new UserDoesNotExistException();
+                }
+            }
+        }
+
+        public async Task<User> GetUserByUserId(int userId)
+        {
+            var parameters = new { userIdVal = userId };
+            var query = $"SELECT * FROM users WHERE id=@userIdVal";
+            using (var connection = _context.CreateConnection())
+            {
+                var users = await connection.QueryAsync<User>(query, parameters);
+                List<User> user = users.ToList();
+                if (user.Count != 0)
+                {
+                    return users.ToList()[0];
+                }
+                else
+                {
+                    throw new UserDoesNotExistException();
+                }
             }
         }
     }

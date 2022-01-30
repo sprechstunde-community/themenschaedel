@@ -14,6 +14,7 @@ namespace Themenschaedel.Shared.Models
             this.Value = token.Value;
             this.ValidUntil = token.ValidUntil;
             this.CreatedAt = token.CreatedAt;
+            this.UserId = token.UserId;
         }
 
         public Token(TokenCache token)
@@ -22,21 +23,46 @@ namespace Themenschaedel.Shared.Models
             this.Value = token.Value;
             this.ValidUntil = token.ValidUntil;
             this.CreatedAt = token.CreatedAt;
+            this.UserId = token.UserId;
+        }
+
+        public Token(TokenExtended token)
+        {
+            this.Id = token.Id;
+            this.Value = token.Value;
+            this.ValidUntil = token.ValidUntil;
+            this.CreatedAt = token.CreatedAt;
+            this.UserId = token.UserId;
         }
 
         public int Id { get; set; }
         public string Value { get; set; }
         public DateTime ValidUntil { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int UserId { get; set; }
     }
 
-    public class TokenCache : Token
+    public class TokenCache : TokenExtended
     {
-        public TokenCache(Token token, User user) : base(token)
+        public TokenCache() { }
+        public TokenCache(TokenExtended token) : base(token){ }
+
+        public TokenCache(TokenExtended token, User user) : base(token)
         {
             this.User = user;
         }
 
         public User User { get; set; }
+    }
+
+    public class TokenExtended : Token
+    {
+        public TokenExtended() { }
+
+        public TokenExtended(TokenExtended token) : base(token)
+        {
+            this.RefreshToken = token.RefreshToken;
+        }
+        public string RefreshToken { get; set; }
     }
 }

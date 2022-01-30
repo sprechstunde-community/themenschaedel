@@ -6,9 +6,11 @@ namespace Themenschaedel.API.Services
     public interface IAuthenticationService
     {
         public Task<bool> Register(UserRegistration user);
-        public Task<Token> Login(string username, string email, string password);
+        public Task<TokenExtended> Login(string username, string password);
         public Task<bool> Logout(string token);
+        public Task LogoutAll(string token);
         public Task<User> GetUser(string token);
         public Task<bool> VerifyEmail(string verificationId);
+        public Task<Token> RefreshToken(RefreshTokenRequest refreshTokenRequest);
     }
 }
