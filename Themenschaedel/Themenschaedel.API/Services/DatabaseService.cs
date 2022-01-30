@@ -58,6 +58,25 @@ namespace Themenschaedel.API.Services
             }
         }
 
+        public async Task<User> GetUserByUsername(string username)
+        {
+            var parameters = new { username = username };
+            var query = $"SELECT * FROM users WHERE username=@username";
+            using (var connection = _context.CreateConnection())
+            {
+                var users = await connection.QueryAsync<User>(query, parameters);
+                List<User> user = users.ToList();
+                if (user.Count != 0)
+                {
+                    return users.ToList()[0];
+                }
+                else
+                {
+                    throw new UserDoesNotExistException();
+                }
+            }
+        }
+
         public async Task<bool> IsRegistrationEmailUnique(string email)
         {
             var parameters = new { email = email };
@@ -84,8 +103,8 @@ namespace Themenschaedel.API.Services
         {
             using (var connection = _context.CreateConnection())
             {
-                var parameters = new { username = user.Username, email = user.Email, email_verification_id = user.EmailValidationId, password = user.Password, salt = user.Salt, created_at = DateTime.Now };
-                string processQuery = "INSERT INTO users (username,email,email_verification_id,password,salt,created_at) VALUES (@username,@email,@email_verification_id,@password,@salt,@created_at)";
+                var parameters = new { uuid = user.UUID, username = user.Username, email = user.Email, email_verification_id = user.EmailValidationId, password = user.Password, salt = user.Salt, created_at = DateTime.Now };
+                string processQuery = "INSERT INTO users (uuid,username,email,email_verification_id,password,salt,created_at) VALUES (@uuid,@username,@email,@email_verification_id,@password,@salt,@created_at)";
                 await connection.ExecuteAsync(processQuery, parameters);
             }
         }

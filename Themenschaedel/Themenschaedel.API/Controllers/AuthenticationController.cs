@@ -1,8 +1,13 @@
-﻿using System.Net.Mail;
+﻿using System.Net.Http.Headers;
+using System.Net.Mail;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
+using Sentry;
 using Themenschaedel.API.Services;
+using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Shared.Models.Response;
 
 namespace Themenschaedel.API.Controllers
 {
@@ -21,41 +26,54 @@ namespace Themenschaedel.API.Controllers
             _databaseService = databaseService;
         }
 
-
-        // ToDo:
-        //  Add Login
-        //  Make sure login checks if the email_verified_at database entry is not empty => User email was verified
-        //  Create random bearer token
-        //  Enter random bearer token into token table with valid_until of +24 Hours
-        //  Create Token Clear worker that clears all tokens that were created 96 Hours ago.
-
-        /*
         // POST api/<EpisodesController>
         [HttpPost("login")]
-        public async Task<IActionResult> Post([FromBody] UserLogin user)
+        public async Task<ActionResult<LoginResponse>> Post([FromBody] UserLogin user)
         {
             if (user.Username.Length > 30) return BadRequest("Username is exceeding username lenght limit!");
             if (user.Username.Length == 0 || user.Username == "") return BadRequest("Username cannot be empty!");
             if (String.IsNullOrWhiteSpace(user.Username)) return BadRequest("Username cannot be empty!");
             if (String.IsNullOrWhiteSpace(user.Password)) return BadRequest("Invalid Password!");
 
-            
-            bool wasUserRegistrationSuccessful = await _authenticationService.Login(user);
-
-            if (wasUserRegistrationSuccessful)
+            try
             {
-                return Ok();
+                Token token = await _authenticationService.Login(user.Username, null, user.Password);
+
+                if (token != null)
+                {
+                    LoginResponse response = new LoginResponse();
+                    response.AccessToken = token.Value;
+                    response.TokenType = "Bearer";
+                    response.ValidUntil = token.ValidUntil;
+                    return Ok(response);
+                }
+                else
+                {
+                    return Problem("An error occured, please try again or report the error.");
+                }
             }
-            else
+            catch (UserEmailNotVerifiedException e)
             {
-                return Problem("An error occured, please try again or report the error.");
+                return BadRequest("User email not verified");
             }
-            
-    }
-        */
+            catch (PasswordOrEmailIncorrectException e)
+            {
+                return BadRequest("Username or password are incorrect!");
+            }
+            catch (UserDoesNotExistException e)
+            {
+                return BadRequest("User does not exist!");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error while a user was trying to login. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
+
+            return Problem();
+        }
 
 
-        // POST api/<EpisodesController>
         [HttpGet("verify/{verificationId}")]
         public async Task<string> Get(string verificationId)
         {
@@ -69,6 +87,35 @@ namespace Themenschaedel.API.Controllers
             {
                 return "An error occured.";
             }
+        }
+
+        [HttpGet("me")]
+        public async Task<ActionResult<UserResponse>> Get()
+        {
+            var authorization = Request.Headers[HeaderNames.Authorization];
+            string token = null;
+
+            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {
+                var scheme = headerValue.Scheme;
+                token = headerValue.Parameter;
+            }
+
+            try
+            {
+                return new UserResponse(await _authenticationService.GetUser(token));
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return BadRequest("User token does not exist!");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error trying to verify a user token. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
+
+            return Problem();
         }
 
 
@@ -90,7 +137,7 @@ namespace Themenschaedel.API.Controllers
 
             if (wasUserRegistrationSuccessful)
             {
-                return Ok();
+                return Ok("User created.");
             }
             else
             {

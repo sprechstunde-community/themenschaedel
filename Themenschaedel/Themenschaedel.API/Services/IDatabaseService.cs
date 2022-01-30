@@ -10,6 +10,7 @@ namespace Themenschaedel.API.Services
         public Task<bool> IsRegistrationUsernameUnique(string username); // Checks if there are any other users with the same name
         public Task<bool> IsRegistrationEmailUnique(string email); // Checks if there are any other users with the same email
         public Task VerifyEmailAddress(string verificationId);
+        public Task<User> GetUserByUsername(string username);
 
         // Epsiodes
         public Task<List<Episode>> GetEpisodesAsync(int page, int per_page);

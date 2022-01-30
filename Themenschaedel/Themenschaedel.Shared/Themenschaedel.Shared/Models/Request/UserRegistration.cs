@@ -13,6 +13,7 @@ namespace Themenschaedel.Shared.Models.Request
 
     public class UserRegistrationExtended : UserRegistration
     {
+        public string UUID { get; set; }
         public byte[] Salt { get; set; }
         public string EmailValidationId { get; set; }
     }
