@@ -56,18 +56,22 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<Episode>> GetAllEpisodesAsync()
+        public async Task<List<EpisodeExtended>> GetAllEpisodesAsync()
         {
             var query = $"SELECT * FROM episodes ORDER BY published_at";
             using (var connection = _context.CreateConnection())
             {
-                var episodes = await connection.QueryAsync<Episode>(query);
+                var episodes = await connection.QueryAsync<EpisodeExtended>(query);
+                List<EpisodeExtended> episodesList = episodes.ToList();
+                for (int i = 0; i < episodesList.Count; i++)
+                {
+                    episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                }
                 return episodes.ToList();
             }
         }
-
-        // ToDo: make this class get episode id and then retrieve all topics and subtopics from those id's
-        public async Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage)
+        
+        public async Task<List<Episode>> GetEpisodesAsync(int page, int perPage)
         {
             var parameters = new { Page = page, PerPage = perPage };
             var query = $"SELECT * FROM public.episodes " +
@@ -76,7 +80,7 @@ namespace Themenschaedel.API.Services
                         $"OFFSET ((@Page-1) * @PerPage);";
             using (var connection = _context.CreateConnection())
             {
-                var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
+                var episodes = await connection.QueryAsync<Episode>(query, parameters);
                 return episodes.ToList();
             }
         }
@@ -189,5 +193,75 @@ namespace Themenschaedel.API.Services
                 await connection.ExecuteAsync(processQuery, parameters);
             }
         }
+
+        public async Task<EpisodeExtended> GetEpisodeAsync(int episodeId)
+        {
+            var parameters = new { epId = episodeId };
+            var query = $"SELECT * FROM episodes WHERE id=@epId LIMIT 1";
+            using (var connection = _context.CreateConnection())
+            {
+                EpisodeExtended episode = await connection.QuerySingleAsync<EpisodeExtended>(query, parameters);
+                episode.Topic = await GetTopicsAsync(episode.Id);
+                return episode;
+            }
+        }
+
+        public async Task<List<TopicExtended>> GetTopicsAsync(int episodeId)
+        {
+            var parameters = new { epId = episodeId };
+            var query = $"SELECT * FROM topic WHERE id_episodes=@epId";
+            using (var connection = _context.CreateConnection())
+            {
+                var topics = await connection.QueryAsync<TopicExtended>(query, parameters);
+                List<TopicExtended> topicsList = topics.ToList();
+                for (int i = 0; i < topicsList.Count; i++)
+                {
+                    topicsList[i].Subtopic = await GetSubtopicsAsync(topicsList[i].Id);
+                }
+                return topics.ToList();
+            }
+        }
+
+        public async Task<List<Subtopic>> GetSubtopicsAsync(int topicId)
+        {
+            var parameters = new { topId = topicId };
+            var query = $"SELECT * FROM subtopics WHERE id_topic=@topId";
+            using (var connection = _context.CreateConnection())
+            {
+                var subtopics = await connection.QueryAsync<Subtopic>(query, parameters);
+                return subtopics.ToList();
+            }
+        }
+
+        public async Task<List<TopicExtended>> GetAllTopics()
+        {
+            var query = $"SELECT * FROM topic ORDER BY id_episodes";
+            using (var connection = _context.CreateConnection())
+            {
+                var topics = await connection.QueryAsync<TopicExtended>(query);
+                List<TopicExtended> topicsList = topics.ToList();
+                if (topicsList.Count == 0) throw new EmptyDatabaseListReturnException();
+                for (int i = 0; i < topicsList.Count; i++)
+                {
+                    topicsList[i].Subtopic = await GetSubtopicsAsync(topicsList[i].Id);
+                }
+                return topicsList;
+            }
+        }
+    }
+
+    [Serializable]
+    public class EmptyDatabaseListReturnException : Exception
+    {
+        public EmptyDatabaseListReturnException()
+        { }
+
+        public EmptyDatabaseListReturnException(string message)
+            : base(message)
+        { }
+
+        public EmptyDatabaseListReturnException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
     }
 }

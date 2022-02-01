@@ -16,16 +16,13 @@ namespace Themenschaedel.API.Controllers
         {
             _databaseService = databaseService;
         }
-
-        // GET: api/<EpisodesController>
-        [HttpGet]
-        public async Task<IActionResult> GetEpisodes(int page, int per_page)
+        
+        [HttpGet("all")]
+        public async Task<ActionResult<EpisodeExtended>> GetAllEpisodes()
         {
-            if (page == 0) page = 1;
-
             try
             {
-                List<EpisodeExtended> episodes = await _databaseService.GetEpisodesAsync(page, per_page);
+                List<EpisodeExtended> episodes = await _databaseService.GetAllEpisodesAsync();
 
                 if (episodes.Count == 0)
                     return NoContent();
@@ -38,6 +35,50 @@ namespace Themenschaedel.API.Controllers
                 return StatusCode(500, e.Message);
             }
         }
+
+        // GET: api/<EpisodesController>
+        [HttpGet]
+        public async Task<ActionResult<Episode>> GetEpisodes(int page, int per_page)
+        {
+            if (page == 0) page = 1;
+
+            try
+            {
+                List<Episode> episodes = await _databaseService.GetEpisodesAsync(page, per_page);
+
+                if (episodes.Count == 0)
+                    return NoContent();
+
+                return Ok(episodes);
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                return StatusCode(500, e.Message);
+            }
+        }
+
+        // GET: api/<EpisodesController>
+        [HttpGet("{episodeId}")]
+        public async Task<ActionResult<Episode>> GetEpisode(int episodeId)
+        {
+            try
+            {
+                Episode episode = await _databaseService.GetEpisodeAsync(episodeId);
+
+                return Ok(episode);
+            }
+            catch (InvalidOperationException e)
+            {
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                return StatusCode(500, e.Message);
+            }
+        }
+
         // POST api/<EpisodesController>
         [HttpPost("verify_episode/{id}")]
         public void Post(int id)

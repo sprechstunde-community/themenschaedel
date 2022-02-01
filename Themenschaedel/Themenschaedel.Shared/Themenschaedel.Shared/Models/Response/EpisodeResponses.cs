@@ -6,6 +6,12 @@ namespace Themenschaedel.Shared.Models.Response
 {
     public class EpisodeResponse
     {
-        public List<Episode> episodes { get; set; } = new List<Episode>();
+        public List<Episode> data { get; set; } = new List<Episode>();
+        public Meta Meta { get; set; }
+    }
+
+    public class Meta
+    {
+
     }
 }
