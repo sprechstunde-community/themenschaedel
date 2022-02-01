@@ -17,5 +17,6 @@ namespace Themenschaedel.Shared.Models
         public byte[] Salt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+        public int RolesId { get; set; }
     }
 }

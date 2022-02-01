@@ -18,6 +18,7 @@ namespace Themenschaedel.Shared.Models
         public string Type { get; set; }
         public string Image { get; set; }
         public bool Explicit { get; set; }
+        public bool Verified { get; set; }
         public DateTime PublishedAt { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
@@ -25,6 +26,6 @@ namespace Themenschaedel.Shared.Models
 
     public class EpisodeExtended : Episode
     {
-        public List<Topic> Topic { get; set; } = new List<Topic>();
+        public List<TopicExtended> Topic { get; set; } = new List<TopicExtended>();
     }
 }

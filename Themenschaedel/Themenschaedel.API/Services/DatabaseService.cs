@@ -19,8 +19,8 @@ namespace Themenschaedel.API.Services
             {
                 foreach (Episode item in episodes)
                 {
-                    var parameters = new { uuid = item.UUID, title = item.Title, episode_number = item.EpisodeNumber, subtitle = item.Subtitle, description = item.Description, media_file = item.MediaFile, spotify_file = item.SpotifyFile, duration = item.Duration, type = item.Type, image = item.Image, explicitItem = item.Explicit, published_at = item.PublishedAt, created_at = item.CreatedAt, updated_at = item.UpdatedAt };
-                    string processQuery = "INSERT INTO episodes (uuid,title,episode_number,subtitle,description,media_file,spotify_file,duration,type,image,explicit,published_at,created_at,updated_at) VALUES (@uuid,@title,@episode_number,@subtitle,@description,@media_file,@spotify_file,@duration,@type,@image,@explicitItem,@published_at,@created_at,@updated_at)";
+                    var parameters = new { uuid = item.UUID, title = item.Title, episode_number = item.EpisodeNumber, subtitle = item.Subtitle, description = item.Description, media_file = item.MediaFile, spotify_file = item.SpotifyFile, duration = item.Duration, type = item.Type, image = item.Image, explicitItem = item.Explicit, published_at = item.PublishedAt, created_at = item.CreatedAt, updated_at = item.UpdatedAt, verified = item.Verified };
+                    string processQuery = "INSERT INTO episodes (uuid,title,episode_number,subtitle,description,media_file,spotify_file,duration,type,image,explicit,published_at,created_at,updated_at,verified) VALUES (@uuid,@title,@episode_number,@subtitle,@description,@media_file,@spotify_file,@duration,@type,@image,@explicitItem,@published_at,@created_at,@updated_at,@verified)";
                     connection.Execute(processQuery, parameters);
                 }
             }
@@ -66,15 +66,17 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<Episode>> GetEpisodesAsync(int page, int per_page)
+        // ToDo: make this class get episode id and then retrieve all topics and subtopics from those id's
+        public async Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage)
         {
-            var parameters = new { Page = page, PerPage = per_page };
-            var query = $"SELECT * FROM episodes ORDER BY published_at DESC " +
-                        $"OFFSET @Page ROWS " +
-                        $"FETCH NEXT @PerPage ROWS ONLY";
+            var parameters = new { Page = page, PerPage = perPage };
+            var query = $"SELECT * FROM public.episodes " +
+                        $"ORDER BY published_at DESC " +
+                        $"LIMIT @PerPage " +
+                        $"OFFSET ((@Page-1) * @PerPage);";
             using (var connection = _context.CreateConnection())
             {
-                var episodes = await connection.QueryAsync<Episode>(query, parameters);
+                var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
                 return episodes.ToList();
             }
         }
@@ -124,8 +126,8 @@ namespace Themenschaedel.API.Services
         {
             using (var connection = _context.CreateConnection())
             {
-                var parameters = new { uuid = user.UUID, username = user.Username, email = user.Email, email_verification_id = user.EmailValidationId, password = user.Password, salt = user.Salt, created_at = DateTime.Now };
-                string processQuery = "INSERT INTO users (uuid,username,email,email_verification_id,password,salt,created_at) VALUES (@uuid,@username,@email,@email_verification_id,@password,@salt,@created_at)";
+                var parameters = new { uuid = user.UUID, username = user.Username, email = user.Email, email_verification_id = user.EmailValidationId, password = user.Password, salt = user.Salt, created_at = DateTime.Now, id_roles = user.RoleId };
+                string processQuery = "INSERT INTO users (uuid,username,email,email_verification_id,password,salt,created_at,id_roles) VALUES (@uuid,@username,@email,@email_verification_id,@password,@salt,@created_at,@id_roles)";
                 await connection.ExecuteAsync(processQuery, parameters);
             }
         }
@@ -175,6 +177,16 @@ namespace Themenschaedel.API.Services
                 {
                     throw new UserDoesNotExistException();
                 }
+            }
+        }
+
+        public async Task ClearSingleToken(string refreshToken)
+        {
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { refresh_token = refreshToken };
+                string processQuery = "DELETE FROM token WHERE value=@refresh_token";
+                await connection.ExecuteAsync(processQuery, parameters);
             }
         }
     }

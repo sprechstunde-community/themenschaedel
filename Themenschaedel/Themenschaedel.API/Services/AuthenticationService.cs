@@ -26,9 +26,9 @@ namespace Themenschaedel.API.Services
             _configuration = configuration;
         }
 
-        public async Task<User> GetUser(string token)
+        public User GetUser(string token)
         {
-            TokenCache cachedToken = await CheckForValidTokenByToken(token);
+            TokenCache cachedToken = CheckForValidTokenByToken(token);
             if (cachedToken == null)
             {
                 throw new TokenDoesNotExistException();
@@ -36,10 +36,10 @@ namespace Themenschaedel.API.Services
             return cachedToken.User;
         }
 
-        public async Task<TokenExtended> Login(string username, string password)
+        public async Task<TokenExtended> LoginAsync(string username, string password)
         {
             User user = null;
-            TokenCache cachedToken = await CheckForValidTokenByUsername(username);
+            TokenCache cachedToken = CheckForValidTokenByUsername(username);
             bool validTokenCached = cachedToken == null;
             if (validTokenCached)
             {
@@ -60,9 +60,7 @@ namespace Themenschaedel.API.Services
 
             if (hashedPassword == user.Password)
             {
-                if (!validTokenCached) return new TokenExtended(cachedToken);
-
-                token = await CreateToken(user.Id);
+                token = CreateToken(user.Id);
                 await _databaseService.CreateRefreshToken(token);
 
                 TokenCache.Add(new TokenCache(token, user));
@@ -76,7 +74,7 @@ namespace Themenschaedel.API.Services
         }
 
 
-        private async Task<TokenCache> CheckForValidTokenByUsername(string username)
+        private TokenCache? CheckForValidTokenByUsername(string username)
         {
             int tokenCacheIndex = TokenCache.FindIndex(x => x.User.Username == username);
             if (tokenCacheIndex != -1)
@@ -98,7 +96,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        private async Task<TokenCache> CheckForValidTokenByToken(string token)
+        private TokenCache? CheckForValidTokenByToken(string token)
         {
             int tokenCacheIndex = TokenCache.FindIndex(x => x.Value == token);
             if (tokenCacheIndex != -1)
@@ -120,7 +118,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        private async Task<TokenExtended> CreateToken(int userId)
+        private TokenExtended CreateToken(int userId)
         {
             TokenExtended token = new TokenExtended();
             token.UserId = userId;
@@ -131,23 +129,32 @@ namespace Themenschaedel.API.Services
             return token;
         }
 
-        public async Task<bool> Logout(string token)
+        public async Task<bool> LogoutAsync(string token)
         {
-            TokenCache cachedToken = await CheckForValidTokenByToken(token);
+            TokenCache cachedToken = CheckForValidTokenByToken(token);
             if (cachedToken == null)
             {
                 throw new TokenDoesNotExistException();
             }
-            return TokenCache.Remove(cachedToken);
+
+            List<TokenCache> toClearCacheTokens = TokenCache.FindAll(x => x.RefreshToken == cachedToken.RefreshToken);
+            for (int i = 0; i < toClearCacheTokens.Count; i++)
+            {
+                TokenCache.Remove(toClearCacheTokens[i]);
+            }
+
+            await _databaseService.ClearSingleToken(cachedToken.RefreshToken);
+            return true;
         }
 
-        public async Task<bool> Register(UserRegistration user)
+        public async Task<bool> RegisterAsync(UserRegistration user)
         {
             try
             {
                 UserRegistrationExtended userToCreate = new UserRegistrationExtended();
                 userToCreate.Email = user.Email;
                 userToCreate.Username = user.Username;
+                userToCreate.RoleId = 1;
                 userToCreate.UUID = Guid.NewGuid().ToString("N");
 
                 string tempPassword = $"{_configuration["Auth:FrontSalt"]}{user.Password}{_configuration["Auth:BackSalt"]}";
@@ -170,7 +177,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<bool> VerifyEmail(string verificationId)
+        public async Task<bool> VerifyEmailAsync(string verificationId)
         {
             try
             {
@@ -224,15 +231,15 @@ namespace Themenschaedel.API.Services
                 numBytesRequested: 256 / 8));
         }
 
-        public async Task LogoutAll(string token)
+        public async Task LogoutAllAsync(string token)
         {
-            TokenCache cachedToken = TokenCache.Find(x => x.Value == token);
-            List<TokenCache> cachedTokens = TokenCache.FindAll(x => x.UserId == cachedToken.UserId);
-            if (cachedTokens.Count == 0)
+            int cachedTokenIndex = TokenCache.FindIndex(x => x.Value == token);
+            if (cachedTokenIndex == -1)
             {
                 throw new TokenDoesNotExistException();
             }
 
+            List<TokenCache> cachedTokens = TokenCache.FindAll(x => x.UserId == TokenCache[cachedTokenIndex].UserId);
             for (int i = 0; i < cachedTokens.Count; i++)
             {
                 TokenCache.Remove(cachedTokens[i]);
@@ -242,16 +249,31 @@ namespace Themenschaedel.API.Services
             await _databaseService.ClearAllToken(cachedTokens[0].UserId);
         }
 
-        public async Task<Token> RefreshToken(RefreshTokenRequest refreshTokenRequest)
+        public async Task<Token> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest)
         {
             User user = await _databaseService.GetUserByUserId(refreshTokenRequest.UserId);
-            TokenCache token = await _databaseService.GetRefreshToken(refreshTokenRequest.RefreshToken);
-            TokenExtended extendedToken = await CreateToken(user.Id);
+
+            // This logic checks if a refresh token exists. If not, it will throw the exception 'RefreshTokenDoesNotExist'.
+            try
+            {
+                TokenCache token = await _databaseService.GetRefreshToken(refreshTokenRequest.RefreshToken);
+            }
+            catch (RefreshTokenDoesNotExist e)
+            {
+                throw new RefreshTokenDoesNotExist();
+            }
+            
+            TokenExtended extendedToken = CreateToken(user.Id);
             extendedToken.RefreshToken = refreshTokenRequest.RefreshToken;
             TokenCache cacheToken = new TokenCache(extendedToken, user);
             TokenCache.Add(cacheToken);
             Token newToken = new Token(cacheToken);
             return newToken;
+        }
+
+        public bool IsTokenValid(string token)
+        {
+            return CheckForValidTokenByToken(token) != null;
         }
     }
 }

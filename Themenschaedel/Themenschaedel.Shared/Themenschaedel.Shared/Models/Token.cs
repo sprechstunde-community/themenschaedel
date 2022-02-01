@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Themenschaedel.Shared.Models
 {
@@ -35,6 +36,7 @@ namespace Themenschaedel.Shared.Models
             this.UserId = token.UserId;
         }
 
+        [JsonIgnore]
         public int Id { get; set; }
         public string Value { get; set; }
         public DateTime ValidUntil { get; set; }

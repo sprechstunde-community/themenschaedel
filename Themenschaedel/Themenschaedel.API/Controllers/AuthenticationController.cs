@@ -40,7 +40,21 @@ namespace Themenschaedel.API.Controllers
 
             if (token == null) return Unauthorized();
 
-            bool logoutWorked = await _authenticationService.Logout(token);
+            bool logoutWorked = false;
+            try
+            {
+                logoutWorked = await _authenticationService.LogoutAsync(token);
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError("Error while trying to clear a singular token from the database. Error:\n" + e.Message);
+            }
+
             if (logoutWorked)
             {
                 return Ok();
@@ -65,7 +79,11 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
-                await _authenticationService.LogoutAll(token);
+                await _authenticationService.LogoutAllAsync(token);
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
             }
             catch (Exception e)
             {
@@ -88,7 +106,7 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
-                TokenExtended token = await _authenticationService.Login(user.Username, user.Password);
+                TokenExtended token = await _authenticationService.LoginAsync(user.Username, user.Password);
 
                 if (token != null)
                 {
@@ -130,12 +148,12 @@ namespace Themenschaedel.API.Controllers
         {
             if (refreshTokenRequest.UserId == null) return BadRequest("UserId cannot be null!");
             if (refreshTokenRequest.UserId == 0) return BadRequest("UserId cannot be 0!");
-            if (refreshTokenRequest.RefreshToken.Length == 0 || refreshTokenRequest.RefreshToken == "") return BadRequest("RefreshToken cannot be empty!");
-            if (String.IsNullOrWhiteSpace(refreshTokenRequest.RefreshToken)) return BadRequest("RefreshToken cannot be empty!");
+            if (refreshTokenRequest.RefreshToken.Length == 0 || refreshTokenRequest.RefreshToken == "") return BadRequest("RefreshTokenAsync cannot be empty!");
+            if (String.IsNullOrWhiteSpace(refreshTokenRequest.RefreshToken)) return BadRequest("RefreshTokenAsync cannot be empty!");
 
             try
             {
-                return Ok(await _authenticationService.RefreshToken(refreshTokenRequest));
+                return Ok(await _authenticationService.RefreshTokenAsync(refreshTokenRequest));
             }
             catch (UserDoesNotExistException e)
             {
@@ -143,7 +161,7 @@ namespace Themenschaedel.API.Controllers
             }
             catch (RefreshTokenDoesNotExist e)
             {
-                return BadRequest("Refresh token does not exist");
+                return Unauthorized();
             }
             catch (Exception e)
             {
@@ -158,7 +176,7 @@ namespace Themenschaedel.API.Controllers
         [HttpGet("verify/{verificationId}")]
         public async Task<string> Get(string verificationId)
         {
-            bool isEmailVerified = await _authenticationService.VerifyEmail(verificationId);
+            bool isEmailVerified = await _authenticationService.VerifyEmailAsync(verificationId);
 
             if (isEmailVerified)
             {
@@ -186,11 +204,11 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
-                return new UserResponse(await _authenticationService.GetUser(token));
+                return new UserResponse(_authenticationService.GetUser(token));
             }
             catch (TokenDoesNotExistException e)
             {
-                return BadRequest("User token does not exist!");
+                return Unauthorized();
             }
             catch (Exception e)
             {
@@ -216,7 +234,7 @@ namespace Themenschaedel.API.Controllers
             if (!await _databaseService.IsRegistrationEmailUnique(user.Email)) return BadRequest("A user with this email already exists!");
             if (!await _databaseService.IsRegistrationUsernameUnique(user.Username)) return BadRequest("A user with this username already exists!");
 
-            bool wasUserRegistrationSuccessful = await _authenticationService.Register(user);
+            bool wasUserRegistrationSuccessful = await _authenticationService.RegisterAsync(user);
 
             if (wasUserRegistrationSuccessful)
             {

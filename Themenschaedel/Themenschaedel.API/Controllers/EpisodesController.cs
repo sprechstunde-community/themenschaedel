@@ -21,14 +21,14 @@ namespace Themenschaedel.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetEpisodes(int page, int per_page)
         {
-            if (page > 0) page -= 1;
+            if (page == 0) page = 1;
 
             try
             {
-                List<Episode> episodes = await _databaseService.GetEpisodesAsync(page, per_page);
+                List<EpisodeExtended> episodes = await _databaseService.GetEpisodesAsync(page, per_page);
 
                 if (episodes.Count == 0)
-                    return NotFound();
+                    return NoContent();
 
                 return Ok(episodes);
             }
@@ -38,28 +38,14 @@ namespace Themenschaedel.API.Controllers
                 return StatusCode(500, e.Message);
             }
         }
-
-        // GET api/<EpisodesController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
         // POST api/<EpisodesController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
-        }
-
-        // PUT api/<EpisodesController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPost("verify_episode/{id}")]
+        public void Post(int id)
         {
         }
 
         // DELETE api/<EpisodesController>/5
-        [HttpDelete("{id}")]
+        [HttpDelete("unverify_epsidoe/{id}")]
         public void Delete(int id)
         {
         }

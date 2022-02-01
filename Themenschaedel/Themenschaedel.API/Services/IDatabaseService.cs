@@ -15,9 +15,10 @@ namespace Themenschaedel.API.Services
         public Task CreateRefreshToken(TokenExtended token);
         public Task<TokenCache> GetRefreshToken(string refreshToken);
         public Task ClearAllToken(int userId);
+        public Task ClearSingleToken(string refreshToken);
 
         // Epsiodes
-        public Task<List<Episode>> GetEpisodesAsync(int page, int per_page);
+        public Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage);
         public Task<List<Episode>> GetAllEpisodesAsync();
         public List<Episode> GetAllEpisodes();
         public void AddEpisodes(List<Episode> episodes);

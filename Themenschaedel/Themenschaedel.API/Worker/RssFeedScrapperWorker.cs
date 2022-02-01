@@ -55,6 +55,7 @@ namespace Themenschaedel.API.Worker
                 foreach (var element in feed.Items)
                 {
                     Episode episode = new Episode();
+                    episode.Verified = false;
                     episode.PublishedAt = element.PublishDate.LocalDateTime;
                     foreach (SyndicationElementExtension extension in element.ElementExtensions)
                     {

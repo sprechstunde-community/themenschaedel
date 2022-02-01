@@ -5,12 +5,13 @@ namespace Themenschaedel.API.Services
 {
     public interface IAuthenticationService
     {
-        public Task<bool> Register(UserRegistration user);
-        public Task<TokenExtended> Login(string username, string password);
-        public Task<bool> Logout(string token);
-        public Task LogoutAll(string token);
-        public Task<User> GetUser(string token);
-        public Task<bool> VerifyEmail(string verificationId);
-        public Task<Token> RefreshToken(RefreshTokenRequest refreshTokenRequest);
+        public Task<bool> RegisterAsync(UserRegistration user);
+        public Task<TokenExtended> LoginAsync(string username, string password);
+        public Task<bool> LogoutAsync(string token);
+        public Task LogoutAllAsync(string token);
+        public User GetUser(string token);
+        public Task<bool> VerifyEmailAsync(string verificationId);
+        public Task<Token> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest);
+        public bool IsTokenValid(string token);
     }
 }

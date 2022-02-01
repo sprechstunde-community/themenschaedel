@@ -19,5 +19,6 @@ namespace Themenschaedel.Shared.Models.Request
 
         [JsonPropertyName("email_validation_id")]
         public string EmailValidationId { get; set; }
+        public int RoleId { get; set; }
     }
 }
