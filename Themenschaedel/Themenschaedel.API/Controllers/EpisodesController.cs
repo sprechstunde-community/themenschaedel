@@ -23,11 +23,11 @@ namespace Themenschaedel.API.Controllers
         }
 
         [HttpGet("all")]
-        public async Task<ActionResult<EpisodeExtended>> GetAllEpisodes()
+        public async Task<ActionResult<EpisodeExtendedExtra>> GetAllEpisodes()
         {
             try
             {
-                List<EpisodeExtended> episodes = await _databaseService.GetAllEpisodesAsync();
+                List<EpisodeExtendedExtra> episodes = await _databaseService.GetAllEpisodesAsync();
 
                 if (episodes.Count == 0)
                     return NoContent();
@@ -49,6 +49,8 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
+                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+
                 EpisodeAlternateResponse episodeResponse = new EpisodeAlternateResponse();
 
                 episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page);
@@ -59,6 +61,10 @@ namespace Themenschaedel.API.Controllers
                     return NoContent();
 
                 return Ok(episodeResponse);
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
             }
             catch (Exception e)
             {
@@ -118,14 +124,14 @@ namespace Themenschaedel.API.Controllers
         }
 
         // POST api/<EpisodesController>
-        [HttpPost("verify_episode/{id}")]
+        [HttpPost("verify/{id}")]
         public async Task<IActionResult> Post(int id)
         {
             try
             {
-                if (await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
 
-                EpisodeExtended episode = await _databaseService.GetEpisodeAsync(id);
+                EpisodeExtendedExtra episode = await _databaseService.GetEpisodeAsync(id);
                 if (episode.Topic == new List<TopicExtended>())
                 {
                     return BadRequest("Episode has nothin to verify.");
@@ -133,6 +139,10 @@ namespace Themenschaedel.API.Controllers
 
                 await _databaseService.VerifyEpisode(id);
                 return Ok();
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
             }
             catch (Exception e)
             {
@@ -143,20 +153,19 @@ namespace Themenschaedel.API.Controllers
         }
 
         // DELETE api/<EpisodesController>/5
-        [HttpDelete("unverify_epsidoe/{id}")]
+        [HttpDelete("unverify/{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                if (await _authenticationService.CheckIfUserHasElivatedPermission(Request))
-                {
-                    await _databaseService.UnverifyEpisode(id);
-                    return Ok();
-                }
-                else
-                {
-                    return Unauthorized();
-                }
+                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+
+                await _databaseService.UnverifyEpisode(id);
+                return Ok();
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
             }
             catch (Exception e)
             {

@@ -57,7 +57,7 @@ namespace Themenschaedel.API.Services
         public List<Episode> GetAllEpisodes()
         {
             _logger.LogInformation($"Returning all episodes from database.");
-            var query = $"SELECT * FROM episodes ORDER BY published_at";
+            var query = $"SELECT * FROM episodes ORDER BY published_at DESC;";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = connection.Query<Episode>(query).ToList();
@@ -65,31 +65,34 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<EpisodeExtended>> GetAllEpisodesAsync()
+        public async Task<List<EpisodeExtendedExtra>> GetAllEpisodesAsync()
         {
             _logger.LogInformation($"Returning all episodes from database.");
-            var query = $"SELECT * FROM episodes ORDER BY published_at";
+            var query = $"SELECT * FROM udf_GetEpisodes();";
             using (var connection = _context.CreateConnection())
             {
-                var episodes = await connection.QueryAsync<EpisodeExtended>(query);
-                List<EpisodeExtended> episodesList = episodes.ToList();
+                var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query);
+                List<EpisodeExtendedExtra> episodesList = episodes.ToList();
                 for (int i = 0; i < episodesList.Count; i++)
                 {
-                    episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                    if (episodesList[i].Verified)
+                    {
+                        episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                    }
                     episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
                 }
                 return episodes.ToList();
             }
         }
 
-        public async Task<List<Episode>> GetEpisodesAsync(int page, int perPage)
+        public async Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage)
         {
             _logger.LogInformation($"Returning all episodes from database, page: {page} per page: {perPage}.");
             var parameters = new { Page = page, PerPage = perPage };
-            var query = $"SELECT * FROM udf_episodes_GetRowsByPageNumberAndSize(@Page, @PerPage);";
+            var query = $"SELECT * FROM udf_episodes_GetRowsByPageNumberAndSizeTesting(@Page,@PerPage);";
             using (var connection = _context.CreateConnection())
             {
-                var episodes = await connection.QueryAsync<Episode>(query, parameters);
+                var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
                 return episodes.ToList();
             }
         }
@@ -211,14 +214,14 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<EpisodeExtended> GetEpisodeAsync(int episodeId)
+        public async Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId)
         {
             _logger.LogInformation($"Returning episode with id: {episodeId}.");
             var parameters = new { epId = episodeId };
-            var query = $"SELECT * FROM episodes WHERE id=@epId LIMIT 1";
+            var query = $"SELECT * FROM udf_GetEpisodes() WHERE id=@epId LIMIT 1";
             using (var connection = _context.CreateConnection())
             {
-                EpisodeExtended episode = await connection.QuerySingleAsync<EpisodeExtended>(query, parameters);
+                EpisodeExtendedExtra episode = await connection.QuerySingleAsync<EpisodeExtendedExtra>(query, parameters);
                 if (episode.Verified)
                 {
                     episode.Topic = await GetTopicsAsync(episode.Id);
@@ -306,15 +309,15 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<EpisodeExtended>> GetEpisodeAwaitingVerificationAsync(int page, int perPage)
+        public async Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage)
         {
             _logger.LogInformation($"Returning all unverified episodes from database.");
             var parameters = new { Page = page, PerPage = perPage };
             var query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage);";
             using (var connection = _context.CreateConnection())
             {
-                var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
-                List<EpisodeExtended> episodesList = episodes.ToList();
+                var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query, parameters);
+                List<EpisodeExtendedExtra> episodesList = episodes.ToList();
                 for (int i = 0; i < episodesList.Count; i++)
                 {
                     episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
@@ -327,7 +330,7 @@ namespace Themenschaedel.API.Services
         public async Task<int> GetUnverifiedEpisodeCount()
         {
             _logger.LogInformation($"Returning current unverified episode count in databse.");
-            var query = $"SELECT COUNT(*) FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(1, 2147483647);";
+            var query = $"SELECT COUNT(*) FROM udf_GetUnverifiedEpisodes();";
             using (var connection = _context.CreateConnection())
             {
                 int episodeCount = await connection.QuerySingleAsync<int>(query);

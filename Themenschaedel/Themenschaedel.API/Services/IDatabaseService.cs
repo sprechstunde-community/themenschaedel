@@ -1,5 +1,6 @@
 ﻿using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Shared.Models.Response;
 
 namespace Themenschaedel.API.Services
 {
@@ -18,10 +19,10 @@ namespace Themenschaedel.API.Services
         public Task ClearSingleToken(string refreshToken);
 
         // Epsiodes
-        public Task<EpisodeExtended> GetEpisodeAsync(int episodeId);
-        public Task<List<Episode>> GetEpisodesAsync(int page, int perPage);
-        public Task<List<EpisodeExtended>> GetAllEpisodesAsync();
-        public Task<List<EpisodeExtended>> GetEpisodeAwaitingVerificationAsync(int page, int perPage);
+        public Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId);
+        public Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage);
+        public Task<List<EpisodeExtendedExtra>> GetAllEpisodesAsync();
+        public Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage);
         public List<Episode> GetAllEpisodes();
         public void AddEpisodes(List<Episode> episodes);
         public Task<int> GetEpisodeCount();

@@ -11,9 +11,11 @@ namespace Themenschaedel.API.Controllers
     public class TopicController : ControllerBase
     {
         private readonly IDatabaseService _databaseService;
-        public TopicController(IDatabaseService databaseService)
+        private readonly IAuthenticationService _authenticationService;
+        public TopicController(IDatabaseService databaseService, IAuthenticationService authenticationService)
         {
             _databaseService = databaseService;
+            _authenticationService = authenticationService;
         }
 
         [HttpGet("all")]
@@ -21,6 +23,8 @@ namespace Themenschaedel.API.Controllers
         {
             try
             {
+                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+
                 List<TopicExtended> episodes = await _databaseService.GetAllTopics();
 
                 if (episodes.Count == 0)

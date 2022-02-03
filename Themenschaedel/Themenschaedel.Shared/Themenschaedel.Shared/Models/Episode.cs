@@ -26,6 +26,14 @@ namespace Themenschaedel.Shared.Models
 
     public class EpisodeExtended : Episode
     {
+        public bool Claimed { get; set; }
+        public int Flags { get; set; }
+        public int Upvotes { get; set; }
+        public int Downvotes { get; set; }
+    }
+
+    public class EpisodeExtendedExtra : EpisodeExtended
+    {
         public List<TopicExtended> Topic { get; set; } = new List<TopicExtended>();
         public List<Person> Person { get; set; } = new List<Person>();
     }

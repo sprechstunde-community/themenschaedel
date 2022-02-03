@@ -1,0 +1,701 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CAUTION: Do not modify this file unless you know what you are doing.
+ Unexpected results may occur if the code is changed deliberately.
+-->
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="0,330" last-zoom="1" max-obj-count="13"
+	 default-schema="public" default-owner="postgres"
+	 layers="Default layer"
+	 active-layers="0"
+	 layer-name-colors="#000000"
+	 layer-rect-colors="#b4b4b4"
+	 show-layer-names="false" show-layer-rects="false">
+<database name="ThemenschaedelTesting" encoding="UTF8" lc-collate="German_Germany.1252" lc-ctype="German_Germany.1252" is-template="false" allow-conns="true">
+	<role name="postgres"/>
+	<tablespace name="pg_default"/>
+</database>
+
+<schema name="public" layers="0" rect-visible="true" fill-color="#e1e1e1" sql-disabled="true">
+	<prepended-sql><![CDATA[CREATE OR REPLACE FUNCTION udf_episodes_GetRowsByPageNumberAndSize(
+ PageNumber INTEGER = NULL,
+ PageSize INTEGER = NULL
+ )
+ RETURNS SETOF public.episodes AS
+ $BODY$
+ DECLARE
+  PageOffset INTEGER :=0;
+ BEGIN
+
+  PageOffset := ((PageNumber-1) * PageSize);
+
+  RETURN QUERY
+   SELECT *
+   FROM public.episodes
+   ORDER BY published_at DESC
+   LIMIT PageSize
+   OFFSET PageOffset;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION udf_episodes_unverified_GetRowsByPageNumberAndSize(
+ PageNumber INTEGER = NULL,
+ PageSize INTEGER = NULL
+ )
+ RETURNS SETOF public.episodes AS
+ $BODY$
+ DECLARE
+  PageOffset INTEGER :=0;
+ BEGIN
+
+  PageOffset := ((PageNumber-1) * PageSize);
+
+  RETURN QUERY
+   SELECT DISTINCT a.*
+   FROM public.episodes a
+   INNER JOIN public.topic b ON b.id_episodes = a.id
+   WHERE a.verified=false
+   ORDER BY a.updated_at DESC
+   LIMIT PageSize
+   OFFSET PageOffset;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION udf_GetEpisodesByPageNumberAndSize(
+ PageNumber INTEGER = NULL,
+ PageSize INTEGER = NULL
+ )
+   RETURNS TABLE (id integer,
+	uuid character varying,
+	title character varying,
+	episode_number bigint,
+	subtitle character varying,
+	description character varying,
+	media_file character varying,
+	spotify_file character varying,
+	duration integer,
+	type character varying,
+	image character varying,
+	explicit boolean,
+	verified boolean,
+	published_at timestamp,
+	created_at timestamp,
+	updated_at timestamp,
+	flags bigint,
+	upvotes bigint,
+	downvotes bigint,
+	claimed boolean)
+  LANGUAGE plpgsql AS
+$BODY$
+ DECLARE
+  PageOffset INTEGER :=0;
+ BEGIN
+
+  PageOffset := ((PageNumber-1) * PageSize);
+
+  RETURN QUERY
+    SELECT a.*,
+           (SELECT COUNT(*) FROM flags f WHERE f.id_episodes  = a.id) AS flags,
+           (SELECT COUNT(CASE WHEN positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS upvotes,
+           (SELECT COUNT(CASE WHEN NOT positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS downvotes,
+           CASE WHEN b.id IS NOT NULL THEN true else false END claimed
+    FROM episodes a
+    LEFT JOIN claims b on a.id = b.id_episodes
+    ORDER BY a.published_at DESC
+    LIMIT PageSize
+    OFFSET PageOffset;
+END;
+$BODY$;
+]]></prepended-sql>
+</schema>
+
+<table name="episodes" layers="0" collapse-mode="2" max-obj-count="19" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="140" y="680"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="uuid">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="title">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="episode_number">
+		<type name="bigint" length="0"/>
+	</column>
+	<column name="subtitle">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="description">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="media_file">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="spotify_file">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="duration">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="type">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="image">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="explicit">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="verified">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="published_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="episodes_pk" type="pk-constr" table="public.episodes">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="episodes_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="topic" layers="0" collapse-mode="2" max-obj-count="13" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="480" y="200"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="name">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="timestamp_start">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="timestamp_end">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="duration">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="community_contributed">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="ad">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="id_episodes">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="id_user">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="topic_pk" type="pk-constr" table="public.topic">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="topic_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="subtopics" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="880" y="80"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="name">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="id_topic">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="id_user">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="subtopics_pk" type="pk-constr" table="public.subtopics">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="subtopics_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="users" layers="0" collapse-mode="2" max-obj-count="14" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1340" y="180"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="uuid">
+		<type name="varchar" length="32"/>
+	</column>
+	<column name="username">
+		<type name="varchar" length="30"/>
+	</column>
+	<column name="description">
+		<type name="text" length="40"/>
+	</column>
+	<column name="email">
+		<type name="varchar" length="65"/>
+	</column>
+	<column name="email_verification_id">
+		<type name="varchar" length="64"/>
+	</column>
+	<column name="email_verified_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="password">
+		<type name="varchar" length="500"/>
+	</column>
+	<column name="salt">
+		<type name="bytea" length="500"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="user_pk" type="pk-constr" table="public.users">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="user_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="claims" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1360" y="540"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="claimed_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="id_user">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="id_episodes">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="claims_pk" type="pk-constr" table="public.claims">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="unique_user" type="uq-constr" table="public.claims">
+		<columns names="id_user" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="unique_episode" type="uq-constr" table="public.claims">
+		<columns names="id_episodes" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="claims_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="votes" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="840" y="460"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="positive">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="id_episodes">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="id_user">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="votes_pk" type="pk-constr" table="public.votes">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="user_only_one_vote_constraint" type="uq-constr" table="public.votes">
+		<columns names="id_episodes,id_user" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="votes_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="flags" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="560" y="980"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="reason">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="flags_pk" type="pk-constr" table="public.flags">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_episodes" index="4"/>
+		<object name="id_users" index="5"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="episodes_fk" index="1"/>
+		<object name="users_fk" index="2"/>
+	</customidxs>
+</table>
+
+<sequence name="flags_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="person" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1300" y="820"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="name" not-null="true">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="host">
+		<type name="boolean" length="0"/>
+	</column>
+	<column name="description">
+		<type name="character varying" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="person_pk" type="pk-constr" table="public.person">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="person_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="episode_person" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="960" y="800"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="updated_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="id_person">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="id_episodes">
+		<type name="integer" length="0"/>
+	</column>
+	<constraint name="episode_person_pk" type="pk-constr" table="public.episode_person">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<sequence name="episode_person_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
+	<schema name="public"/>
+	<role name="postgres"/>
+</sequence>
+
+<table name="token" layers="0" collapse-mode="2" max-obj-count="4" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1720" y="260"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="value">
+		<type name="varchar" length="512"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="token_pk" type="pk-constr" table="public.token">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_users" index="3"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="users_fk" index="1"/>
+	</customidxs>
+</table>
+
+<relationship name="users_has_many_token" type="rel1n" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#83af1f"
+	 src-table="public.users"
+	 dst-table="public.token"
+	 src-required="false" dst-required="false"/>
+
+<table name="roles" layers="0" collapse-mode="2" max-obj-count="2" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1720" y="60"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="name">
+		<type name="varchar" length="64"/>
+	</column>
+	<constraint name="roles_pk" type="pk-constr" table="public.roles">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+	<initial-data>
+<![CDATA[id•name⸣
+•User⸣
+•Verified User⸣
+•Froid⸣
+•Moderator⸣
+•Admin]]>
+	</initial-data>
+</table>
+
+<relationship name="roles_has_many_users" type="rel1n" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#83af1f"
+	 src-table="public.roles"
+	 dst-table="public.users"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="episodes_has_many_flags" type="rel1n" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#83af1f"
+	 src-table="public.episodes"
+	 dst-table="public.flags"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="users_has_many_flags" type="rel1n" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#83af1f"
+	 src-table="public.users"
+	 dst-table="public.flags"
+	 src-required="false" dst-required="false"/>
+
+<constraint name="unique_combined_episode_user" type="uq-constr" table="public.flags">
+	<columns names="id_episodes,id_users" ref-type="src-columns"/>
+</constraint>
+
+<constraint name="episodes_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.episodes" table="public.topic">
+	<columns names="id_episodes" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="user_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.users" table="public.topic">
+	<columns names="id_user" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="topic_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.topic" table="public.subtopics">
+	<columns names="id_topic" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="user_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.users" table="public.subtopics">
+	<columns names="id_user" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="user_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.users" table="public.claims">
+	<columns names="id_user" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="episodes_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.episodes" table="public.claims">
+	<columns names="id_episodes" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="episodes_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.episodes" table="public.votes">
+	<columns names="id_episodes" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="user_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.users" table="public.votes">
+	<columns names="id_user" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="person_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.person" table="public.episode_person">
+	<columns names="id_person" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<constraint name="episodes_fk" type="fk-constr" comparison-type="MATCH FULL"
+	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.episodes" table="public.episode_person">
+	<columns names="id_episodes" ref-type="src-columns"/>
+	<columns names="id" ref-type="dst-columns"/>
+</constraint>
+
+<relationship name="rel_topic_episodes" type="relfk" layers="0"
+	 custom-color="#5aa578"
+	 src-table="public.topic"
+	 dst-table="public.episodes" reference-fk="episodes_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_topic_user" type="relfk" layers="0"
+	 custom-color="#4b3e56"
+	 src-table="public.topic"
+	 dst-table="public.users" reference-fk="user_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_subtopics_topic" type="relfk" layers="0"
+	 custom-color="#9ac721"
+	 src-table="public.subtopics"
+	 dst-table="public.topic" reference-fk="topic_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_subtopics_user" type="relfk" layers="0"
+	 custom-color="#249b49"
+	 src-table="public.subtopics"
+	 dst-table="public.users" reference-fk="user_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_claims_user" type="relfk" layers="0"
+	 custom-color="#942665"
+	 src-table="public.claims"
+	 dst-table="public.users" reference-fk="user_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_claims_episodes" type="relfk" layers="0"
+	 custom-color="#abb258"
+	 src-table="public.claims"
+	 dst-table="public.episodes" reference-fk="episodes_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_votes_episodes" type="relfk" layers="0"
+	 custom-color="#94e1e5"
+	 src-table="public.votes"
+	 dst-table="public.episodes" reference-fk="episodes_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_votes_user" type="relfk" layers="0"
+	 custom-color="#a239f5"
+	 src-table="public.votes"
+	 dst-table="public.users" reference-fk="user_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_episode_person_person" type="relfk" layers="0"
+	 custom-color="#87ec86"
+	 src-table="public.episode_person"
+	 dst-table="public.person" reference-fk="person_fk"
+	 src-required="false" dst-required="false"/>
+
+<relationship name="rel_episode_person_episodes" type="relfk" layers="0"
+	 custom-color="#63e1f3"
+	 src-table="public.episode_person"
+	 dst-table="public.episodes" reference-fk="episodes_fk"
+	 src-required="false" dst-required="false"/>
+
+<permission>
+	<object name="public" type="schema"/>
+	<roles names="postgres"/>
+	<privileges create="true" usage="true"/>
+</permission>
+<permission>
+	<object name="public" type="schema"/>
+	<privileges create="true" usage="true"/>
+</permission>
+</dbmodel>

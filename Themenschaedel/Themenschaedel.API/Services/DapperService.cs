@@ -1,5 +1,8 @@
-﻿using System.Data;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
+using Dapper;
 using Npgsql;
+using Themenschaedel.Shared.Models;
 
 namespace Themenschaedel.API.Services
 {
@@ -15,6 +18,16 @@ namespace Themenschaedel.API.Services
             string connectionStringPassword = _configuration["Database:LocalPassword"];
             _connectionString = $"{connectionStringUser}{connectionStringPassword}{connectionStringRaw}";
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+            Dapper.SqlMapper.SetTypeMap(
+                typeof(User),
+                new CustomPropertyTypeMap(
+                    typeof(User),
+                    (type, columnName) =>
+                        type.GetProperties().FirstOrDefault(prop =>
+                            prop.GetCustomAttributes(false)
+                                .OfType<ColumnAttribute>()
+                                .Any(attr => attr.Name == columnName))));
         }
         public IDbConnection CreateConnection()
             => new NpgsqlConnection(_connectionString);

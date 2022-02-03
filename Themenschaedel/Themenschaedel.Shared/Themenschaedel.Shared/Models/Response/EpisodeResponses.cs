@@ -8,7 +8,7 @@ namespace Themenschaedel.Shared.Models.Response
     public class EpisodeResponse
     {
         [JsonPropertyName("data")]
-        public List<Episode> Data { get; set; } = new List<Episode>();
+        public List<EpisodeExtended> Data { get; set; } = new List<EpisodeExtended>();
 
         [JsonPropertyName("meta")] public Meta Meta { get; set; } = new Meta();
     }
@@ -16,7 +16,7 @@ namespace Themenschaedel.Shared.Models.Response
     public class EpisodeAlternateResponse
     {
         [JsonPropertyName("data")]
-        public List<EpisodeExtended> Data { get; set; } = new List<EpisodeExtended>();
+        public List<EpisodeExtendedExtra> Data { get; set; } = new List<EpisodeExtendedExtra>();
 
         [JsonPropertyName("meta")] public Meta Meta { get; set; } = new Meta();
     }
