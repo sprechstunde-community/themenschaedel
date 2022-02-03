@@ -14,10 +14,12 @@ namespace Themenschaedel.API.Controllers
     {
         private readonly IDatabaseService _databaseService;
         private readonly ILogger<EpisodesController> _logger;
-        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger)
+        private readonly IAuthenticationService _authenticationService;
+        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger, IAuthenticationService authenticationService)
         {
             _databaseService = databaseService;
             _logger = logger;
+            _authenticationService = authenticationService;
         }
 
         [HttpGet("all")]
@@ -76,7 +78,7 @@ namespace Themenschaedel.API.Controllers
             {
                 EpisodeResponse episodeResponse = new EpisodeResponse();
 
-                episodeResponse.Data =  await _databaseService.GetEpisodesAsync(page, per_page);
+                episodeResponse.Data = await _databaseService.GetEpisodesAsync(page, per_page);
                 episodeResponse.Meta.EpisodeCount = await _databaseService.GetEpisodeCount();
                 episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
 
@@ -121,6 +123,8 @@ namespace Themenschaedel.API.Controllers
         {
             try
             {
+                if (await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+
                 EpisodeExtended episode = await _databaseService.GetEpisodeAsync(id);
                 if (episode.Topic == new List<TopicExtended>())
                 {
@@ -144,8 +148,15 @@ namespace Themenschaedel.API.Controllers
         {
             try
             {
-                await _databaseService.UnverifyEpisode(id);
-                return Ok();
+                if (await _authenticationService.CheckIfUserHasElivatedPermission(Request))
+                {
+                    await _databaseService.UnverifyEpisode(id);
+                    return Ok();
+                }
+                else
+                {
+                    return Unauthorized();
+                }
             }
             catch (Exception e)
             {

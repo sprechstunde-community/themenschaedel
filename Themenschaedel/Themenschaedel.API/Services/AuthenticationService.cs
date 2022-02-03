@@ -316,5 +316,36 @@ namespace Themenschaedel.API.Services
                 throw new TokenDoesNotExistException();
             }
         }
+
+        public async Task<User> GetUserFromValidToken(HttpRequest request)
+        {
+            var authorization = request.Headers[HeaderNames.Authorization];
+            string token = null;
+
+            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {
+                var scheme = headerValue.Scheme;
+                token = headerValue.Parameter;
+            }
+
+            TokenCache cachedToken = CheckForValidTokenByToken(token);
+
+            bool tokenValid = cachedToken != null;
+
+            if (tokenValid)
+            {
+                return cachedToken.User;
+            }
+            else
+            {
+                throw new TokenDoesNotExistException();
+            }
+        }
+
+        public async Task<bool> CheckIfUserHasElivatedPermission(HttpRequest request)
+        {
+            User user = await GetUserFromValidToken(request);
+            return RoleMisc.UserHasElevatedPermission(user.RolesId);
+        }
     }
 }

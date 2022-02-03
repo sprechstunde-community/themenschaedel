@@ -66,5 +66,18 @@ namespace Themenschaedel.Shared.Models
                     return UserRole.RegularUser;
             }
         }
+
+        public static bool UserHasElevatedPermission(int roleId)
+        {
+            switch (roleId)
+            {
+                case 4:
+                    return true;
+                case 5:
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 }
