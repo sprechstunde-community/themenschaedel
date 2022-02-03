@@ -45,4 +45,26 @@ namespace Themenschaedel.Shared.Models
             }
         }
     }
+
+    public static class RoleMisc
+    {
+        public static UserRole GetUserRoleByRoleId(int roleId)
+        {
+            switch (roleId)
+            {
+                case 1:
+                    return UserRole.RegularUser;
+                case 2:
+                    return UserRole.VerifiedUser;
+                case 3:
+                    return UserRole.Froid;
+                case 4:
+                    return UserRole.Moderator;
+                case 5:
+                    return UserRole.Admin;
+                default:
+                    return UserRole.RegularUser;
+            }
+        }
+    }
 }

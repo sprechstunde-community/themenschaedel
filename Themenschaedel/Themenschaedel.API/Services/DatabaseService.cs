@@ -76,6 +76,7 @@ namespace Themenschaedel.API.Services
                 for (int i = 0; i < episodesList.Count; i++)
                 {
                     episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                    episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
                 }
                 return episodes.ToList();
             }
@@ -317,6 +318,7 @@ namespace Themenschaedel.API.Services
                 for (int i = 0; i < episodesList.Count; i++)
                 {
                     episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                    episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
                 }
                 return episodes.ToList();
             }
@@ -330,6 +332,50 @@ namespace Themenschaedel.API.Services
             {
                 int episodeCount = await connection.QuerySingleAsync<int>(query);
                 return episodeCount;
+            }
+        }
+
+        public async Task<List<Person>> GetPeopleFeaturedInEpisodeByEpisodeId(int episodeId)
+        {
+            _logger.LogInformation($"Returning all people featured in episode, by episode id. Episode ID: {episodeId}.");
+            var parameters = new { epId = episodeId };
+            var query = $"SELECT c.* FROM episodes a " +
+                        $"LEFT JOIN episode_person b ON b.id_episodes = a.id " +
+                        $"LEFT JOIN person c ON c.id = b.id_person " +
+                        $"WHERE a.id = @epId;";
+            using (var connection = _context.CreateConnection())
+            {
+                var people = await connection.QueryAsync<Person>(query, parameters);
+                return people.ToList();
+            }
+        }
+
+        public async Task<bool> CheckIfEpisodeIsClaimedByEpisodeId(int episodeId)
+        {
+            _logger.LogInformation($"Returning claim status for episode id: {episodeId}.");
+            var parameters = new { epId = episodeId };
+            var query = $"SELECT COUNT(b.*) FROM episodes a " +
+                        $"LEFT JOIN claims b ON b.id_episodes = a.id " +
+                        $"WHERE a.id = @epId;";
+            using (var connection = _context.CreateConnection())
+            {
+                int episodeClaimCount = await connection.QuerySingleAsync<int>(query, parameters);
+                return episodeClaimCount == 1;
+            }
+        }
+
+        public async Task<UserMinimal> GetUserFromClaimByEpisodeId(int episodeId)
+        {
+            _logger.LogInformation($"Returning all people featured in episode, by episode id. Episode ID: {episodeId}.");
+            var parameters = new { epId = episodeId };
+            var query = $"SELECT c.* FROM episodes a " +
+                        $"LEFT JOIN episode_person b ON b.id_episodes = a.id " +
+                        $"LEFT JOIN users c ON c.id = b.id_user " +
+                        $"WHERE a.id = @epId;";
+            using (var connection = _context.CreateConnection())
+            {
+                var singleUser = await connection.QuerySingleAsync<UserMinimal>(query, parameters);
+                return singleUser;
             }
         }
     }

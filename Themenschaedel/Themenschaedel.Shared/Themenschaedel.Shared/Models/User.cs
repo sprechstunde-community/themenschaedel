@@ -19,4 +19,19 @@ namespace Themenschaedel.Shared.Models
         public DateTime UpdatedAt { get; set; }
         public int RolesId { get; set; }
     }
+
+    public class UserMinimal
+    {
+        public string UUID { get; set; }
+        public string Username { get; set; }
+        public int RolesId { get; set; }
+
+        public UserRole Role
+        {
+            get
+            {
+                return RoleMisc.GetUserRoleByRoleId(RolesId);
+            }
+        }
+    }
 }

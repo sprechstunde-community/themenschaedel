@@ -35,5 +35,12 @@ namespace Themenschaedel.API.Services
 
         // Subtopics
         public Task<List<Subtopic>> GetSubtopicsAsync(int topicId);
+
+        // Person
+        public Task<List<Person>> GetPeopleFeaturedInEpisodeByEpisodeId(int episodeId);
+
+        // Claims
+        public Task<bool> CheckIfEpisodeIsClaimedByEpisodeId(int episodeId);
+        public Task<UserMinimal> GetUserFromClaimByEpisodeId(int episodeId);
     }
 }
