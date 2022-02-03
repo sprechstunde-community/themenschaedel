@@ -2,6 +2,7 @@
 using Sentry;
 using Themenschaedel.API.Services;
 using Themenschaedel.Shared.Models;
+using Themenschaedel.Shared.Models.Response;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -12,11 +13,13 @@ namespace Themenschaedel.API.Controllers
     public class EpisodesController : ControllerBase
     {
         private readonly IDatabaseService _databaseService;
-        public EpisodesController(IDatabaseService databaseService)
+        private readonly ILogger<EpisodesController> _logger;
+        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger)
         {
             _databaseService = databaseService;
+            _logger = logger;
         }
-        
+
         [HttpGet("all")]
         public async Task<ActionResult<EpisodeExtended>> GetAllEpisodes()
         {
@@ -32,29 +35,61 @@ namespace Themenschaedel.API.Controllers
             catch (Exception e)
             {
                 SentrySdk.CaptureException(e);
-                return StatusCode(500, e.Message);
+                _logger.LogError(e.Message);
+                return Problem();
             }
         }
 
-        // GET: api/<EpisodesController>
-        [HttpGet]
-        public async Task<ActionResult<Episode>> GetEpisodes(int page, int per_page)
+        [HttpGet("all/unverified")]
+        public async Task<ActionResult<EpisodeAlternateResponse>> GetUnverifiedAllEpisodes(int page, int per_page)
         {
             if (page == 0) page = 1;
 
             try
             {
-                List<Episode> episodes = await _databaseService.GetEpisodesAsync(page, per_page);
+                EpisodeAlternateResponse episodeResponse = new EpisodeAlternateResponse();
 
-                if (episodes.Count == 0)
+                episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page);
+                episodeResponse.Meta.EpisodeCount = await _databaseService.GetUnverifiedEpisodeCount();
+                episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
+
+                if (episodeResponse.Data.Count == 0)
                     return NoContent();
 
-                return Ok(episodes);
+                return Ok(episodeResponse);
             }
             catch (Exception e)
             {
                 SentrySdk.CaptureException(e);
-                return StatusCode(500, e.Message);
+                _logger.LogError(e.Message);
+                return Problem();
+            }
+        }
+
+        // GET: api/<EpisodesController>
+        [HttpGet]
+        public async Task<ActionResult<EpisodeResponse>> GetEpisodes(int page, int per_page)
+        {
+            if (page == 0) page = 1;
+
+            try
+            {
+                EpisodeResponse episodeResponse = new EpisodeResponse();
+
+                episodeResponse.Data =  await _databaseService.GetEpisodesAsync(page, per_page);
+                episodeResponse.Meta.EpisodeCount = await _databaseService.GetEpisodeCount();
+                episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
+
+                if (episodeResponse.Data.Count == 0)
+                    return NoContent();
+
+                return Ok(episodeResponse);
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError(e.Message);
+                return Problem();
             }
         }
 
@@ -75,20 +110,49 @@ namespace Themenschaedel.API.Controllers
             catch (Exception e)
             {
                 SentrySdk.CaptureException(e);
-                return StatusCode(500, e.Message);
+                _logger.LogError(e.Message);
+                return Problem();
             }
         }
 
         // POST api/<EpisodesController>
         [HttpPost("verify_episode/{id}")]
-        public void Post(int id)
+        public async Task<IActionResult> Post(int id)
         {
+            try
+            {
+                EpisodeExtended episode = await _databaseService.GetEpisodeAsync(id);
+                if (episode.Topic == new List<TopicExtended>())
+                {
+                    return BadRequest("Episode has nothin to verify.");
+                }
+
+                await _databaseService.VerifyEpisode(id);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError(e.Message);
+                return Problem();
+            }
         }
 
         // DELETE api/<EpisodesController>/5
         [HttpDelete("unverify_epsidoe/{id}")]
-        public void Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
+            try
+            {
+                await _databaseService.UnverifyEpisode(id);
+                return Ok();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError(e.Message);
+                return Problem();
+            }
         }
     }
 }

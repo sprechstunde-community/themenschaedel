@@ -13,5 +13,7 @@ namespace Themenschaedel.API.Services
         public Task<bool> VerifyEmailAsync(string verificationId);
         public Task<Token> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest);
         public bool IsTokenValid(string token);
+        public bool IsTokenValid(HttpRequest request);
+        public string GetValidToken(HttpRequest request);
     }
 }

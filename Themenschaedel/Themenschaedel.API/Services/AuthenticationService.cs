@@ -1,6 +1,8 @@
-﻿using System.Security.Cryptography;
+﻿using System.Net.Http.Headers;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.Net.Http.Headers;
 using Sentry;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
@@ -274,6 +276,45 @@ namespace Themenschaedel.API.Services
         public bool IsTokenValid(string token)
         {
             return CheckForValidTokenByToken(token) != null;
+        }
+
+        public bool IsTokenValid(HttpRequest request)
+        {
+            var authorization = request.Headers[HeaderNames.Authorization];
+            string token = null;
+
+            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {
+                var scheme = headerValue.Scheme;
+                token = headerValue.Parameter;
+            }
+
+            return CheckForValidTokenByToken(token) != null;
+        }
+
+        public string GetValidToken(HttpRequest request)
+        {
+            var authorization = request.Headers[HeaderNames.Authorization];
+            string token = null;
+
+            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {
+                var scheme = headerValue.Scheme;
+                token = headerValue.Parameter;
+            }
+
+            TokenCache cachedToken = CheckForValidTokenByToken(token);
+
+            bool tokenValid = cachedToken != null;
+
+            if (tokenValid)
+            {
+                return cachedToken.Value;
+            }
+            else
+            {
+                throw new TokenDoesNotExistException();
+            }
         }
     }
 }

@@ -29,16 +29,16 @@ namespace Themenschaedel.API.Controllers
         [HttpDelete("logout")]
         public async Task<IActionResult> Delete()
         {
-            var authorization = Request.Headers[HeaderNames.Authorization];
             string token = null;
 
-            if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            try
             {
-                var scheme = headerValue.Scheme;
-                token = headerValue.Parameter;
+                token = _authenticationService.GetValidToken(Request);
             }
-
-            if (token == null) return Unauthorized();
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
 
             bool logoutWorked = false;
             try
