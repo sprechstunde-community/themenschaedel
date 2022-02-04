@@ -32,7 +32,8 @@ namespace Themenschaedel.API.Services
 
         // Topics
         public Task<List<TopicExtended>> GetTopicsAsync(int episodeId);
-        public Task<List<TopicExtended>> GetAllTopics();
+        public Task<List<Topic>> GetAllTopicsSimpleAsync();
+        public Task<List<TopicExtended>> GetAllTopicsAsync();
 
         // Subtopics
         public Task<List<Subtopic>> GetSubtopicsAsync(int topicId);
@@ -43,5 +44,8 @@ namespace Themenschaedel.API.Services
         // Claims
         public Task<bool> CheckIfEpisodeIsClaimedByEpisodeId(int episodeId);
         public Task<UserMinimal> GetUserFromClaimByEpisodeId(int episodeId);
+        public Task ClaimEpisode(int episodeId);
+        public Task<List<Claim>> GetAllExpiredClaims();
+        public Task ClearAllExpiredClaims();
     }
 }

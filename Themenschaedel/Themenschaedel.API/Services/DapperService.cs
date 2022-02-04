@@ -19,10 +19,44 @@ namespace Themenschaedel.API.Services
             _connectionString = $"{connectionStringUser}{connectionStringPassword}{connectionStringRaw}";
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
 
+            // Add support for custom column attribute for User Property Class
             Dapper.SqlMapper.SetTypeMap(
                 typeof(User),
                 new CustomPropertyTypeMap(
                     typeof(User),
+                    (type, columnName) =>
+                        type.GetProperties().FirstOrDefault(prop =>
+                            prop.GetCustomAttributes(false)
+                                .OfType<ColumnAttribute>()
+                                .Any(attr => attr.Name == columnName))));
+
+            // Add support for custom column attribute for Topic Property Class
+            Dapper.SqlMapper.SetTypeMap(
+                typeof(Topic),
+                new CustomPropertyTypeMap(
+                    typeof(Topic),
+                    (type, columnName) =>
+                        type.GetProperties().FirstOrDefault(prop =>
+                            prop.GetCustomAttributes(false)
+                                .OfType<ColumnAttribute>()
+                                .Any(attr => attr.Name == columnName))));
+
+            // Add support for custom column attribute for Subtopic Property Class
+            Dapper.SqlMapper.SetTypeMap(
+                typeof(Topic),
+                new CustomPropertyTypeMap(
+                    typeof(Topic),
+                    (type, columnName) =>
+                        type.GetProperties().FirstOrDefault(prop =>
+                            prop.GetCustomAttributes(false)
+                                .OfType<ColumnAttribute>()
+                                .Any(attr => attr.Name == columnName))));
+
+            // Add support for custom column attribute for Claim Property Class
+            Dapper.SqlMapper.SetTypeMap(
+                typeof(Claim),
+                new CustomPropertyTypeMap(
+                    typeof(Claim),
                     (type, columnName) =>
                         type.GetProperties().FirstOrDefault(prop =>
                             prop.GetCustomAttributes(false)

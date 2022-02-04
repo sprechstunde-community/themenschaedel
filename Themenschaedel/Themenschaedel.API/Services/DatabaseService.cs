@@ -73,11 +73,21 @@ namespace Themenschaedel.API.Services
             {
                 var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query);
                 List<EpisodeExtendedExtra> episodesList = episodes.ToList();
+                List<Topic> topics = await GetAllTopicsSimpleAsync();
+                List<Subtopic> subtopics = await GetAllSubtopicsAsync();
                 for (int i = 0; i < episodesList.Count; i++)
                 {
                     if (episodesList[i].Verified)
                     {
-                        episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                        List<Topic> foundTopics = topics.FindAll(x => x.EpisodeId == episodesList[i].Id);
+                        List<TopicExtended> topicsToAdd = new List<TopicExtended>();
+                        for (int j = 0; j < foundTopics.Count; j++)
+                        {
+                            List<Subtopic> subtopicsToAdd = subtopics.FindAll(x => x.TopicId == foundTopics[j].Id);
+                            topicsToAdd.Add(new TopicExtended(foundTopics[j], subtopicsToAdd));
+                        }
+
+                        episodesList[i].Topic = topicsToAdd;
                     }
                     episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
                 }
@@ -226,6 +236,7 @@ namespace Themenschaedel.API.Services
                 {
                     episode.Topic = await GetTopicsAsync(episode.Id);
                 }
+                episode.Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episode.Id);
                 return episode;
             }
         }
@@ -259,19 +270,25 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<TopicExtended>> GetAllTopics()
+        public async Task<List<Subtopic>> GetAllSubtopicsAsync()
         {
-            _logger.LogInformation($"Returning all topic from database.");
-            var query = $"SELECT * FROM topic ORDER BY id_episodes";
+            _logger.LogInformation($"Returning all subtopics from the database.");
+            var query = $"SELECT * FROM subtopics;";
             using (var connection = _context.CreateConnection())
             {
-                var topics = await connection.QueryAsync<TopicExtended>(query);
-                List<TopicExtended> topicsList = topics.ToList();
-                if (topicsList.Count == 0) throw new EmptyDatabaseListReturnException();
-                for (int i = 0; i < topicsList.Count; i++)
-                {
-                    topicsList[i].Subtopic = await GetSubtopicsAsync(topicsList[i].Id);
-                }
+                var subtopics = await connection.QueryAsync<Subtopic>(query);
+                return subtopics.ToList();
+            }
+        }
+
+        public async Task<List<Topic>> GetAllTopicsSimpleAsync()
+        {
+            _logger.LogInformation($"Returning all topic from database.");
+            var query = $"SELECT * FROM topic ORDER BY id_episodes;";
+            using (var connection = _context.CreateConnection())
+            {
+                var topics = await connection.QueryAsync<Topic>(query);
+                List<Topic> topicsList = topics.ToList();
                 return topicsList;
             }
         }
@@ -318,9 +335,19 @@ namespace Themenschaedel.API.Services
             {
                 var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query, parameters);
                 List<EpisodeExtendedExtra> episodesList = episodes.ToList();
+                List<Topic> topics = await GetAllTopicsSimpleAsync();
+                List<Subtopic> subtopics = await GetAllSubtopicsAsync();
                 for (int i = 0; i < episodesList.Count; i++)
                 {
-                    episodesList[i].Topic = await GetTopicsAsync(episodesList[i].Id);
+                    List<Topic> foundTopics = topics.FindAll(x => x.EpisodeId == episodesList[i].Id);
+                    List<TopicExtended> topicsToAdd = new List<TopicExtended>();
+                    for (int j = 0; j < foundTopics.Count; j++)
+                    {
+                        List<Subtopic> subtopicsToAdd = subtopics.FindAll(x => x.TopicId == foundTopics[j].Id);
+                        topicsToAdd.Add(new TopicExtended(foundTopics[j], subtopicsToAdd));
+                    }
+                    episodesList[i].Topic = topicsToAdd;
+
                     episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
                 }
                 return episodes.ToList();
@@ -349,6 +376,9 @@ namespace Themenschaedel.API.Services
             using (var connection = _context.CreateConnection())
             {
                 var people = await connection.QueryAsync<Person>(query, parameters);
+                List<Person> peopleList = people.ToList();
+                if (peopleList.Count == 0) return null;
+                if (peopleList[0].Id == 0) return null;
                 return people.ToList();
             }
         }
@@ -380,6 +410,38 @@ namespace Themenschaedel.API.Services
                 var singleUser = await connection.QuerySingleAsync<UserMinimal>(query, parameters);
                 return singleUser;
             }
+        }
+
+        public async Task<List<TopicExtended>> GetAllTopicsAsync()
+        {
+            _logger.LogInformation($"Returning all topic from database.");
+            var query = $"SELECT * FROM topic ORDER BY id_episodes;";
+            List<Subtopic> subtopics = await GetAllSubtopicsAsync();
+            using (var connection = _context.CreateConnection())
+            {
+                var topics = await connection.QueryAsync<TopicExtended>(query);
+                List<TopicExtended> topicsList = topics.ToList();
+                for (int i = 0; i < topicsList.Count; i++)
+                {
+                    topicsList[i].Subtopic = subtopics.FindAll(x => x.TopicId == topicsList[i].Id);
+                }
+                return topicsList;
+            }
+        }
+
+        public async Task ClaimEpisode(int episodeId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<Claim>> GetAllExpiredClaims()
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task ClearAllExpiredClaims()
+        {
+            throw new NotImplementedException();
         }
     }
 

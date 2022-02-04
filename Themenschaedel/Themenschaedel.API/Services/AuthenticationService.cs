@@ -317,6 +317,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
+        /// <summary>
+        /// Return user object from a valid token. This method only checks the local Token Cache.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>User object</returns>
+        /// <exception cref="TokenDoesNotExistException"></exception>
         public async Task<User> GetUserFromValidToken(HttpRequest request)
         {
             var authorization = request.Headers[HeaderNames.Authorization];
@@ -342,6 +348,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
+        /// <summary>
+        /// Wrapper to check if the user has elivated Permissions (Moderator or Admin role).
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>True/False</returns>
+        /// <exception cref="TokenDoesNotExistException"></exception>
         public async Task<bool> CheckIfUserHasElivatedPermission(HttpRequest request)
         {
             User user = await GetUserFromValidToken(request);
