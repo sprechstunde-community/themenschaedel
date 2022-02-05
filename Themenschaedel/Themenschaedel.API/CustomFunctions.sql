@@ -7,9 +7,9 @@
 -- Database creation must be performed outside a multi lined SQL file. 
 -- These commands were put in this file only as a convenience.
 -- 
--- object: "Themenarchiv" | type: DATABASE --
--- DROP DATABASE IF EXISTS "Themenarchiv";
-CREATE DATABASE "Themenarchiv"
+-- object: "ThemenschaedelTesting" | type: DATABASE --
+-- DROP DATABASE IF EXISTS "ThemenschaedelTesting";
+CREATE DATABASE "ThemenschaedelTesting"
 	ENCODING = 'UTF8'
 	LC_COLLATE = 'German_Germany.1252'
 	LC_CTYPE = 'German_Germany.1252'
@@ -61,7 +61,7 @@ ALTER TABLE public.episodes OWNER TO postgres;
 -- object: public.topic | type: TABLE --
 -- DROP TABLE IF EXISTS public.topic CASCADE;
 CREATE TABLE public.topic (
-	id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1 ),
+	id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	name character varying,
 	timestamp_start integer,
 	timestamp_end integer,
@@ -96,11 +96,11 @@ ALTER TABLE public.topic OWNER TO postgres;
 -- object: public.subtopics | type: TABLE --
 -- DROP TABLE IF EXISTS public.subtopics CASCADE;
 CREATE TABLE public.subtopics (
-	id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1 ),
+	id bigint NOT NULL GENERATED ALWAYS AS IDENTITY ,
 	name character varying,
 	created_at timestamp,
 	updated_at timestamp,
-	id_topic integer,
+	id_topic bigint,
 	id_user integer,
 	CONSTRAINT subtopics_pk PRIMARY KEY (id)
 );
@@ -462,6 +462,9 @@ GRANT CREATE,USAGE
    ON SCHEMA public
    TO PUBLIC;
 -- ddl-end --
+
+
+
 
 
 

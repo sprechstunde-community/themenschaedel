@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="732,17" last-zoom="1" max-obj-count="13"
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="421,0" last-zoom="1" max-obj-count="13"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -225,8 +225,8 @@ LANGUAGE plpgsql;]]></prepended-sql>
 	<role name="postgres"/>
 	<position x="480" y="200"/>
 	<column name="id" not-null="true"
-	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
-		<type name="integer" length="0"/>
+	 identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
 	</column>
 	<column name="name">
 		<type name="character varying" length="0"/>
@@ -273,8 +273,8 @@ LANGUAGE plpgsql;]]></prepended-sql>
 	<role name="postgres"/>
 	<position x="880" y="80"/>
 	<column name="id" not-null="true"
-	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
-		<type name="integer" length="0"/>
+	 identity-type="ALWAYS">
+		<type name="bigint" length="0"/>
 	</column>
 	<column name="name">
 		<type name="character varying" length="0"/>
@@ -286,7 +286,7 @@ LANGUAGE plpgsql;]]></prepended-sql>
 		<type name="timestamp" length="0"/>
 	</column>
 	<column name="id_topic">
-		<type name="integer" length="0"/>
+		<type name="bigint" length="0"/>
 	</column>
 	<column name="id_user">
 		<type name="integer" length="0"/>
@@ -705,7 +705,11 @@ LANGUAGE plpgsql;]]></prepended-sql>
 	 custom-color="#9ac721"
 	 src-table="public.subtopics"
 	 dst-table="public.topic" reference-fk="topic_fk"
-	 src-required="false" dst-required="false"/>
+	 src-required="false" dst-required="false">
+	<label ref-type="name-label">
+		<position x="0" y="0"/>
+	</label>
+</relationship>
 
 <relationship name="rel_subtopics_user" type="relfk" layers="0"
 	 custom-color="#249b49"

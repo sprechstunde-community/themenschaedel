@@ -3,6 +3,7 @@ using Sentry;
 using Themenschaedel.API.Services;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Response;
+using User = Themenschaedel.Shared.Models.User;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,11 +16,13 @@ namespace Themenschaedel.API.Controllers
         private readonly IDatabaseService _databaseService;
         private readonly ILogger<EpisodesController> _logger;
         private readonly IAuthenticationService _authenticationService;
-        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger, IAuthenticationService authenticationService)
+        private readonly IClaimService _claims;
+        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger, IAuthenticationService authenticationService, IClaimService claims)
         {
             _databaseService = databaseService;
             _logger = logger;
             _authenticationService = authenticationService;
+            _claims = claims;
         }
 
         [HttpGet("all")]
@@ -105,9 +108,26 @@ namespace Themenschaedel.API.Controllers
         [HttpGet("{episodeId}")]
         public async Task<ActionResult<Episode>> GetEpisode(int episodeId)
         {
+            bool isEditingRequestedEpisode = false;
             try
             {
-                Episode episode = await _databaseService.GetEpisodeAsync(episodeId);
+                User user = await _authenticationService.GetUserFromValidToken(Request);
+                Episode claimedEpisode = await _claims.GetUserByClaimedEpisodeAsync(user.Id);
+                isEditingRequestedEpisode = claimedEpisode.Id == episodeId;
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                // ignore lol -> could happen all the time
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError(e.Message);
+            }
+
+            try
+            {
+                Episode episode = await _databaseService.GetEpisodeAsync(episodeId, isEditingRequestedEpisode);
 
                 return Ok(episode);
             }

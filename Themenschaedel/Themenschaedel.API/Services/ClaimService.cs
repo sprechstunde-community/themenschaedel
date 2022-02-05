@@ -36,9 +36,13 @@ namespace Themenschaedel.API.Services
         public void ClearExpiredClaimsAync()
         {
             List<Claim> claims = _database.GetAllExpiredClaims();
+            if (claims.Count == 0) return;
             _logger.LogError($"Clearing all these expired claims:\n{ObjectLogger.Dump(claims)}");
             _database.ClearAllExpiredClaims();
         }
+
+        public async Task<Episode> GetUserByClaimedEpisodeAsync(int userId) =>
+            await _database.GetClaimedEpisodeByUserIdAsync(userId);
 
         public async Task<bool> HasUserClaimOnEpisodeAsync(int episodeId, int userId) =>
             await _database.CheckIfUserHasClaimOnEpisodeAsync(episodeId, userId);

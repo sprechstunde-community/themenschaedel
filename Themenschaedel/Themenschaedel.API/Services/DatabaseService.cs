@@ -224,7 +224,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId)
+        public async Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId, bool editorRequest = false)
         {
             _logger.LogInformation($"Returning episode with id: {episodeId}.");
             var parameters = new { epId = episodeId };
@@ -232,7 +232,7 @@ namespace Themenschaedel.API.Services
             using (var connection = _context.CreateConnection())
             {
                 EpisodeExtendedExtra episode = await connection.QuerySingleAsync<EpisodeExtendedExtra>(query, parameters);
-                if (episode.Verified)
+                if (episode.Verified || editorRequest)
                 {
                     episode.Topic = await GetTopicsAsync(episode.Id);
                 }
@@ -258,7 +258,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<Subtopic>> GetSubtopicsAsync(int topicId)
+        public async Task<List<Subtopic>> GetSubtopicsAsync(Int64 topicId)
         {
             _logger.LogInformation($"Returning all subtopics from database with Topic ID: {topicId}.");
             var parameters = new { topId = topicId };
@@ -513,6 +513,101 @@ namespace Themenschaedel.API.Services
             {
                 string processQuery = "DELETE FROM claims WHERE valid_until < NOW();";
                 connection.Execute(processQuery);
+            }
+        }
+
+        public async Task<Episode> GetClaimedEpisodeByUserIdAsync(int userId)
+        {
+            _logger.LogInformation($"Returning claimed episode by user with id: {userId}.");
+            var parameters = new { uId = userId };
+            var query = $"SELECT a.* FROM episodes a WHERE EXISTS (SELECT FROM claims WHERE  claims.id_episodes = a.id AND claims.id_user = @uId);";
+            using (var connection = _context.CreateConnection())
+            {
+                var episode = await connection.QuerySingleAsync<Episode>(query, parameters);
+                return episode;
+            }
+        }
+
+        public async Task InsertTopicAsync(ProcessedTopicPostRequest topic, int episodeId, int userId)
+        {
+            _logger.LogDebug($"Topic contributed by user with id: {userId} in episode with id: {episodeId} to insert: {ObjectLogger.Dump(topic)}");
+            _logger.LogInformation($"Inserting list of topics.");
+            var parameters = new
+            {
+                name = topic.Name,
+                timestamp_start = topic.TimestampStart,
+                timestamp_end = topic.TimestampEnd,
+                duration = topic.Duration,
+                community_contributed = topic.CommunityContributed,
+                ad = topic.Ad,
+                created_at = DateTime.Now,
+                epId = episodeId,
+                uId = userId
+            };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "INSERT INTO topic (name,timestamp_start,timestamp_end,duration,community_contributed,ad,created_at,id_episodes,id_user) " +
+                                      "VALUES (@name,@timestamp_start,@timestamp_end,@duration,@community_contributed,@ad,@created_at,@epId,@uId); SELECT * FROM LASTVAL();";
+                int topicId = await connection.ExecuteScalarAsync<int>(processQuery, parameters);
+                for (int i = 0; i < topic.Subtopics.Count; i++)
+                {
+                    await InsertSubtopicAsync(topic.Subtopics[i], topicId, userId);
+                }
+            }
+        }
+
+        public async Task InsertSubtopicAsync(SubtopicPostRequest subtopic, int topicId, int userId)
+        {
+            _logger.LogDebug($"Subtopic to insert: {subtopic.Name} by user with id: {userId} in topic with id: {topicId}");
+            _logger.LogInformation($"Inserting list of topics.");
+            var parameters = new
+            {
+                name = subtopic.Name,
+                id_topic = topicId,
+                id_user = userId
+            };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "INSERT INTO subtopics (name,id_topic,id_user) " +
+                                      "VALUES (@name,@id_topic,@id_user);";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task DeleteTopicAndSubtopicAsync(int episodeId)
+        {
+            _logger.LogDebug($"Deleting all topics from episode with id: {episodeId}");
+            List<TopicExtended> topics = await GetTopicsAsync(episodeId);
+            for (int i = 0; i < topics.Count; i++)
+            {
+                await DeleteSubtopicsByTopicIdAsync(topics[i].Id);
+            }
+            var parameters = new { epId = episodeId };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "DELETE FROM topic WHERE id_episodes=@epId;";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        private async Task DeleteSubtopicsByTopicIdAsync(Int64 topicId)
+        {
+            _logger.LogDebug($"Deleting all subtopic with topic id: {topicId}");
+            var parameters = new { id_topic = topicId };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "DELETE FROM subtopics WHERE id_topic=@id_topic;";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task ResetIdentityForTopicAndSubtopicsAsync()
+        {
+            _logger.LogDebug($"Reseting id identity for Topic and Subtopics table");
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "ALTER SEQUENCE topic_id_seq RESTART; ALTER SEQUENCE subtopics_id_seq RESTART;";
+                await connection.ExecuteAsync(processQuery);
             }
         }
     }

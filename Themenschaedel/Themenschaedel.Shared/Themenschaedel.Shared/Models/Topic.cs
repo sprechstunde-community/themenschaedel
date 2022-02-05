@@ -26,7 +26,7 @@ namespace Themenschaedel.Shared.Models
         }
 
         [Column("id")]
-        public int Id { get; set; }
+        public Int64 Id { get; set; }
         [Column("name")]
         public string Name { get; set; }
         [Column("timestamp_start")]

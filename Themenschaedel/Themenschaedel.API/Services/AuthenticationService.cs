@@ -52,7 +52,7 @@ namespace Themenschaedel.API.Services
                 user = cachedToken.User;
             }
 
-            if (user.EmailVerifiedAt == null) throw new UserEmailNotVerifiedException();
+            if (user.EmailVerifiedAt == null || user.EmailVerificationId != null) throw new UserEmailNotVerifiedException();
 
             string tempPassword = $"{_configuration["Auth:FrontSalt"]}{password}{_configuration["Auth:BackSalt"]}";
             byte[] salt = user.Salt;

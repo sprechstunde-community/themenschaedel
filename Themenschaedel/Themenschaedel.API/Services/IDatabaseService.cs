@@ -19,7 +19,7 @@ namespace Themenschaedel.API.Services
         public Task ClearSingleTokenAsync(string refreshToken);
 
         // Epsiodes
-        public Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId);
+        public Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId, bool editorRequest = false);
         public Task<EpisodeExtended> GetMinimalEpisodeAsync(int episodeId);
         public Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage);
         public Task<List<EpisodeExtendedExtra>> GetAllEpisodesAsync();
@@ -35,9 +35,11 @@ namespace Themenschaedel.API.Services
         public Task<List<TopicExtended>> GetTopicsAsync(int episodeId);
         public Task<List<Topic>> GetAllTopicsSimpleAsync();
         public Task<List<TopicExtended>> GetAllTopicsAsync();
+        public Task InsertTopicAsync(ProcessedTopicPostRequest topic, int episodeId, int userId);
+        public Task DeleteTopicAndSubtopicAsync(int episodeId);
 
         // Subtopics
-        public Task<List<Subtopic>> GetSubtopicsAsync(int topicId);
+        public Task<List<Subtopic>> GetSubtopicsAsync(Int64 topicId);
 
         // Person
         public Task<List<Person>> GetPeopleFeaturedInEpisodeByEpisodeIdAsync(int episodeId);
@@ -51,5 +53,8 @@ namespace Themenschaedel.API.Services
         public Task<List<Claim>> GetAllExpiredClaimsAsync();
         public Task ClearAllExpiredClaimsAsync();
         public Task<bool> CheckIfUserHasClaimOnEpisodeAsync(int episodeId, int userId);
+        public Task<Episode> GetClaimedEpisodeByUserIdAsync(int userId);
+
+        public Task ResetIdentityForTopicAndSubtopicsAsync();
     }
 }

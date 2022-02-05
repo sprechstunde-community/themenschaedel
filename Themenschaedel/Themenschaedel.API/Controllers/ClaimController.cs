@@ -25,6 +25,31 @@ namespace Themenschaedel.API.Controllers
             _database = databaseService;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<Episode>> GetCurrentClaimedEpisode()
+        {
+            try
+            {
+                User user = await _auth.GetUserFromValidToken(Request);
+                Episode claimedEpisode = await _claim.GetUserByClaimedEpisodeAsync(user.Id);
+                if (claimedEpisode == null) return BadRequest("Currently there are no claimed episodes by this user.");
+                return Ok(claimedEpisode);
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                if(e.Message.Contains("Sequence contains no elements")) return BadRequest("Currently there are no claimed episodes by this user.");
+
+                _logger.LogError($"Error while trying to get the episode the user currently has claimed. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
+
+            return Problem();
+        }
+
         [HttpPost("{id}")]
         public async Task<ActionResult<ClaimResponse>> Post(int id) // id = EpisodeId
         {
