@@ -81,6 +81,8 @@ namespace Themenschaedel.API.Controllers
             }
             catch (Exception e)
             {
+                if (e.Message.Contains("Sequence contains no elements")) return Unauthorized("User has no claimed episode!");
+
                 SentrySdk.CaptureException(e);
                 _logger.LogError("Error while trying to post a list of topics. Error:\n" + e.Message);
                 return Problem();
@@ -89,7 +91,7 @@ namespace Themenschaedel.API.Controllers
 
         // ToDo:
         //  Add endpoint to claim an episode under a /claim endpoint -> Make sure a user can only have one claim at a time! (there should be unique constraints on the database anyways lol) -> Default claim time = episode duration * 3 -> DONE!
-        //  Add Post TopicExtended (so the client sends the topic and a list of subtopics) -> Make sure the user has claimed the episode he is posting to/editing
+        //  Add Post TopicExtended (so the client sends the topic and a list of subtopics) -> Make sure the user has claimed the episode he is posting to/editing -> Done!
         //  Add endpoint for clients to extend claim time (for about 30 minutes) -> Maybe a user should only be able to do that 10 times -> 5 more hours in total
         //  Add way for user/client to remove claim -> already saved stuff will be kept -> Maybe don't add, as users should not claim und unclaim "just to edit another episode", user has to commit to a claimed episode!
         //  Add way for admins to assign other users to abandoned claims -> easily implementable, as the "constraint" of a user only being able to claim a unverified episode with topics is only prohibited by API logic and not by database logic -> see ClaimEpisodeAsync() first 3 lines

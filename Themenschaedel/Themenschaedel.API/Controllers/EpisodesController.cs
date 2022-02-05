@@ -166,6 +166,8 @@ namespace Themenschaedel.API.Controllers
             }
             catch (Exception e)
             {
+                if (e.Message.Contains("Sequence contains no elements")) return BadRequest("Episode is not open to verify.");
+
                 SentrySdk.CaptureException(e);
                 _logger.LogError(e.Message);
                 return Problem();

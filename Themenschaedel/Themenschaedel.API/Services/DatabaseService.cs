@@ -604,10 +604,33 @@ namespace Themenschaedel.API.Services
         public async Task ResetIdentityForTopicAndSubtopicsAsync()
         {
             _logger.LogDebug($"Reseting id identity for Topic and Subtopics table");
+            int lastTopicId = await GetLastIdInTopic();
+            int lastSubtpicsId = await GetLastIdInSubtopics();
+            //var parameters = new { last_topic_id = lastTopicId, last_subtopics_id = lastSubtpicsId };
             using (var connection = _context.CreateConnection())
             {
-                string processQuery = "ALTER SEQUENCE topic_id_seq RESTART; ALTER SEQUENCE subtopics_id_seq RESTART;";
+                string processQuery = $"ALTER SEQUENCE topic_id_seq RESTART WITH {lastTopicId + 1}; ALTER SEQUENCE subtopics_id_seq RESTART WITH {lastSubtpicsId + 3};";
                 await connection.ExecuteAsync(processQuery);
+            }
+        }
+
+        private async Task<int> GetLastIdInTopic()
+        {
+            _logger.LogDebug($"Getting last Id in table topic.");
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "SELECT id FROM topic ORDER BY id DESC LIMIT 1;";
+                return await connection.QuerySingleAsync<int>(processQuery);
+            }
+        }
+
+        private async Task<int> GetLastIdInSubtopics()
+        {
+            _logger.LogDebug($"Getting last Id in table topic.");
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "SELECT id FROM subtopics ORDER BY id DESC LIMIT 1;";
+                return await connection.QuerySingleAsync<int>(processQuery);
             }
         }
     }
