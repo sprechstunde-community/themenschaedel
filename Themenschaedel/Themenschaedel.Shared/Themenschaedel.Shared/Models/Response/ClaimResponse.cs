@@ -10,4 +10,19 @@ namespace Themenschaedel.Shared.Models.Response
         public int UserId { get; set; }
         public DateTime ValidUntil { get; set; }
     }
+
+    [Serializable]
+    public class EpisodeUnclaimedButAlreadyHasTopcisException : Exception
+    {
+        public EpisodeUnclaimedButAlreadyHasTopcisException()
+        { }
+
+        public EpisodeUnclaimedButAlreadyHasTopcisException(string message)
+            : base(message)
+        { }
+
+        public EpisodeUnclaimedButAlreadyHasTopcisException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+    }
 }

@@ -43,9 +43,9 @@ namespace Themenschaedel.API.Services
 
             // Add support for custom column attribute for Subtopic Property Class
             Dapper.SqlMapper.SetTypeMap(
-                typeof(Topic),
+                typeof(Subtopic),
                 new CustomPropertyTypeMap(
-                    typeof(Topic),
+                    typeof(Subtopic),
                     (type, columnName) =>
                         type.GetProperties().FirstOrDefault(prop =>
                             prop.GetCustomAttributes(false)

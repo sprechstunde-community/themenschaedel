@@ -1,4 +1,5 @@
-﻿using Themenschaedel.Shared.Models;
+﻿using Themenschaedel.Shared;
+using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Response;
 
 namespace Themenschaedel.API.Services
@@ -13,14 +14,33 @@ namespace Themenschaedel.API.Services
             _database = databaseService;
         }
 
-        public async Task<ClaimResponse> ClaimEpisodeAsync(int episodeId)
+        public async Task<ClaimResponse> ClaimEpisodeAsync(Episode episode, int userId)
         {
-            throw new NotImplementedException();
+            List<TopicExtended> topics = await _database.GetTopicsAsync(episode.Id);
+            if (topics == null) throw new EpisodeUnclaimedButAlreadyHasTopcisException();
+            if (topics.Count != 0) throw new EpisodeUnclaimedButAlreadyHasTopcisException();
+
+            DateTime currentTime = DateTime.Now;
+            DateTime claimValidUntil = currentTime.AddSeconds(episode.Duration * 3);
+
+            await _database.ClaimEpisodeAsync(episode.Id, userId, claimValidUntil, currentTime);
+
+            return new ClaimResponse()
+            {
+                EpisodeId = episode.Id,
+                UserId = userId,
+                ValidUntil = claimValidUntil
+            };
         }
 
-        public async Task<List<Claim>> ClearExpiredClaimsAync()
+        public void ClearExpiredClaimsAync()
         {
-            throw new NotImplementedException();
+            List<Claim> claims = _database.GetAllExpiredClaims();
+            _logger.LogError($"Clearing all these expired claims:\n{ObjectLogger.Dump(claims)}");
+            _database.ClearAllExpiredClaims();
         }
+
+        public async Task<bool> HasUserClaimOnEpisodeAsync(int episodeId, int userId) =>
+            await _database.CheckIfUserHasClaimOnEpisodeAsync(episodeId, userId);
     }
 }

@@ -54,7 +54,7 @@ namespace Themenschaedel.API.Controllers
                 EpisodeAlternateResponse episodeResponse = new EpisodeAlternateResponse();
 
                 episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page);
-                episodeResponse.Meta.EpisodeCount = await _databaseService.GetUnverifiedEpisodeCount();
+                episodeResponse.Meta.EpisodeCount = await _databaseService.GetUnverifiedEpisodeCountAsync();
                 episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
 
                 if (episodeResponse.Data.Count == 0)
@@ -85,7 +85,7 @@ namespace Themenschaedel.API.Controllers
                 EpisodeResponse episodeResponse = new EpisodeResponse();
 
                 episodeResponse.Data = await _databaseService.GetEpisodesAsync(page, per_page);
-                episodeResponse.Meta.EpisodeCount = await _databaseService.GetEpisodeCount();
+                episodeResponse.Meta.EpisodeCount = await _databaseService.GetEpisodeCountAsync();
                 episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
 
                 if (episodeResponse.Data.Count == 0)
@@ -137,7 +137,7 @@ namespace Themenschaedel.API.Controllers
                     return BadRequest("Episode has nothin to verify.");
                 }
 
-                await _databaseService.VerifyEpisode(id);
+                await _databaseService.VerifyEpisodeAsync(id);
                 return Ok();
             }
             catch (TokenDoesNotExistException e)
@@ -160,7 +160,7 @@ namespace Themenschaedel.API.Controllers
             {
                 if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
 
-                await _databaseService.UnverifyEpisode(id);
+                await _databaseService.UnverifyEpisodeAsync(id);
                 return Ok();
             }
             catch (TokenDoesNotExistException e)

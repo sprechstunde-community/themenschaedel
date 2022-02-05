@@ -48,10 +48,10 @@ namespace Themenschaedel.API.Controllers
         }
 
         // ToDo:
-        //  Add endpoint to claim an episode under a /claim endpoint -> Make sure a user can only have one claim at a time! (there should be unique constraints on the database anyways lol) -> Default claim time = episode duration * 3
+        //  Add endpoint to claim an episode under a /claim endpoint -> Make sure a user can only have one claim at a time! (there should be unique constraints on the database anyways lol) -> Default claim time = episode duration * 3 -> DONE!
         //  Add Post TopicExtended (so the client sends the topic and a list of subtopics) -> Make sure the user has claimed the episode he is posting to/editing
         //  Add endpoint for clients to extend claim time (for about 30 minutes)
-        //  Add way for user/client to remove claim -> already saved stuff will be kept
+        //  Add way for user/client to remove claim -> already saved stuff will be kept -> Maybe don't add, as users should not claim und unclaim "just to edit another episode", user has to commit to a claimed episode!
         //  Add way for admins to assign other users to abandoned claims
     }
 }

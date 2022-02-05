@@ -7,9 +7,9 @@
 -- Database creation must be performed outside a multi lined SQL file. 
 -- These commands were put in this file only as a convenience.
 -- 
--- object: "ThemenschaedelTesting" | type: DATABASE --
-DROP DATABASE IF EXISTS "ThemenschaedelArchiv";
-CREATE DATABASE "ThemenschaedelArchiv"
+-- object: "Themenarchiv" | type: DATABASE --
+-- DROP DATABASE IF EXISTS "Themenarchiv";
+CREATE DATABASE "Themenarchiv"
 	ENCODING = 'UTF8'
 	LC_COLLATE = 'German_Germany.1252'
 	LC_CTYPE = 'German_Germany.1252'
@@ -127,7 +127,7 @@ ALTER TABLE public.subtopics OWNER TO postgres;
 -- DROP TABLE IF EXISTS public.users CASCADE;
 CREATE TABLE public.users (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1 ),
-	uuid varchar(32),
+	uuid varchar(32) NOT NULL,
 	username varchar(30),
 	description text,
 	email varchar(65),
@@ -138,7 +138,9 @@ CREATE TABLE public.users (
 	created_at timestamp,
 	updated_at timestamp,
 	id_roles integer,
-	CONSTRAINT user_pk PRIMARY KEY (id)
+	CONSTRAINT user_pk PRIMARY KEY (id),
+	CONSTRAINT unique_username_constraint UNIQUE (username),
+	CONSTRAINT unique_uuid_constraint UNIQUE (uuid)
 );
 -- ddl-end --
 ALTER TABLE public.users OWNER TO postgres;
@@ -164,6 +166,7 @@ ALTER TABLE public.users OWNER TO postgres;
 CREATE TABLE public.claims (
 	id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1 ),
 	claimed_at timestamp,
+	valid_until timestamp,
 	created_at timestamp,
 	updated_at timestamp,
 	id_user integer,
@@ -200,8 +203,7 @@ CREATE TABLE public.votes (
 	updated_at timestamp,
 	id_episodes integer,
 	id_user integer,
-	CONSTRAINT votes_pk PRIMARY KEY (id),
-	CONSTRAINT user_only_one_vote_constraint UNIQUE (id_episodes,id_user)
+	CONSTRAINT votes_pk PRIMARY KEY (id)
 );
 -- ddl-end --
 ALTER TABLE public.votes OWNER TO postgres;
@@ -578,6 +580,24 @@ END;
 $BODY$
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION udf_GetUnverifiedEpisodes()
+ RETURNS SETOF public.episodes AS
+ $BODY$
+ BEGIN
+
+  RETURN QUERY
+   SELECT DISTINCT a.*
+   FROM public.episodes a
+   INNER JOIN public.topic b ON b.id_episodes = a.id
+   WHERE a.verified=false AND NOT EXISTS (
+       SELECT
+       FROM   claims
+       WHERE  claims.id_episodes = a.id)
+   ORDER BY a.updated_at DESC;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
 
 CREATE OR REPLACE FUNCTION udf_episodes_unverified_GetRowsByPageNumberAndSize(
  PageNumber INTEGER = NULL,
@@ -592,29 +612,10 @@ CREATE OR REPLACE FUNCTION udf_episodes_unverified_GetRowsByPageNumberAndSize(
   PageOffset := ((PageNumber-1) * PageSize);
 
   RETURN QUERY
-   SELECT DISTINCT a.*
-   FROM public.episodes a
-   INNER JOIN public.topic b ON b.id_episodes = a.id
-   WHERE a.verified=false
-   ORDER BY a.updated_at DESC
+   SELECT *
+   FROM udf_GetUnverifiedEpisodes()
    LIMIT PageSize
    OFFSET PageOffset;
-END;
-$BODY$
-LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION udf_GetUnverifiedEpisodes()
- RETURNS SETOF public.episodes AS
- $BODY$
- BEGIN
-
-  RETURN QUERY
-   SELECT DISTINCT a.*
-   FROM public.episodes a
-   INNER JOIN public.topic b ON b.id_episodes = a.id
-   WHERE a.verified=false
-   ORDER BY a.updated_at DESC;
 END;
 $BODY$
 LANGUAGE plpgsql;

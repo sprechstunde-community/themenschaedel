@@ -231,8 +231,8 @@ namespace Themenschaedel.API.Controllers
             if (String.IsNullOrWhiteSpace(user.Username)) return BadRequest("Username cannot be empty!");
             if (user.Password.Length <= 8) return BadRequest("A password has to be more than 8 characters!");
             if (user.Password.Length > 127) return BadRequest("A password cannot be more than 127 characters!");
-            if (!await _databaseService.IsRegistrationEmailUnique(user.Email)) return BadRequest("A user with this email already exists!");
-            if (!await _databaseService.IsRegistrationUsernameUnique(user.Username)) return BadRequest("A user with this username already exists!");
+            if (!await _databaseService.IsRegistrationEmailUniqueAsync(user.Email)) return BadRequest("A user with this email already exists!");
+            if (!await _databaseService.IsRegistrationUsernameUniqueAsync(user.Username)) return BadRequest("A user with this username already exists!");
 
             bool wasUserRegistrationSuccessful = await _authenticationService.RegisterAsync(user);
 

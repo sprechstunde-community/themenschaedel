@@ -15,7 +15,7 @@ namespace Themenschaedel.Shared.Models
         public DateTime CreatedAt { get; set; }
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
-        [Column("id_topics")]
+        [Column("id_topic")]
         public int TopicId { get; set; }
         [Column("id_user")]
         public int UserId { get; set; }

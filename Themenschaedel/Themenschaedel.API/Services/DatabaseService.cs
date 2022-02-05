@@ -31,7 +31,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task ClearAllToken(int userId)
+        public async Task ClearAllTokenAsync(int userId)
         {
             _logger.LogInformation($"Clearing all tokens for user: {userId}");
             using (var connection = _context.CreateConnection())
@@ -42,7 +42,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task CreateRefreshToken(TokenExtended token)
+        public async Task CreateRefreshTokenAsync(TokenExtended token)
         {
             _logger.LogDebug($"Creating token for TokenExtended Object: {ObjectLogger.Dump(token)}");
             _logger.LogInformation($"Creating token for refresh token: {token.RefreshToken}");
@@ -89,7 +89,7 @@ namespace Themenschaedel.API.Services
 
                         episodesList[i].Topic = topicsToAdd;
                     }
-                    episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
+                    episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeIdAsync(episodesList[i].Id);
                 }
                 return episodes.ToList();
             }
@@ -99,7 +99,7 @@ namespace Themenschaedel.API.Services
         {
             _logger.LogInformation($"Returning all episodes from database, page: {page} per page: {perPage}.");
             var parameters = new { Page = page, PerPage = perPage };
-            var query = $"SELECT * FROM udf_episodes_GetRowsByPageNumberAndSizeTesting(@Page,@PerPage);";
+            var query = $"SELECT * FROM udf_episodes_GetRowsByPageNumberAndSize(@Page,@PerPage);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
@@ -107,7 +107,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<TokenCache> GetRefreshToken(string refreshToken)
+        public async Task<TokenCache> GetRefreshTokenAsync(string refreshToken)
         {
             _logger.LogInformation($"Getting refresh token from database: {refreshToken}.");
             var parameters = new { tokenVal = refreshToken };
@@ -127,7 +127,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<bool> IsRegistrationEmailUnique(string email)
+        public async Task<bool> IsRegistrationEmailUniqueAsync(string email)
         {
             _logger.LogInformation($"Verifying user with email: {email}.");
             var parameters = new { email = email };
@@ -139,7 +139,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<bool> IsRegistrationUsernameUnique(string username)
+        public async Task<bool> IsRegistrationUsernameUniqueAsync(string username)
         {
             _logger.LogInformation($"Checking if username is unique. Username: {username}.");
             var parameters = new { username = username };
@@ -151,7 +151,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task RegiserUser(UserRegistrationExtended user)
+        public async Task RegiserUserAsync(UserRegistrationExtended user)
         {
             _logger.LogInformation($"Registering new User with UUID: {user.UUID}.");
             using (var connection = _context.CreateConnection())
@@ -162,7 +162,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task VerifyEmailAddress(string verificationId)
+        public async Task VerifyEmailAddressAsync(string verificationId)
         {
             _logger.LogInformation($"Verifying email with verification id: {verificationId}.");
             using (var connection = _context.CreateConnection())
@@ -173,7 +173,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<User> GetUserByUsername(string username)
+        public async Task<User> GetUserByUsernameAsync(string username)
         {
             _logger.LogInformation($"Returning user with username: {username}.");
             var parameters = new { username = username };
@@ -193,7 +193,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<User> GetUserByUserId(int userId)
+        public async Task<User> GetUserByUserIdAsync(int userId)
         {
             _logger.LogInformation($"Returning user with id: {userId}.");
             var parameters = new { userIdVal = userId };
@@ -213,7 +213,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task ClearSingleToken(string refreshToken)
+        public async Task ClearSingleTokenAsync(string refreshToken)
         {
             _logger.LogInformation($"Clearing sinlge refresh token with value: {refreshToken}.");
             using (var connection = _context.CreateConnection())
@@ -236,7 +236,7 @@ namespace Themenschaedel.API.Services
                 {
                     episode.Topic = await GetTopicsAsync(episode.Id);
                 }
-                episode.Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episode.Id);
+                episode.Person = await GetPeopleFeaturedInEpisodeByEpisodeIdAsync(episode.Id);
                 return episode;
             }
         }
@@ -293,7 +293,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<int> GetEpisodeCount()
+        public async Task<int> GetEpisodeCountAsync()
         {
             _logger.LogInformation($"Returning current episode count in databse.");
             var query = $"SELECT COUNT(*) FROM episodes;";
@@ -304,7 +304,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task VerifyEpisode(int episodeId)
+        public async Task VerifyEpisodeAsync(int episodeId)
         {
             _logger.LogInformation($"Verifying episode with id: {episodeId}.");
             using (var connection = _context.CreateConnection())
@@ -315,7 +315,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task UnverifyEpisode(int episodeId)
+        public async Task UnverifyEpisodeAsync(int episodeId)
         {
             _logger.LogInformation($"Removing verification for episode with id: {episodeId}.");
             using (var connection = _context.CreateConnection())
@@ -348,13 +348,13 @@ namespace Themenschaedel.API.Services
                     }
                     episodesList[i].Topic = topicsToAdd;
 
-                    episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeId(episodesList[i].Id);
+                    episodesList[i].Person = await GetPeopleFeaturedInEpisodeByEpisodeIdAsync(episodesList[i].Id);
                 }
                 return episodes.ToList();
             }
         }
 
-        public async Task<int> GetUnverifiedEpisodeCount()
+        public async Task<int> GetUnverifiedEpisodeCountAsync()
         {
             _logger.LogInformation($"Returning current unverified episode count in databse.");
             var query = $"SELECT COUNT(*) FROM udf_GetUnverifiedEpisodes();";
@@ -365,7 +365,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<Person>> GetPeopleFeaturedInEpisodeByEpisodeId(int episodeId)
+        public async Task<List<Person>> GetPeopleFeaturedInEpisodeByEpisodeIdAsync(int episodeId)
         {
             _logger.LogInformation($"Returning all people featured in episode, by episode id. Episode ID: {episodeId}.");
             var parameters = new { epId = episodeId };
@@ -383,7 +383,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<bool> CheckIfEpisodeIsClaimedByEpisodeId(int episodeId)
+        public async Task<bool> CheckIfEpisodeIsClaimedByEpisodeIdAsync(int episodeId)
         {
             _logger.LogInformation($"Returning claim status for episode id: {episodeId}.");
             var parameters = new { epId = episodeId };
@@ -397,7 +397,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<UserMinimal> GetUserFromClaimByEpisodeId(int episodeId)
+        public async Task<UserMinimal> GetUserFromClaimByEpisodeIdAsync(int episodeId)
         {
             _logger.LogInformation($"Returning all people featured in episode, by episode id. Episode ID: {episodeId}.");
             var parameters = new { epId = episodeId };
@@ -429,34 +429,91 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task ClaimEpisode(int episodeId)
+        public async Task ClaimEpisodeAsync(int episodeId, int userId, DateTime validUntil, DateTime ClaimedAt)
         {
-            throw new NotImplementedException();
+            _logger.LogInformation($"Creating claim on episode with id: {episodeId}. Claim was registered by user with id: {userId}.");
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { epId = episodeId, uId = userId, valid_until = validUntil, claimed_at = ClaimedAt, created_at = DateTime.Now };
+                string processQuery = "INSERT INTO claims (claimed_at,valid_until,created_at,id_user,id_episodes) VALUES (@claimed_at,@valid_until,@created_at,@uId,@epId);";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
         }
 
-        public async Task<List<Claim>> GetAllExpiredClaims()
+        public async Task<List<Claim>> GetAllExpiredClaimsAsync()
         {
-            throw new NotImplementedException();
+            _logger.LogInformation($"Returning all expired claims.");
+            var query = $"SELECT * FROM claims WHERE valid_until < NOW();";
+            using (var connection = _context.CreateConnection())
+            {
+                var claims = await connection.QueryAsync<Claim>(query);
+                return claims.ToList();
+            }
         }
 
-        public async Task ClearAllExpiredClaims()
+        public async Task ClearAllExpiredClaimsAsync()
         {
-            throw new NotImplementedException();
+            _logger.LogInformation($"Deleting all expired Claims.");
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "DELETE FROM claims WHERE valid_until < NOW();";
+                await connection.ExecuteAsync(processQuery);
+            }
         }
-    }
 
-    [Serializable]
-    public class EmptyDatabaseListReturnException : Exception
-    {
-        public EmptyDatabaseListReturnException()
-        { }
+        public async Task<bool> CheckIfUserHasClaimOnEpisodeAsync(int episodeId, int userId)
+        {
+            _logger.LogInformation($"Checking if user with id: {userId} has a valid claim on episode with id: {episodeId}.");
+            var parameters = new { epId = episodeId, uId = userId };
+            var query = $"SELECT valid_until FROM claims WHERE id_episodes=@epId AND id_user=@uId;";
+            using (var connection = _context.CreateConnection())
+            {
+                var validUntil = await connection.QuerySingleAsync<DateTime>(query, parameters);
 
-        public EmptyDatabaseListReturnException(string message)
-            : base(message)
-        { }
+                if (validUntil == null)
+                {
+                    _logger.LogInformation($"User with id: {userId} does not have a valid claim on episode with id: {episodeId}.");
+                    return false;
+                }
 
-        public EmptyDatabaseListReturnException(string message, Exception innerException)
-            : base(message, innerException)
-        { }
+                bool claimStillValid = validUntil < DateTime.Now;
+                if (claimStillValid) _logger.LogInformation($"User with id: {userId} has a valid claim on episode with id: {episodeId}.");
+                else _logger.LogInformation($"User with id: {userId} has an expired and thereby not a valid claim on episode with id: {episodeId}.");
+                return claimStillValid;
+            }
+        }
+
+        public async Task<EpisodeExtended> GetMinimalEpisodeAsync(int episodeId)
+        {
+            _logger.LogInformation($"Returning all expired claims.");
+            var parameters = new { epId = episodeId };
+            var query = $"SELECT * FROM udf_GetEpisodes() WHERE id=@epId;";
+            using (var connection = _context.CreateConnection())
+            {
+                var episode = await connection.QuerySingleAsync<EpisodeExtended>(query, parameters);
+                return episode;
+            }
+        }
+
+        public List<Claim> GetAllExpiredClaims()
+        {
+            _logger.LogInformation($"Returning all expired claims.");
+            var query = $"SELECT * FROM claims WHERE valid_until < NOW();";
+            using (var connection = _context.CreateConnection())
+            {
+                var claims = connection.Query<Claim>(query);
+                return claims.ToList();
+            }
+        }
+
+        public void ClearAllExpiredClaims()
+        {
+            _logger.LogInformation($"Deleting all expired Claims.");
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "DELETE FROM claims WHERE valid_until < NOW();";
+                connection.Execute(processQuery);
+            }
+        }
     }
 }

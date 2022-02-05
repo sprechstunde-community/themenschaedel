@@ -12,8 +12,10 @@ builder.Services.AddHttpClient<IMailService, MailService>(client =>
     client.BaseAddress = new Uri(builder.Configuration["MailjetURL"]);
 });
 builder.Services.AddSingleton<IAuthenticationService, AuthenticationService>();
+builder.Services.AddSingleton<IClaimService, ClaimService>();
 // Add Workers
 builder.Services.AddHostedService<RssFeedScrapperWorker>();
+builder.Services.AddHostedService<ExpiredClaimClearingWorker>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

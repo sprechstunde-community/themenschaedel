@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="0,0" last-zoom="0.65" max-obj-count="13"
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="732,17" last-zoom="1" max-obj-count="13"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -16,52 +16,43 @@ CAUTION: Do not modify this file unless you know what you are doing.
 </database>
 
 <schema name="public" layers="0" rect-visible="true" fill-color="#e1e1e1" sql-disabled="true">
-	<prepended-sql><![CDATA[CREATE OR REPLACE FUNCTION udf_episodes_GetRowsByPageNumberAndSize(
- PageNumber INTEGER = NULL,
- PageSize INTEGER = NULL
- )
- RETURNS SETOF public.episodes AS
- $BODY$
- DECLARE
-  PageOffset INTEGER :=0;
- BEGIN
-
-  PageOffset := ((PageNumber-1) * PageSize);
+	<prepended-sql><![CDATA[CREATE OR REPLACE FUNCTION udf_GetEpisodes()
+   RETURNS TABLE (id integer,
+	uuid character varying,
+	title character varying,
+	episode_number bigint,
+	subtitle character varying,
+	description character varying,
+	media_file character varying,
+	spotify_file character varying,
+	duration integer,
+	type character varying,
+	image character varying,
+	explicit boolean,
+	verified boolean,
+	published_at timestamp,
+	created_at timestamp,
+	updated_at timestamp,
+	flags bigint,
+	upvotes bigint,
+	downvotes bigint,
+	claimed boolean)
+  LANGUAGE plpgsql AS
+$BODY$
+BEGIN
 
   RETURN QUERY
-   SELECT *
-   FROM public.episodes
-   ORDER BY published_at DESC
-   LIMIT PageSize
-   OFFSET PageOffset;
+    SELECT a.*,
+           (SELECT COUNT(*) FROM flags f WHERE f.id_episodes  = a.id) AS flags,
+           (SELECT COUNT(CASE WHEN positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS upvotes,
+           (SELECT COUNT(CASE WHEN NOT positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS downvotes,
+           CASE WHEN b.id IS NOT NULL THEN true else false END claimed
+    FROM episodes a
+    LEFT JOIN claims b on a.id = b.id_episodes
+    ORDER BY a.published_at DESC;
 END;
-$BODY$
-LANGUAGE plpgsql;
+$BODY$;
 
-
-CREATE OR REPLACE FUNCTION udf_episodes_unverified_GetRowsByPageNumberAndSize(
- PageNumber INTEGER = NULL,
- PageSize INTEGER = NULL
- )
- RETURNS SETOF public.episodes AS
- $BODY$
- DECLARE
-  PageOffset INTEGER :=0;
- BEGIN
-
-  PageOffset := ((PageNumber-1) * PageSize);
-
-  RETURN QUERY
-   SELECT DISTINCT a.*
-   FROM public.episodes a
-   INNER JOIN public.topic b ON b.id_episodes = a.id
-   WHERE a.verified=false
-   ORDER BY a.updated_at DESC
-   LIMIT PageSize
-   OFFSET PageOffset;
-END;
-$BODY$
-LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION udf_GetEpisodesByPageNumberAndSize(
  PageNumber INTEGER = NULL,
@@ -96,19 +87,74 @@ $BODY$
   PageOffset := ((PageNumber-1) * PageSize);
 
   RETURN QUERY
-    SELECT a.*,
-           (SELECT COUNT(*) FROM flags f WHERE f.id_episodes  = a.id) AS flags,
-           (SELECT COUNT(CASE WHEN positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS upvotes,
-           (SELECT COUNT(CASE WHEN NOT positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS downvotes,
-           CASE WHEN b.id IS NOT NULL THEN true else false END claimed
-    FROM episodes a
-    LEFT JOIN claims b on a.id = b.id_episodes
-    ORDER BY a.published_at DESC
+    SELECT * FROM udf_GetEpisodes()
     LIMIT PageSize
     OFFSET PageOffset;
 END;
 $BODY$;
-]]></prepended-sql>
+
+
+CREATE OR REPLACE FUNCTION udf_episodes_GetRowsByPageNumberAndSize(
+ PageNumber INTEGER = NULL,
+ PageSize INTEGER = NULL
+ )
+ RETURNS SETOF public.episodes AS
+ $BODY$
+ DECLARE
+  PageOffset INTEGER :=0;
+ BEGIN
+
+  PageOffset := ((PageNumber-1) * PageSize);
+
+  RETURN QUERY
+   SELECT *
+   FROM public.episodes
+   ORDER BY published_at DESC
+   LIMIT PageSize
+   OFFSET PageOffset;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION udf_GetUnverifiedEpisodes()
+ RETURNS SETOF public.episodes AS
+ $BODY$
+ BEGIN
+
+  RETURN QUERY
+   SELECT DISTINCT a.*
+   FROM public.episodes a
+   INNER JOIN public.topic b ON b.id_episodes = a.id
+   WHERE a.verified=false AND NOT EXISTS (
+       SELECT
+       FROM   claims
+       WHERE  claims.id_episodes = a.id)
+   ORDER BY a.updated_at DESC;
+END;
+$BODY$
+LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION udf_episodes_unverified_GetRowsByPageNumberAndSize(
+ PageNumber INTEGER = NULL,
+ PageSize INTEGER = NULL
+ )
+ RETURNS SETOF public.episodes AS
+ $BODY$
+ DECLARE
+  PageOffset INTEGER :=0;
+ BEGIN
+
+  PageOffset := ((PageNumber-1) * PageSize);
+
+  RETURN QUERY
+   SELECT *
+   FROM udf_GetUnverifiedEpisodes()
+   LIMIT PageSize
+   OFFSET PageOffset;
+END;
+$BODY$
+LANGUAGE plpgsql;]]></prepended-sql>
 </schema>
 
 <table name="episodes" layers="0" collapse-mode="2" max-obj-count="19" z-value="0">
@@ -263,7 +309,7 @@ $BODY$;
 	 identity-type="ALWAYS" start="1" increment="1" min-value="1" max-value="2147483647" cache="1">
 		<type name="integer" length="0"/>
 	</column>
-	<column name="uuid">
+	<column name="uuid" not-null="true">
 		<type name="varchar" length="32"/>
 	</column>
 	<column name="username">
@@ -296,6 +342,20 @@ $BODY$;
 	<constraint name="user_pk" type="pk-constr" table="public.users">
 		<columns names="id" ref-type="src-columns"/>
 	</constraint>
+	<constraint name="unique_username_constraint" type="uq-constr" table="public.users">
+		<columns names="username" ref-type="src-columns"/>
+	</constraint>
+	<constraint name="unique_uuid_constraint" type="uq-constr" table="public.users">
+		<columns names="uuid" ref-type="src-columns"/>
+	</constraint>
+
+	<customidxs object-type="column">
+		<object name="id_roles" index="11"/>
+	</customidxs>
+
+	<customidxs object-type="constraint">
+		<object name="roles_fk" index="1"/>
+	</customidxs>
 </table>
 
 <sequence name="user_id_seq" cycle="false" start="1" increment="1" min-value="1" max-value="2147483647" cache="1" sql-disabled="true">
@@ -303,7 +363,7 @@ $BODY$;
 	<role name="postgres"/>
 </sequence>
 
-<table name="claims" layers="0" collapse-mode="2" max-obj-count="7" z-value="0">
+<table name="claims" layers="0" collapse-mode="2" max-obj-count="8" z-value="0">
 	<schema name="public"/>
 	<role name="postgres"/>
 	<position x="1360" y="540"/>
@@ -312,6 +372,9 @@ $BODY$;
 		<type name="integer" length="0"/>
 	</column>
 	<column name="claimed_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<column name="valid_until">
 		<type name="timestamp" length="0"/>
 	</column>
 	<column name="created_at">
@@ -367,9 +430,6 @@ $BODY$;
 	</column>
 	<constraint name="votes_pk" type="pk-constr" table="public.votes">
 		<columns names="id" ref-type="src-columns"/>
-	</constraint>
-	<constraint name="user_only_one_vote_constraint" type="uq-constr" table="public.votes">
-		<columns names="id_episodes,id_user" ref-type="src-columns"/>
 	</constraint>
 </table>
 

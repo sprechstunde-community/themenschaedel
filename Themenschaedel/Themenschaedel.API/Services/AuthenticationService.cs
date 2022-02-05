@@ -45,7 +45,7 @@ namespace Themenschaedel.API.Services
             bool validTokenCached = cachedToken == null;
             if (validTokenCached)
             {
-                user = await _databaseService.GetUserByUsername(username);
+                user = await _databaseService.GetUserByUsernameAsync(username);
             }
             else
             {
@@ -63,7 +63,7 @@ namespace Themenschaedel.API.Services
             if (hashedPassword == user.Password)
             {
                 token = CreateToken(user.Id);
-                await _databaseService.CreateRefreshToken(token);
+                await _databaseService.CreateRefreshTokenAsync(token);
 
                 TokenCache.Add(new TokenCache(token, user));
             }
@@ -145,7 +145,7 @@ namespace Themenschaedel.API.Services
                 TokenCache.Remove(toClearCacheTokens[i]);
             }
 
-            await _databaseService.ClearSingleToken(cachedToken.RefreshToken);
+            await _databaseService.ClearSingleTokenAsync(cachedToken.RefreshToken);
             return true;
         }
 
@@ -167,7 +167,7 @@ namespace Themenschaedel.API.Services
 
                 userToCreate.EmailValidationId = RandomString(64);
 
-                await _databaseService.RegiserUser(userToCreate);
+                await _databaseService.RegiserUserAsync(userToCreate);
                 await _mailService.SendMail(userToCreate.Email, userToCreate.EmailValidationId);
                 return true;
             }
@@ -183,7 +183,7 @@ namespace Themenschaedel.API.Services
         {
             try
             {
-                await _databaseService.VerifyEmailAddress(verificationId);
+                await _databaseService.VerifyEmailAddressAsync(verificationId);
                 return true;
             }
             catch (Exception e)
@@ -248,17 +248,17 @@ namespace Themenschaedel.API.Services
             }
 
             // maybe add, if refresh token exists
-            await _databaseService.ClearAllToken(cachedTokens[0].UserId);
+            await _databaseService.ClearAllTokenAsync(cachedTokens[0].UserId);
         }
 
         public async Task<Token> RefreshTokenAsync(RefreshTokenRequest refreshTokenRequest)
         {
-            User user = await _databaseService.GetUserByUserId(refreshTokenRequest.UserId);
+            User user = await _databaseService.GetUserByUserIdAsync(refreshTokenRequest.UserId);
 
             // This logic checks if a refresh token exists. If not, it will throw the exception 'RefreshTokenDoesNotExist'.
             try
             {
-                TokenCache token = await _databaseService.GetRefreshToken(refreshTokenRequest.RefreshToken);
+                TokenCache token = await _databaseService.GetRefreshTokenAsync(refreshTokenRequest.RefreshToken);
             }
             catch (RefreshTokenDoesNotExist e)
             {
