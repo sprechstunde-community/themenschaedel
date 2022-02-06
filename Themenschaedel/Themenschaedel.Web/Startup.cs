@@ -62,7 +62,7 @@ namespace Themenschaedel.Web
             
             services.AddScoped<Themenschaedel.Web.Services.Interfaces.IUserSession, Themenschaedel.Web.Services.UserSession>();
             
-            services.AddHttpClient<IData, ApiData>(client =>
+            services.AddHttpClient<IDeprecatedData, DeprecatedApiDeprecatedData>(client =>
             {
                 client.BaseAddress = new Uri("https://api.schaedel.rocks/");
             });

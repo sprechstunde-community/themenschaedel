@@ -14,7 +14,7 @@ namespace Themenschaedel.Components
         [Parameter] [Required] public int episodeId { get; set; }
         [Parameter] public Episode episode { get; set; }
 
-        [Inject] protected IData _data { get; set; }
+        [Inject] protected IDeprecatedData DeprecatedData { get; set; }
 
         protected GetTopicWorkaroundWrapper wrapper;
         protected List<Topic> topics = new List<Topic>();
@@ -22,7 +22,7 @@ namespace Themenschaedel.Components
         protected override async Task OnInitializedAsync()
         {
             topics = episode.topics;
-            wrapper = await this._data.GetTopics(episodeId);
+            wrapper = await this.DeprecatedData.GetTopics(episodeId);
             if (wrapper.data != null)
             {
                 topics = wrapper.data;

@@ -90,7 +90,7 @@
 @code{
 
     [Inject]
-    private IData _data { get; set; }
+    private IDeprecatedData DeprecatedData { get; set; }
 
     protected bool isLoggedIn = false;
 
@@ -136,7 +136,7 @@
 
     private async Task<IEnumerable<Search>> Search(string searchText)
     {
-        SearchResult = await _data.Search(searchText);
+        SearchResult = await DeprecatedData.Search(searchText);
         return await Task.FromResult(SearchResult);
     }
 

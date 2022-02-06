@@ -41,6 +41,14 @@ namespace Themenschaedel.Shared.Models.Request
 
     public class TopicRequest
     {
+        public TopicRequest() {}
+
+        public TopicRequest(List<PeopleInEpisode> people, List<TopicPostRequest> topics)
+        {
+            People = people;
+            Topics = topics;
+        }
+
         [JsonPropertyName("people")]
         public List<PeopleInEpisode> People { get; set; } = new List<PeopleInEpisode>();
 

@@ -1,17 +1,20 @@
 using System.Threading.Tasks;
-using Themenschaedel.Shared.Props;
+using Themenschaedel.Shared.Models;
+using Themenschaedel.Shared.Models.Response;
+using Themenschaedel.Web.Pages;
+using Settings = Themenschaedel.Shared.Models.Settings;
 
 namespace Themenschaedel.Web.Services.Interfaces
 {
     public interface IUserSession
     {
-        Task SetAuthenticationTokenAsync(Token authenticationToken, bool keepLoggedIn);
+        Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, bool keepLoggedIn);
         bool IsLoggedIn();
         Task<bool> IsLoggedInAsync();
-        Task<ShortUser> GetCurrentlyLoggedInUser();
+        Task<UserResponse> GetCurrentlyLoggedInUser();
         Task Logout();
         Task<bool> RecheckLoginAndClearIfInvalid();
-        Task<Token> GetToken();
+        Task<LoginResponse> GetToken();
         Task<Settings> GetSettings();
         Task SetSettings(Settings settings);
     }

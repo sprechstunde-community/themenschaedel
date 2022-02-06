@@ -1,9 +1,9 @@
-﻿@using Themenschaedel.Shared.Props
+﻿@using Themenschaedel.Shared.Models
 @using Humanizer
 @inherits Themenschaedel.Components.EpisodeCollection
 
 <div class="videos">
-    @foreach (Episode item in Episodes)
+    @foreach (EpisodeClient item in Episodes)
     {
         <EpisodeCard item="@item"  />
     }

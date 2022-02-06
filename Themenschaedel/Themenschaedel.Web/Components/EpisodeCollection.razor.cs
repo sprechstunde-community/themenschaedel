@@ -11,7 +11,7 @@ namespace Themenschaedel.Components
     public partial class EpisodeCollection : ComponentBase
     {
         [Inject] private IJSRuntime JSRuntime { get; set; }
-        [Inject] private IData Data { get; set; }
+        [Inject] private IDeprecatedData DeprecatedData { get; set; }
 
         public bool IsLoading { get; set; } = false;
 
@@ -50,7 +50,7 @@ namespace Themenschaedel.Components
 
                 //await Task.Delay(1000);
 
-                GetEpisodesWorkaround ep = await Data.GetEpisodes(PageSize, PageNumber);
+                GetEpisodesWorkaround ep = await DeprecatedData.GetEpisodes(PageSize, PageNumber);
                 for (int j = 0; j < ep.data.Count; j++)
                 {
                     ep.data[j].AnimationDelay = _cssDelay + j * 100;

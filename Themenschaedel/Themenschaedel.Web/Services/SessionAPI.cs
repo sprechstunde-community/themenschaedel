@@ -4,9 +4,10 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Sentry;
-using Themenschaedel.Shared.Props;
+using Themenschaedel.Shared.Models;
+using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Shared.Models.Response;
 using Themenschaedel.Web.Services.Interfaces;
-using User = Themenschaedel.Shared.Props.User;
 
 namespace Themenschaedel.Web.Services
 {
@@ -26,10 +27,10 @@ namespace Themenschaedel.Web.Services
             throw new System.NotImplementedException();
         }
 
-        private async Task<Token> GetToken() =>
-            await _sessionStorage.GetItemAsync<Token>("Token");
+        private async Task<LoginResponse> GetToken() =>
+            await _sessionStorage.GetItemAsync<LoginResponse>("Token");
 
-        public async Task<ShortUser> GetCurrentUserData()
+        public async Task<UserResponse> GetCurrentUserData()
         {
             try
             {
@@ -37,18 +38,15 @@ namespace Themenschaedel.Web.Services
                     new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}me"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await GetToken()).AccessToken);
 
                     var response = await _httpClient.SendAsync(requestMessage);
 
                     if (response.IsSuccessStatusCode)
                     {
                         string json = response.Content.ReadAsStringAsync().Result;
-                        ShortUserWrapper user = JsonConvert.DeserializeObject<ShortUserWrapper>(json);
-                        return user.data;
-                    }else if (response.RequestMessage.RequestUri == new Uri("https://account.schaedel.rocks/login"))
-                    {
-                        return null;
+                        UserResponse user = JsonConvert.DeserializeObject<UserResponse>(json);
+                        return user;
                     }
                     else
                     {
@@ -72,7 +70,7 @@ namespace Themenschaedel.Web.Services
                     new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/logout"))
                 {
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await GetToken()).access_token);
+                        new AuthenticationHeaderValue("Bearer", (await GetToken()).AccessToken);
 
                     await _httpClient.SendAsync(requestMessage);
                 }
@@ -81,6 +79,46 @@ namespace Themenschaedel.Web.Services
             {
                 SentrySdk.CaptureException(e);
             }
+        }
+
+        public async Task<LoginResponse> RefreshToken()
+        {
+            try
+            {
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/refresh_token"))
+                {
+                    LoginResponse initialToken = await GetToken();
+                    RefreshTokenRequest request = new RefreshTokenRequest()
+                    {
+                        RefreshToken = initialToken.RefreshToken,
+                        UserId = initialToken.UserId
+                    };
+
+                    var response = await _httpClient.SendAsync(requestMessage);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string json = response.Content.ReadAsStringAsync().Result;
+                        Token token = JsonConvert.DeserializeObject<Token>(json);
+                        LoginResponse loginResponse = new LoginResponse();
+                        loginResponse = initialToken;
+                        loginResponse.ValidUntil = token.ValidUntil;
+                        loginResponse.AccessToken = token.Value;
+                        return loginResponse;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return null;
         }
     }
 }

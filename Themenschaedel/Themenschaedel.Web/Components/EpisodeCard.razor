@@ -1,4 +1,4 @@
-﻿@using Themenschaedel.Shared.Props
+﻿@using Themenschaedel.Shared.Models
 @using Humanizer
 @inject NavigationManager NavigationManager
 
@@ -116,12 +116,12 @@
         }
 </style>
 
-<a href="episode/@item.id">
+<a href="episode/@item.Id">
     <div class="video anim" style="@item.AnimationDelayCSS" @onclick="@(e => EpisodeClick())">
-        <div class="video-time">@(item.duration/60)m</div>
+        <div class="video-time">@(item.Duration/60)m</div>
         <div class="video-claim-status"><EpisodePills ClaimStatus=@item.ClaimStatus StatusStyle="EpisodePills.Style.Transparent"/></div>
         <div class="video-wrapper" @onclick="@(e => EpisodeClick())">
-            <img class="thumbnail" src="@item.image" />
+            <img class="thumbnail" src="@item.Image" />
             <div class="author-img__wrapper video-author">
                 <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check feather feather-check" viewBox="0 0 24 24" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -131,8 +131,8 @@
             </div>
         </div>
         <div class="video-by">Andy William</div>
-        <div class="video-name" @onclick="@(e => EpisodeClick())"><a href="episode/@item.id">@((MarkupString)item.title)</a></div>
-        <div class="video-view">@item.published_at.Humanize().ToString()</div>
+        <div class="video-name" @onclick="@(e => EpisodeClick())"><a href="episode/@item.Id">@((MarkupString)item.Title)</a></div>
+        <div class="video-view">@item.PublishedAt.Humanize().ToString()</div>
     </div>
 </a>
 
@@ -140,12 +140,12 @@
 @code {
 
     [Parameter]
-    public Episode item { get; set; }
+    public EpisodeClient item { get; set; }
 
     protected const string cssThumbnailHover = "display: none;";
 
     protected void EpisodeClick()
     {
-        NavigationManager.NavigateTo($"episode/{item.id}");
+        NavigationManager.NavigateTo($"episode/{item.Id}");
     }
 }

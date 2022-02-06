@@ -7,6 +7,8 @@ namespace Themenschaedel.Shared.Models.Response
 {
     public class LoginResponse
     {
+        [JsonPropertyName("user_id")]
+        public int UserId { get; set; }
         [JsonPropertyName("refresh_token")]
         public string RefreshToken { get; set; }
 

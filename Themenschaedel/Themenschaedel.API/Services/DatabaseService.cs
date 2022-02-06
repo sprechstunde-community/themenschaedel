@@ -99,7 +99,7 @@ namespace Themenschaedel.API.Services
         {
             _logger.LogInformation($"Returning all episodes from database, page: {page} per page: {perPage}.");
             var parameters = new { Page = page, PerPage = perPage };
-            var query = $"SELECT * FROM udf_episodes_GetRowsByPageNumberAndSize(@Page,@PerPage);";
+            var query = $"SELECT * FROM udf_GetEpisodesByPageNumberAndSize(@Page,@PerPage);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);

@@ -503,6 +503,7 @@ CREATE OR REPLACE FUNCTION udf_GetEpisodes()
 	flags bigint,
 	upvotes bigint,
 	downvotes bigint,
+	topic_count bigint,
 	claimed boolean)
   LANGUAGE plpgsql AS
 $BODY$
@@ -513,6 +514,7 @@ BEGIN
            (SELECT COUNT(*) FROM flags f WHERE f.id_episodes  = a.id) AS flags,
            (SELECT COUNT(CASE WHEN positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS upvotes,
            (SELECT COUNT(CASE WHEN NOT positive THEN 1 END) FROM votes v WHERE v.id_episodes  = a.id) AS downvotes,
+           (SELECT COUNT(*) FROM topic t WHERE t.id_episodes = a.id) AS topic_count,
            CASE WHEN b.id IS NOT NULL THEN true else false END claimed
     FROM episodes a
     LEFT JOIN claims b on a.id = b.id_episodes
@@ -544,6 +546,7 @@ CREATE OR REPLACE FUNCTION udf_GetEpisodesByPageNumberAndSize(
 	flags bigint,
 	upvotes bigint,
 	downvotes bigint,
+	topic_count bigint,
 	claimed boolean)
   LANGUAGE plpgsql AS
 $BODY$

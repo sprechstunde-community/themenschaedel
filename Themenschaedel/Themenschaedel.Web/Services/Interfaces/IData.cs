@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Themenschaedel.Shared.Props;
+using Themenschaedel.Shared.Models;
+using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Shared.Models.Response;
 
 namespace Themenschaedel.Web.Services.Interfaces
 {
     public interface IData
     {
-        Task<GetEpisodesWorkaround> GetEpisodes(int count, int page);
+        Task<EpisodeResponse> GetEpisodes(int count, int page);
         Task<Episode> GetEpisode(int id);
-        Task<Token> Login(string username, string password, bool keepLoggedIn);
-        Task<GetTopicWorkaroundWrapper> GetTopics(int EpisodeID);
+        Task<LoginResponse> Login(string username, string password, bool keepLoggedIn);
+        Task<List<TopicExtended>> GetTopics(int EpisodeID);
         Task ClaimEpisode(int episodeID);
-        Task<Topic> AddTopic(Topic topic, int episodeID);
-        Task<Topic> UpdateTopic(Topic topic);
-        Task DeleteTopic(Topic topic);
-        Task DeleteSubtopic(Subtopics subtopic);
-        Task<List<Search>> Search(string searchTerm);
+        Task<List<TopicExtended>> PostTopic(List<TopicPostRequest> topic, List<PeopleInEpisode> people, int episodeID);
+        Task<List<Themenschaedel.Shared.Models.Search>> Search(string searchTerm);
     }
 }

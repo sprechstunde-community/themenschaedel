@@ -1,5 +1,5 @@
 @page "/Settings"
-@using Themenschaedel.Shared.Props
+@using Themenschaedel.Shared.Models
 @using Themenschaedel.Web.Services.Interfaces
 @inject IUserSession _userSession
 <h1>Settings</h1>
@@ -35,7 +35,7 @@
 
         private const string ACTIVE_CSS_STRING = "is-active";
 
-    protected Themenschaedel.Shared.Props.Settings UserSetttings;
+    protected Themenschaedel.Shared.Models.Settings UserSetttings;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

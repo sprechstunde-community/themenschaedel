@@ -52,6 +52,32 @@ namespace Themenschaedel.API.Controllers
             }
         }
 
+        [HttpGet("{episodeId}")]
+        public async Task<ActionResult<List<TopicExtended>>> GetTopic(int episodeId)
+        {
+            try
+            {
+                if (!await _auth.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+
+                List<TopicExtended> topics = await _database.GetTopicsAsync(episodeId);
+
+                if (topics.Count == 0)
+                    return NoContent();
+
+                return Ok(topics);
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError("Error while trying to get all topics. Error:\n" + e.Message);
+                return Problem();
+            }
+        }
+
         [HttpPost]
         public async Task<ActionResult<List<TopicExtended>>> PostTopicList([FromBody] TopicRequest request)
         {

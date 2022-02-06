@@ -111,6 +111,7 @@ namespace Themenschaedel.API.Controllers
                 if (token != null)
                 {
                     LoginResponse response = new LoginResponse();
+                    response.UserId = token.UserId;
                     response.AccessToken = token.Value;
                     response.TokenType = "Bearer";
                     response.ValidUntil = token.ValidUntil;

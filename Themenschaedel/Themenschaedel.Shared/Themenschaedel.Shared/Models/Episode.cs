@@ -4,6 +4,13 @@ using System.Text;
 
 namespace Themenschaedel.Shared.Models
 {
+    public enum EpisodeClaimStatus
+    {
+        not_claimed,
+        claimed,
+        done
+    }
+
     public class Episode
     {
         public int Id { get; set; }
@@ -30,11 +37,39 @@ namespace Themenschaedel.Shared.Models
         public int Flags { get; set; }
         public int Upvotes { get; set; }
         public int Downvotes { get; set; }
+        public Int64 topic_count { get; set; }
     }
 
     public class EpisodeExtendedExtra : EpisodeExtended
     {
         public List<TopicExtended> Topic { get; set; } = new List<TopicExtended>();
         public List<Person> Person { get; set; } = new List<Person>();
+    }
+
+    public class EpisodeClient : EpisodeExtended
+    {
+        //Data not from the API
+        public string ThumbnailCSS { get; set; }
+        public string VideoCSS { get; set; }
+        public double AnimationDelay { get; set; }
+        public string AnimationDelayCSS => $"--delay: {AnimationDelay.ToString()}ms";
+
+        public EpisodeClaimStatus ClaimStatus => GetClaimStatus();
+
+        public EpisodeClaimStatus GetClaimStatus()
+        {
+            if (Claimed)
+            {
+                return EpisodeClaimStatus.claimed;
+            }
+            else if (topic_count > 0)
+            {
+                return EpisodeClaimStatus.done;
+            }
+            else
+            {
+                return EpisodeClaimStatus.not_claimed;
+            }
+        }
     }
 }

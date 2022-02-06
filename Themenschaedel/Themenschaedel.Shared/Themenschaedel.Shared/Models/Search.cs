@@ -1,15 +1,17 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Themenschaedel.Shared.Props
+namespace Themenschaedel.Shared.Models
 {
-    public enum SearchType {Episode, Topic, Subtopic}
+    public enum SearchType { Episode, Topic, Subtopic }
     public class Search
     {
         public string UniqueGuid { get; set; }
         public SearchType Type { get; set; }
         public Episode Episode { get; set; }
-        public Topic Topic {get; set; }
-        public Subtopics Subtopic {get; set; }
+        public Topic Topic { get; set; }
+        public Subtopic Subtopic { get; set; }
 
         public Search(Episode episode)
         {
@@ -24,7 +26,7 @@ namespace Themenschaedel.Shared.Props
             this.Episode = episode;
             this.Topic = topic;
         }
-        public Search(Episode episode, Topic topic, Subtopics subtopic)
+        public Search(Episode episode, Topic topic, Subtopic subtopic)
         {
             UniqueGuid = Guid.NewGuid().ToString();
             Type = SearchType.Subtopic;

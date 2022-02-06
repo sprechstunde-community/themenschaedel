@@ -15,7 +15,7 @@ namespace Themenschaedel.Components
         [Parameter] [Required] public int episodeId { get; set; }
         [Parameter] public Episode episode { get; set; }
 
-        [Inject] protected IData _data { get; set; }
+        [Inject] protected IDeprecatedData DeprecatedData { get; set; }
         [Inject] protected IToastService _toastService { get; set; }
 
         protected GetTopicWorkaroundWrapper wrapper;
@@ -40,7 +40,7 @@ namespace Themenschaedel.Components
             {
                 //Server request (delete topic)
                 //else is not needed, as else the api never knew about this topic
-                await _data.DeleteTopic(topic);
+                await DeprecatedData.DeleteTopic(topic);
             }
 
             localTopics.Remove(topic);
@@ -55,7 +55,7 @@ namespace Themenschaedel.Components
             {
                 //Server request (delete topic)
                 //else is not needed, as else the api never knew about this topic
-                await _data.DeleteSubtopic(subtopic);
+                await DeprecatedData.DeleteSubtopic(subtopic);
             }
 
             this.StateHasChanged();
@@ -67,7 +67,7 @@ namespace Themenschaedel.Components
         protected async Task PopulateTopics()
         {
             localTopics = episode.topics;
-            wrapper = await this._data.GetTopics(episodeId);
+            wrapper = await this.DeprecatedData.GetTopics(episodeId);
             if (wrapper.data != null)
             {
                 localTopics = wrapper.data;
@@ -84,11 +84,11 @@ namespace Themenschaedel.Components
             {
                 //Server request (delete topic)
                 //else is not needed, as else the api never knew about this topic
-                localTopics[topicIndex] = await _data.UpdateTopic(topic);
+                localTopics[topicIndex] = await DeprecatedData.UpdateTopic(topic);
             }
             else
             {
-                localTopics[topicIndex] = await _data.AddTopic(topic, episodeId);
+                localTopics[topicIndex] = await DeprecatedData.AddTopic(topic, episodeId);
             }
 
             if (localTopics[topicIndex] != null)

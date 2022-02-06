@@ -1,8 +1,8 @@
 @page "/Episode/{Id:int}"
 @using Themenschaedel.Web.Services.Interfaces
-@using Themenschaedel.Shared.Props
 @using Humanizer
 @using Ganss.XSS
+@using Themenschaedel.Shared.Models
 
 <!-- thanks https://pavellaptev.medium.com/css-weekly-2-an-image-on-the-left-text-on-the-left-a5e59b2acdb5 -->
 <div class="episode-container">
@@ -21,7 +21,7 @@
             <button class="default-button" @onclick="ClaimEpisode"><i class="ti ti-bookmark"></i>Claim Episode</button>
         }
     </div>
-    @if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
+    @if (EpisodeMisc.GetClaimStatus(episode) != EpisodeClaimStatus.not_claimed)
     {
         <hr/>
     }
@@ -41,12 +41,12 @@
     public int Id { get; set; }
 
     [Inject]
-    private IData _apiData { get; set; }
+    private IData ApiData { get; set; }
 
     [Inject]
     private IUserSession UserSession { get; set; }
 
-    public Episode episode = new Episode();
+    public EpisodeExtended episode = new EpisodeExtended();
 
     public static string sanitizedDescription = "";
 
@@ -55,7 +55,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        episode = await _apiData.GetEpisode(Id);
+        episode = await ApiData.GetEpisode(Id);
 
     // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
     // cannot contain any xss exploits.
