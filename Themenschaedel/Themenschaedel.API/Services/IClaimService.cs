@@ -9,5 +9,6 @@ namespace Themenschaedel.API.Services
         public void ClearExpiredClaimsAync();
         public Task<bool> HasUserClaimOnEpisodeAsync(int episodeId, int userId);
         public Task<Episode> GetUserByClaimedEpisodeAsync(int userId);
+        public Task AddExtraTimeToClaim(int userId);
     }
 }

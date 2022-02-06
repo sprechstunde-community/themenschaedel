@@ -88,5 +88,40 @@ namespace Themenschaedel.API.Controllers
 
             return Problem();
         }
+
+        [HttpPost("extend_time")]
+        public async Task<ActionResult<ClaimResponse>> PostAdditionalTime()
+        {
+            try
+            {
+                User user = await _auth.GetUserFromValidToken(Request);
+                Episode claimedEpisode = await _claim.GetUserByClaimedEpisodeAsync(user.Id);
+
+                await _claim.AddExtraTimeToClaim(user.Id);
+
+                return Ok();
+            }
+            catch (TimeExtendedTooOftenException)
+            {
+                return BadRequest("The time was already extended too often.");
+            }
+            catch (ClaimNotNearEnoughToInvalidationException)
+            {
+                return BadRequest("Token is not close enough to invalidation, please wait until the last 5 minutes to extend the valid until time.");
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("Sequence contains no elements")) return BadRequest("Currently there are no claimed episodes by this user.");
+
+                _logger.LogError($"Error extend claim time. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
+
+            return Problem();
+        }
     }
 }

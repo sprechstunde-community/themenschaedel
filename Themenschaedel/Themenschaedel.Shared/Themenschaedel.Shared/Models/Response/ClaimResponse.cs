@@ -25,4 +25,34 @@ namespace Themenschaedel.Shared.Models.Response
             : base(message, innerException)
         { }
     }
+
+    [Serializable]
+    public class ClaimNotNearEnoughToInvalidationException : Exception
+    {
+        public ClaimNotNearEnoughToInvalidationException()
+        { }
+
+        public ClaimNotNearEnoughToInvalidationException(string message)
+            : base(message)
+        { }
+
+        public ClaimNotNearEnoughToInvalidationException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+    }
+
+    [Serializable]
+    public class TimeExtendedTooOftenException : Exception
+    {
+        public TimeExtendedTooOftenException()
+        { }
+
+        public TimeExtendedTooOftenException(string message)
+            : base(message)
+        { }
+
+        public TimeExtendedTooOftenException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+    }
 }

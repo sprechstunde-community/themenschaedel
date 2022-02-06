@@ -633,5 +633,28 @@ namespace Themenschaedel.API.Services
                 return await connection.QuerySingleAsync<int>(processQuery);
             }
         }
+
+        public async Task<Claim> GetClaimByUserIdAsync(int userId)
+        {
+            _logger.LogInformation($"Returning claim by user with id: {userId}.");
+            var parameters = new { uId = userId };
+            var query = $"SELECT * FROM claims WHERE id_user = @uId;";
+            using (var connection = _context.CreateConnection())
+            {
+                var claim = await connection.QuerySingleAsync<Claim>(query, parameters);
+                return claim;
+            }
+        }
+
+        public async Task UpdateClaimsValidUntil(int claimId, DateTime newValidUntilTime)
+        {
+            _logger.LogInformation($"Adding additional time to claim with id: {claimId}, new time is: {newValidUntilTime.ToString()}.");
+            var parameters = new { cId = claimId, valid_until = newValidUntilTime};
+            var query = $"UPDATE claims SET valid_until=@valid_until WHERE id=@cId";
+            using (var connection = _context.CreateConnection())
+            {
+                await connection.ExecuteAsync(query, parameters);
+            }
+        }
     }
 }
