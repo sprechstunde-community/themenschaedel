@@ -39,9 +39,24 @@ namespace Themenschaedel.Shared.Models.Request
         public string Name { get; set; }
     }
 
+    public class TopicRequest
+    {
+        [JsonPropertyName("people")]
+        public List<PeopleInEpisode> People { get; set; } = new List<PeopleInEpisode>();
+
+        [JsonPropertyName("topics")]
+        public List<TopicPostRequest> Topics { get; set; } = new List<TopicPostRequest>();
+    }
+
+    public class PeopleInEpisode
+    {
+        [JsonPropertyName("person_id")]
+        public int PersonId { get; set; }
+    }
+
     public class ProcessedTopicPostRequest : TopicPostRequest
     {
-        public ProcessedTopicPostRequest(){}
+        public ProcessedTopicPostRequest() { }
         public ProcessedTopicPostRequest(TopicPostRequest topic) : base(topic) { }
 
         public int Duration => TimestampEnd - TimestampStart;

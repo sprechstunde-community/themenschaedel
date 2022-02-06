@@ -666,7 +666,7 @@ namespace Themenschaedel.API.Services
         public async Task UpdateClaimsValidUntilAsync(int claimId, DateTime newValidUntilTime)
         {
             _logger.LogInformation($"Adding additional time to claim with id: {claimId}, new time is: {newValidUntilTime.ToString()}.");
-            var parameters = new { cId = claimId, valid_until = newValidUntilTime};
+            var parameters = new { cId = claimId, valid_until = newValidUntilTime };
             var query = $"UPDATE claims SET valid_until=@valid_until WHERE id=@cId";
             using (var connection = _context.CreateConnection())
             {
@@ -698,6 +698,73 @@ namespace Themenschaedel.API.Services
             {
                 string processQuery = "SELECT * FROM episodes WHERE episode_number > @minEpNumber;";
                 return connection.Query<Episode>(processQuery, parameters).ToList();
+            }
+        }
+
+        public async Task<List<Person>> GetAllPeopleAsync()
+        {
+            _logger.LogInformation($"Returning all people.");
+            var query = $"SELECT * FROM person;";
+            using (var connection = _context.CreateConnection())
+            {
+                var people = await connection.QueryAsync<Person>(query);
+                return people.ToList();
+            }
+        }
+
+        public async Task InsertPeopleInEpisodeAsync(List<PeopleInEpisode> people, int episodeId)
+        {
+            _logger.LogInformation($"Inserting people into episode with id: {episodeId}");
+            _logger.LogDebug($"Inserting people: {ObjectLogger.Dump(people)}");
+            foreach (PeopleInEpisode person in people)
+            {
+                using (var connection = _context.CreateConnection())
+                {
+                    var parameters = new { created_at = DateTime.Now, id_person = person.PersonId, id_episodes = episodeId };
+                    string processQuery = "INSERT INTO episode_person (created_at,id_person,id_episodes) VALUES (@created_at,@id_person,@id_episodes);";
+                    await connection.ExecuteAsync(processQuery, parameters);
+                }
+            }
+        }
+
+        public async Task DeletePeopleFromEpisodeByEpisodeIdAsync(int episodeId)
+        {
+            _logger.LogInformation($"Deleting people in episode with episode id: {episodeId}");
+            var parameters = new { epId = episodeId };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "DELETE FROM episode_person WHERE id_episodes=@epId;";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task ResetIdentityForPersonInEpisodeTableAsync()
+        {
+            _logger.LogInformation($"Reseting id identity for episode_person table.");
+            int lastTopicId = 0;
+            try
+            {
+                lastTopicId = await GetLastIdInEpisodePerson();
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("Sequence contains no elements")) return;
+            }
+
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = $"ALTER SEQUENCE episode_person_id_seq RESTART WITH {lastTopicId + 1};";
+                await connection.ExecuteAsync(processQuery);
+            }
+        }
+
+        private async Task<int> GetLastIdInEpisodePerson()
+        {
+            _logger.LogInformation($"Getting last Id in table topic.");
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "SELECT id FROM episode_person ORDER BY id DESC LIMIT 1;";
+                return await connection.QuerySingleAsync<int>(processQuery);
             }
         }
     }

@@ -44,6 +44,10 @@ namespace Themenschaedel.API.Services
 
         // Person
         public Task<List<Person>> GetPeopleFeaturedInEpisodeByEpisodeIdAsync(int episodeId);
+        public Task<List<Person>> GetAllPeopleAsync();
+        public Task InsertPeopleInEpisodeAsync(List<PeopleInEpisode> people, int episodeId);
+        public Task DeletePeopleFromEpisodeByEpisodeIdAsync(int episodeId);
+        public Task ResetIdentityForPersonInEpisodeTableAsync();
 
         // Claims
         public Task<bool> CheckIfEpisodeIsClaimedByEpisodeIdAsync(int episodeId);

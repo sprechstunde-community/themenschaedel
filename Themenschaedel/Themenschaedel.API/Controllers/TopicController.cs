@@ -53,23 +53,29 @@ namespace Themenschaedel.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<List<TopicExtended>>> PostTopicList([FromBody] List<TopicPostRequest> topics)
+        public async Task<ActionResult<List<TopicExtended>>> PostTopicList([FromBody] TopicRequest request)
         {
-            if (topics == null) return BadRequest("Topic list is null!");
-            if (topics.Count == 0) return BadRequest("Topic list is empty!");
+            if (request.Topics == null) return BadRequest("Topic list is null!");
+            if (request.Topics.Count == 0) return BadRequest("Topic list is empty!");
 
             try
             {
                 User user = await _auth.GetUserFromValidToken(Request);
                 Episode claimedEpisode = await _claims.GetUserByClaimedEpisodeAsync(user.Id);
 
+                // Topics and Subtopics
                 await _database.DeleteTopicAndSubtopicAsync(claimedEpisode.Id);
                 await _database.ResetIdentityForTopicAndSubtopicsAsync();
 
-                for (int i = 0; i < topics.Count; i++)
+                for (int i = 0; i < request.Topics.Count; i++)
                 {
-                    await _database.InsertTopicAsync(new ProcessedTopicPostRequest(topics[i]), claimedEpisode.Id, user.Id);
+                    await _database.InsertTopicAsync(new ProcessedTopicPostRequest(request.Topics[i]), claimedEpisode.Id, user.Id);
                 }
+
+                // People
+                await _database.DeletePeopleFromEpisodeByEpisodeIdAsync(claimedEpisode.Id);
+                await _database.ResetIdentityForPersonInEpisodeTableAsync();
+                await _database.InsertPeopleInEpisodeAsync(request.People, claimedEpisode.Id);
 
                 EpisodeExtendedExtra episode = await _database.GetEpisodeAsync(claimedEpisode.Id, true);
 
