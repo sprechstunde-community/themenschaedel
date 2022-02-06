@@ -26,6 +26,7 @@ namespace Themenschaedel.API.Services
         public Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage);
         public List<Episode> GetAllEpisodes();
         public void AddEpisodes(List<Episode> episodes);
+        public List<Episode> GetAllNewEpisodes(List<Episode> episodes);
         public Task<int> GetEpisodeCountAsync();
         public Task<int> GetUnverifiedEpisodeCountAsync();
         public Task VerifyEpisodeAsync(int episodeId);

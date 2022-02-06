@@ -49,6 +49,38 @@ namespace Themenschaedel.Shared.Models
         public int UserId { get; set; }
     }
 
+    public class TopicTest
+    {
+        public TopicTest() { }
+
+        public TopicTest(Topic topic)
+        {
+            Id = topic.Id;
+            Name = topic.Name;
+            TimestampStart = topic.TimestampStart;
+            TimestampEnd = topic.TimestampEnd;
+            Duration = topic.Duration;
+            CommunityContributed = topic.CommunityContributed;
+            Ad = topic.Ad;
+            CreatedAt = topic.CreatedAt;
+            UpdatedAt = topic.UpdatedAt;
+            EpisodeId = topic.EpisodeId;
+            UserId = topic.UserId;
+        }
+        
+        public Int64 Id { get; set; }
+        public string Name { get; set; }
+        public int TimestampStart { get; set; }
+        public int TimestampEnd { get; set; }
+        public int Duration { get; set; }
+        public bool CommunityContributed { get; set; }
+        public bool Ad { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public int EpisodeId { get; set; }
+        public int UserId { get; set; }
+    }
+
     public class TopicExtended : Topic
     {
         public TopicExtended() { }

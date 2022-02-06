@@ -604,12 +604,29 @@ namespace Themenschaedel.API.Services
         public async Task ResetIdentityForTopicAndSubtopicsAsync()
         {
             _logger.LogDebug($"Reseting id identity for Topic and Subtopics table");
-            int lastTopicId = await GetLastIdInTopic();
-            int lastSubtpicsId = await GetLastIdInSubtopics();
+            int lastTopicId = 0;
+            try
+            {
+                lastTopicId = await GetLastIdInTopic();
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("Sequence contains no elements")) return;
+            }
+
+            int lastSubtpicsId = 0;
+            try
+            {
+                lastSubtpicsId = await GetLastIdInSubtopics();
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("Sequence contains no elements")) return;
+            }
             //var parameters = new { last_topic_id = lastTopicId, last_subtopics_id = lastSubtpicsId };
             using (var connection = _context.CreateConnection())
             {
-                string processQuery = $"ALTER SEQUENCE topic_id_seq RESTART WITH {lastTopicId + 1}; ALTER SEQUENCE subtopics_id_seq RESTART WITH {lastSubtpicsId + 3};";
+                string processQuery = $"ALTER SEQUENCE topic_id_seq RESTART WITH {lastTopicId + 1}; ALTER SEQUENCE subtopics_id_seq RESTART WITH {lastSubtpicsId + 1};";
                 await connection.ExecuteAsync(processQuery);
             }
         }
@@ -665,6 +682,22 @@ namespace Themenschaedel.API.Services
             {
                 string processQuery = "DELETE FROM claims WHERE id_episodes=@epId;";
                 await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public List<Episode> GetAllNewEpisodes(List<Episode> episodes)
+        {
+            Episode minIdEpisode = episodes[0];
+            foreach (var episode in episodes)
+            {
+                if (episode.EpisodeNumber < minIdEpisode.EpisodeNumber)
+                    minIdEpisode = episode;
+            }
+            var parameters = new { minEpNumber = minIdEpisode.EpisodeNumber };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "SELECT * FROM episodes WHERE episode_number > @minEpNumber;";
+                return connection.Query<Episode>(processQuery, parameters).ToList();
             }
         }
     }

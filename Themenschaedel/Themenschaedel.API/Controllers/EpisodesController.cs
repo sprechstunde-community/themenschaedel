@@ -17,12 +17,14 @@ namespace Themenschaedel.API.Controllers
         private readonly ILogger<EpisodesController> _logger;
         private readonly IAuthenticationService _authenticationService;
         private readonly IClaimService _claims;
-        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger, IAuthenticationService authenticationService, IClaimService claims)
+        private readonly ISearchService _search;
+        public EpisodesController(IDatabaseService databaseService, ILogger<EpisodesController> logger, IAuthenticationService authenticationService, IClaimService claims, ISearchService searchService)
         {
             _databaseService = databaseService;
             _logger = logger;
             _authenticationService = authenticationService;
             _claims = claims;
+            _search = searchService;
         }
 
         [HttpGet("all")]
@@ -151,13 +153,16 @@ namespace Themenschaedel.API.Controllers
             {
                 if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
 
-                EpisodeExtendedExtra episode = await _databaseService.GetEpisodeAsync(id);
-                if (episode.Topic == new List<TopicExtended>())
+                EpisodeExtendedExtra episode = await _databaseService.GetEpisodeAsync(id, true);
+                if (episode.Topic == null || episode.Topic.Count == 0)
                 {
-                    return BadRequest("Episode has nothin to verify.");
+                    return BadRequest("Episode has nothing to verify.");
                 }
 
+                if (episode.Verified) return BadRequest("Episode is already verified.");
+
                 await _databaseService.VerifyEpisodeAsync(id);
+                await _search.AddTopicsAsync(episode.Topic);
                 return Ok();
             }
             catch (TokenDoesNotExistException e)

@@ -14,12 +14,14 @@ namespace Themenschaedel.API.Worker
         private readonly ILogger<RssFeedScrapperWorker> _logger;
         private readonly IConfiguration _configuration;
         private readonly IDatabaseService _database;
+        private readonly ISearchService _search;
 
-        public RssFeedScrapperWorker(ILogger<RssFeedScrapperWorker> logger, IConfiguration configuration, IDatabaseService databaseService)
+        public RssFeedScrapperWorker(ILogger<RssFeedScrapperWorker> logger, IConfiguration configuration, IDatabaseService databaseService, ISearchService searchService)
         {
             _logger = logger;
             _configuration = configuration;
             _database = databaseService;
+            _search = searchService;
             JobManager.Initialize();
         }
 
@@ -94,6 +96,7 @@ namespace Themenschaedel.API.Worker
                 try
                 {
                     _database.AddEpisodes(newEpisodes);
+                    _search.AddEpisodes(_database.GetAllNewEpisodes(newEpisodes));
                 }
                 catch (Exception e)
                 {
