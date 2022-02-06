@@ -95,5 +95,6 @@ namespace Themenschaedel.API.Controllers
         //  Add endpoint for clients to extend claim time (for about 30 minutes) -> Maybe a user should only be able to do that 10 times -> 5 more hours in total -> Done
         //  Add way for user/client to remove claim -> already saved stuff will be kept -> Maybe don't add, as users should not claim und unclaim "just to edit another episode", user has to commit to a claimed episode!
         //  Add way for admins to assign other users to abandoned claims -> easily implementable, as the "constraint" of a user only being able to claim a unverified episode with topics is only prohibited by API logic and not by database logic -> see ClaimEpisodeAsync() first 3 lines
+        //  Add way for Admin to remove a claim on an episode
     }
 }

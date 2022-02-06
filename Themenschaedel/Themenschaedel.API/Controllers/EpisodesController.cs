@@ -196,5 +196,28 @@ namespace Themenschaedel.API.Controllers
                 return Problem();
             }
         }
+
+        // DELETE api/<EpisodesController>/5
+        [HttpDelete("delete/topics/{id}")]
+        public async Task<IActionResult> DeleteAllTopicContent(int id)
+        {
+            try
+            {
+                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+
+                await _databaseService.DeleteTopicAndSubtopicAsync(id);
+                return Ok();
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError(e.Message);
+                return Problem();
+            }
+        }
     }
 }

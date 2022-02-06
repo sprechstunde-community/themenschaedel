@@ -17,7 +17,7 @@ namespace Themenschaedel.API.Services
             _database = databaseService;
         }
 
-        public async Task AddExtraTimeToClaim(int userId)
+        public async Task AddExtraTimeToClaimAsync(int userId)
         {
             Claim claim = await _database.GetClaimByUserIdAsync(userId);
 
@@ -30,7 +30,7 @@ namespace Themenschaedel.API.Services
             if ((claim.ValidUntil - DateTime.Now).TotalMinutes <= 5)
             {
                 DateTime newValiDateTime = DateTime.Now.AddMinutes(30);
-                await _database.UpdateClaimsValidUntil(claim.Id, newValiDateTime);
+                await _database.UpdateClaimsValidUntilAsync(claim.Id, newValiDateTime);
 
                 if (index == -1)
                 {
@@ -79,11 +79,29 @@ namespace Themenschaedel.API.Services
             _database.ClearAllExpiredClaims();
         }
 
+        public async Task DeleteClaimByEpisodeIdAsync(int episodeId) =>
+            await _database.DeleteClaimByEpisodeIdAsync(episodeId);
+
         public async Task<Episode> GetUserByClaimedEpisodeAsync(int userId) =>
             await _database.GetClaimedEpisodeByUserIdAsync(userId);
 
         public async Task<bool> HasUserClaimOnEpisodeAsync(int episodeId, int userId) =>
             await _database.CheckIfUserHasClaimOnEpisodeAsync(episodeId, userId);
+
+        public async Task<ClaimResponse> ReassingClaimAsync(Episode episode, int userId)
+        {
+            DateTime currentTime = DateTime.Now;
+            DateTime claimValidUntil = currentTime.AddSeconds(episode.Duration * 3);
+
+            await _database.ClaimEpisodeAsync(episode.Id, userId, claimValidUntil, currentTime);
+
+            return new ClaimResponse()
+            {
+                EpisodeId = episode.Id,
+                UserId = userId,
+                ValidUntil = claimValidUntil
+            };
+        }
     }
 
     public class AddedClaimTime

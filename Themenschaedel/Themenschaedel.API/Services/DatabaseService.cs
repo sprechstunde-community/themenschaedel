@@ -646,7 +646,7 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task UpdateClaimsValidUntil(int claimId, DateTime newValidUntilTime)
+        public async Task UpdateClaimsValidUntilAsync(int claimId, DateTime newValidUntilTime)
         {
             _logger.LogInformation($"Adding additional time to claim with id: {claimId}, new time is: {newValidUntilTime.ToString()}.");
             var parameters = new { cId = claimId, valid_until = newValidUntilTime};
@@ -654,6 +654,17 @@ namespace Themenschaedel.API.Services
             using (var connection = _context.CreateConnection())
             {
                 await connection.ExecuteAsync(query, parameters);
+            }
+        }
+
+        public async Task DeleteClaimByEpisodeIdAsync(int episodeId)
+        {
+            _logger.LogDebug($"Deleting claim with episode id: {episodeId}");
+            var parameters = new { epId = episodeId };
+            using (var connection = _context.CreateConnection())
+            {
+                string processQuery = "DELETE FROM claims WHERE id_episodes=@epId;";
+                await connection.ExecuteAsync(processQuery, parameters);
             }
         }
     }

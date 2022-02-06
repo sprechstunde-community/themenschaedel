@@ -46,4 +46,12 @@ namespace Themenschaedel.Shared.Models.Request
 
         public int Duration => TimestampEnd - TimestampStart;
     }
+
+    public class TopicReasingPostRequest
+    {
+        [JsonPropertyName("user_id")]
+        public int UserId { get; set; }
+        [JsonPropertyName("episode_id")]
+        public int EpisodeId { get; set; }
+    }
 }
