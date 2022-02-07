@@ -21,6 +21,7 @@ This repo contains materials from third parties, supplied under the following li
 	-	[MIT] Copyright (c) 2021 by javad (https://codepen.io/javadbat/pen/dyNwddd)
 	-	[MIT] Copyright (c) 2021 by Nadine Coelho (https://codepen.io/coelho-na/pen/NWgJwwx)
 	-	[MIT] Copyright (c) 2019 Blazored (https://github.com/Blazored/Typeahead)
+	-	[MIT] Copyright (c) 2020 Sven Matthys (https://github.com/SveNord/Sve-Blazor-ChipsInput)
 
 Copyright (c) 2021 by Aysenur Turk (https://codepen.io/TurkAysenur/pen/LYRKpWe)
 Copyright (c) 2021 by Nadine Coelho (https://codepen.io/coelho-na/pen/NWgJwwx)
@@ -40,6 +41,7 @@ Copyright (c) 2020 johan-v-r (https://github.com/johan-v-r/LibSassBuilder)
 Copyright (c) 2021 by Gibbu (https://codepen.io/Gibbu/pen/qxRwRp)
 Copyright (c) 2018 B.C.Rikko <https://github.com/BcRikko>
 Copyright (c) 2013-2016 Michael Ganss and HtmlSanitizer contributors (https://github.com/mganss/HtmlSanitizer)
+Copyright (c) 2020 Sven Matthys (https://github.com/SveNord/Sve-Blazor-ChipsInput)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

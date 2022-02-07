@@ -7,6 +7,8 @@ namespace Themenschaedel.Shared.Models.Response
 {
     public class UserResponse
     {
+        public UserResponse(){}
+
         public UserResponse(User user)
         {
             this.Id = user.Id;

@@ -21,6 +21,7 @@
     <PackageReference Include="Blazored.Typeahead" Version="4.6.0" />
     <PackageReference Include="HtmlSanitizer" Version="7.1.475" />
     <PackageReference Include="Humanizer" Version="2.13.14" />
+    <PackageReference Include="MeiliSearch" Version="0.9.0" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
     <PackageReference Include="Sentry.AspNetCore" Version="3.13.0" />
   </ItemGroup>

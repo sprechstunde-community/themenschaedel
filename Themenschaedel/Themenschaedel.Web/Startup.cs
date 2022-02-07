@@ -42,7 +42,8 @@ namespace Themenschaedel.Web
                             "https://status.alyra.dev/",
                             "https://atleris.com/",
                             "https://alyra.dev/",
-                            "https://api.schaedel.rocks/");
+                            "https://api.schaedel.rocks/",
+                            "https://localhost:44392/");
                     });
             });
             
@@ -57,14 +58,14 @@ namespace Themenschaedel.Web
 
             services.AddHttpClient<ISessionAPI, SessionAPI>(client =>
             {
-                client.BaseAddress = new Uri("https://api.schaedel.rocks/");
+                client.BaseAddress = new Uri("https://localhost:44392/api/");
             });
             
             services.AddScoped<Themenschaedel.Web.Services.Interfaces.IUserSession, Themenschaedel.Web.Services.UserSession>();
             
-            services.AddHttpClient<IDeprecatedData, DeprecatedApiDeprecatedData>(client =>
+            services.AddHttpClient<IData, ApiData>(client =>
             {
-                client.BaseAddress = new Uri("https://api.schaedel.rocks/");
+                client.BaseAddress = new Uri("https://localhost:44392/api/");
             });
         }
 

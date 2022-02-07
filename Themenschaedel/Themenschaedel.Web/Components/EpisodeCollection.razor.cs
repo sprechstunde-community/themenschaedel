@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Themenschaedel.Shared.Props;
+using Themenschaedel.Shared.Models;
+using Themenschaedel.Shared.Models.Response;
 using Themenschaedel.Web.Services.Interfaces;
 
 namespace Themenschaedel.Components
@@ -11,7 +12,7 @@ namespace Themenschaedel.Components
     public partial class EpisodeCollection : ComponentBase
     {
         [Inject] private IJSRuntime JSRuntime { get; set; }
-        [Inject] private IDeprecatedData DeprecatedData { get; set; }
+        [Inject] private IData _data { get; set; }
 
         public bool IsLoading { get; set; } = false;
 
@@ -21,7 +22,7 @@ namespace Themenschaedel.Components
 
         public bool StopLoading = false;
 
-        public List<Episode> Episodes { get; set; } = new List<Episode>();
+        public List<EpisodeClient> Episodes { get; set; } = new List<EpisodeClient>();
 
         Random random = new Random();
 
@@ -49,24 +50,25 @@ namespace Themenschaedel.Components
                 StateHasChanged();
 
                 //await Task.Delay(1000);
-
-                GetEpisodesWorkaround ep = await DeprecatedData.GetEpisodes(PageSize, PageNumber);
-                for (int j = 0; j < ep.data.Count; j++)
+                EpisodeResponse ep = await _data.GetEpisodes(PageSize, PageNumber);
+                if (ep == null) return;
+                for (int j = 0; j < ep.Data.Count; j++)
                 {
-                    ep.data[j].AnimationDelay = _cssDelay + j * 100;
+                    EpisodeClient episodeClient = new EpisodeClient(ep.Data[j]);
+                    episodeClient.AnimationDelay = _cssDelay + j * 100;
 
-                    Episodes.Add(ep.data[j]);
+                    Episodes.Add(episodeClient);
 
-                    if (Episodes[Episodes.Count - 1].image == null || Episodes[Episodes.Count - 1].image == "")
+                    if (Episodes[Episodes.Count - 1].Image == null || Episodes[Episodes.Count - 1].Image == "")
                     {
-                        Episodes[Episodes.Count - 1].image = "assets/WhiteThemenschaedel.png";
+                        Episodes[Episodes.Count - 1].Image = "assets/WhiteThemenschaedel.png";
                         if (random.Next(1, 10001) > 9995)
                         {
-                            Episodes[Episodes.Count - 1].image = "assets/WhiteThemenschaedel3.png";
+                            Episodes[Episodes.Count - 1].Image = "assets/WhiteThemenschaedel3.png";
                         }
                         if (random.Next(1, 10001) > 9900)
                         {
-                            Episodes[Episodes.Count - 1].image = "assets/WhiteThemenschaedel2.png";
+                            Episodes[Episodes.Count - 1].Image = "assets/WhiteThemenschaedel2.png";
                         }
                     }
                 }
@@ -79,7 +81,7 @@ namespace Themenschaedel.Components
 
 
                 //at the end of pages or results stop loading anymore
-                if (PageNumber > ep.meta.last_page)
+                if (PageNumber > ep.Meta.EpisodeMaxPageCount)
                 {
                     await StopListener();
                 }

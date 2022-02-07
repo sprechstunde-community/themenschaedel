@@ -1,7 +1,8 @@
 ﻿@using Themenschaedel.Web.Services.Interfaces
-@using Themenschaedel.Shared.Props
 @using Sentry
-@inject ISession _session
+@using Themenschaedel.Shared.Models
+@using Themenschaedel.Shared.Models.Response
+@inject IUserSession _session
 @inject IToastService _toastService
 @inject NavigationManager NavigationManager
 
@@ -18,42 +19,42 @@
                 case SearchType.Topic:
                     <div class="search-selected">
                         <div class="item" max-width="150px" max-height="150px" width="150px" height="150px">
-                            <img src="@searchResult.Episode.image" max-width="150px" max-height="150px" width="150px" height="150px"/>
+                            <img src="@searchResult.Episode.Image" max-width="150px" max-height="150px" width="150px" height="150px"/>
                         </div>
                         <div class="item">
-                            <p>Episode Name: @searchResult.Episode.title</p>
-                            <p>Episode Length: @(searchResult.Episode.duration / 60)m</p>
+                            <p>Episode Name: @searchResult.Episode.Title</p>
+                            <p>Episode Length: @(searchResult.Episode.Duration / 60)m</p>
                         </div>
                         <div class="item">
-                            Search find: @searchResult.Topic.name
+                            Search find: @searchResult.Topic.Name
                         </div>
                     </div>
                     break;
                 case SearchType.Subtopic:
                     <div class="search-selected">
                         <div class="item" max-width="150px" max-height="150px" width="150px" height="150px">
-                            <img src="@searchResult.Episode.image" max-width="150px" max-height="150px" width="150px" height="150px"/>
+                            <img src="@searchResult.Episode.Image" max-width="150px" max-height="150px" width="150px" height="150px"/>
                         </div>
                         <div class="item">
-                            <p>Episode Name: @searchResult.Episode.title</p>
-                            <p>Episode Length: @(searchResult.Episode.duration / 60)m</p>
+                            <p>Episode Name: @searchResult.Episode.Title</p>
+                            <p>Episode Length: @(searchResult.Episode.Duration / 60)m</p>
                         </div>
                         <div class="item">
-                            Search find: @searchResult.Subtopic.name
+                            Search find: @searchResult.Subtopic.Name
                         </div>
                     </div>
                     break;
                 case SearchType.Episode:
                     <div class="search-selected">
                         <div class="item" max-width="150px" max-height="150px" width="150px" height="150px">
-                            <img src="@searchResult.Episode.image" max-width="150px" max-height="150px" width="150px" height="150px"/>
+                            <img src="@searchResult.Episode.Image" max-width="150px" max-height="150px" width="150px" height="150px"/>
                         </div>
                         <div class="item">
-                            <p>Episode Name: @searchResult.Episode.title</p>
-                            <p>Episode Length: @(searchResult.Episode.duration / 60)m</p>
+                            <p>Episode Name: @searchResult.Episode.Title</p>
+                            <p>Episode Length: @(searchResult.Episode.Duration / 60)m</p>
                         </div>
                         <div class="item">
-                            Search find: @searchResult.Episode.title
+                            Search find: @searchResult.Episode.Title
                         </div>
                     </div>
                     break;
@@ -67,9 +68,9 @@
 <div class="user-settings">
     @if (isLoggedIn && CurrentlyLoggedInUser != null)
     {
-        <img class="user-img" src="@CurrentlyLoggedInUser.profile_picture" alt="">
+        <img class="user-img" alt="">
         <div class="dropdown">
-            <div class="user-name">@CurrentlyLoggedInUser.username</div>
+            <div class="user-name">@CurrentlyLoggedInUser.Username</div>
             <i class="ti ti-chevron-down"></i>
             <div class="dropdown-content">
                 @*<a href="#">Settings</a>*@
@@ -90,11 +91,11 @@
 @code{
 
     [Inject]
-    private IDeprecatedData DeprecatedData { get; set; }
+    private IData _data { get; set; }
 
     protected bool isLoggedIn = false;
 
-    private ShortUser CurrentlyLoggedInUser = null;
+    private UserResponse CurrentlyLoggedInUser = null;
 
     protected string? SearchTerm { get; set; }
 
@@ -136,7 +137,7 @@
 
     private async Task<IEnumerable<Search>> Search(string searchText)
     {
-        SearchResult = await DeprecatedData.Search(searchText);
+        SearchResult = await _data.Search(searchText);
         return await Task.FromResult(SearchResult);
     }
 
@@ -144,7 +145,7 @@
 
     private Search LoadSelectedSearchResult(string? guid)
     {
-        int id = SearchResult.FirstOrDefault(x => x.UniqueGuid == guid).Episode.id;
+        int id = SearchResult.FirstOrDefault(x => x.UniqueGuid == guid).Episode.Id;
         NavigationManager.NavigateTo($"episode/{id}");
         SearchTerm = null;
         return null;

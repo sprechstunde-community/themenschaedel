@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components
-@using Themenschaedel.Shared.Props
+@using Themenschaedel.Shared.Models
 @using System.ComponentModel.DataAnnotations
+@using Themenschaedel.Shared.Models.Request
 <div>
     <EditForm class="topic-view-card container" Model="@Topic" OnValidSubmit="SendTopic" EditContext="InputChanged()">
         <DataAnnotationsValidator/>
@@ -26,7 +27,7 @@
             }
         </div>
         <div class="topic-view-card-title item-big-space">
-            Name: <InputText disabled="@IsSaving" id="name" @bind-Value="Topic.name"/>
+            Name: <InputText disabled="@IsSaving" id="name" @bind-Value="Topic.Name"/>
         </div>
 
         <div class="topic-view-card-times item">
@@ -36,18 +37,19 @@
         </div>
 
         <div class="item">
-            Webung? <InputCheckbox disabled="@IsSaving" id="ad" @bind-Value="Topic.ad"/>
+            Webung? <InputCheckbox disabled="@IsSaving" id="ad" @bind-Value="Topic.Ad"/>
             <br/>
-            Community Thema? <InputCheckbox disabled="@IsSaving" id="community_topic" @bind-Value="Topic.community_contribution"/>
+            Community Thema? <InputCheckbox disabled="@IsSaving" id="community_topic" @bind-Value="Topic.CommunityContributed"/>
         </div>
 
         <div class="item-small-space">
-            <button disabled="@IsSaving" type="button" class="default-button" @onclick="AddSubtopic"><i class="ti ti-plus"></i> Add Subtopic</button>
             <div class="item">
-                @for (int i = 0; i < Topic.subtopics.Count; i++)
-                {
-                    <SubtopicEdit Subtopic="Topic.subtopics[i]" Disabled="@IsSaving" Index="i" RemoveSubtopic="removeSubtopicTask" OnSubtopicChanged="SubtopicChanged"></SubtopicEdit>
-                }
+                <ChipsInput Chips="@Subtopics"
+                            OnChipsChanged="SubtopicChanged"
+                            EnableBackspaceRemove="false"
+                            ShowValidationErrors="true"
+                            AllowEmptyValue="false"
+                            AllowEmptyValueValidationMessage="No empty values are allowed" />
             </div>
         </div>
         <div class="item">
@@ -69,22 +71,21 @@
 
     [Parameter]
     [Required]
-    public Topic Topic { get; set; }
+    public TopicPostRequestClient Topic { get; set; }
 
     [Parameter]
-    public EventCallback<Topic> TopicCallback { get; set; }
+    public EventCallback TopicCallback { get; set; }
 
     [Parameter]
-    public EventCallback<Topic> RemoveTopic { get; set; }
-
-    [Parameter]
-    public EventCallback<Subtopics> RemoveSubtopic { get; set; }
+    public EventCallback<TopicPostRequestClient> RemoveTopic { get; set; }
 
     [Inject]
     protected IToastService _toastService { get; set; }
 
+    private TopicExtended TopicServerState;
+
     public TopicState State = TopicState.Saved;
-    private Topic TopicServerState;
+    private List<string> Subtopics = new List<string>();
     protected bool IsSaving => State == TopicState.Saving;
 
     protected string StartTimeProxy
@@ -115,35 +116,16 @@
 
     private void PopulateTopicServerState()
     {
-        TopicServerState = new Topic();
-        TopicServerState.name = Topic.name;
-        TopicServerState.id = Topic.id;
-        TopicServerState.ad = Topic.ad;
-        TopicServerState.end = Topic.end;
-        TopicServerState.start = Topic.start;
-        TopicServerState.community_contribution = Topic.community_contribution;
-        TopicServerState.user = Topic.user;
-        for (int i = 0; i < Topic.subtopics.Count; i++)
+        TopicServerState = new TopicExtended();
+        TopicServerState.Name = Topic.Name;
+        TopicServerState.Ad = Topic.Ad;
+        TopicServerState.TimestampEnd = Topic.TimestampEnd;
+        TopicServerState.TimestampStart = Topic.TimestampStart;
+        TopicServerState.CommunityContributed = Topic.CommunityContributed;
+        for (int i = 0; i < Topic.Subtopics.Count; i++)
         {
-            TopicServerState.subtopics.Add(new Subtopics() { name = Topic.subtopics[i].name, id = Topic.subtopics[i].id });
+            TopicServerState.Subtopic.Add(new Subtopic() { Name = Topic.Subtopics[i].Name });
         }
-    }
-
-    protected async Task AddSubtopic()
-    {
-        Topic.subtopics.Add(new Subtopics());
-        State = TopicState.Unsaved;
-        this.StateHasChanged();
-    }
-
-    protected async Task removeSubtopicTask(Subtopics subtopic)
-    {
-        await RemoveSubtopic.InvokeAsync(subtopic);
-        Topic.subtopics.Remove(subtopic);
-        int index = TopicServerState.subtopics.FindIndex(x => x.id == subtopic.id);
-        if (index != -1) TopicServerState.subtopics.RemoveAt(index);
-        this.StateHasChanged();
-        CheckSaveState();
     }
 
     protected async Task DeleteTopic()
@@ -155,7 +137,7 @@
     {
         State = TopicState.Saving;
         this.StateHasChanged();
-        await TopicCallback.InvokeAsync(Topic);
+        await TopicCallback.InvokeAsync();
         State = TopicState.Saved;
         PopulateTopicServerState();
         this.StateHasChanged();
@@ -171,11 +153,11 @@
     {
         if (State == TopicState.Saving) return;
 
-        if (TopicServerState.name == Topic.name &&
-            TopicServerState.ad == Topic.ad &&
-            TopicServerState.start == Topic.start &&
-            TopicServerState.end == Topic.end &&
-            TopicServerState.community_contribution == Topic.community_contribution
+        if (TopicServerState.Name == Topic.Name &&
+            TopicServerState.Ad == Topic.Ad &&
+            TopicServerState.TimestampStart == Topic.TimestampStart &&
+            TopicServerState.TimestampEnd == Topic.TimestampEnd &&
+            TopicServerState.CommunityContributed == Topic.CommunityContributed
             )
         {
             State = TopicState.Saved;
@@ -186,25 +168,9 @@
             return;
         }
 
-        if (TopicServerState.subtopics.Count == Topic.subtopics.Count)
+        if (IsServerSubtopicsEqualToLocal())
         {
-            for (int i = 0; i < TopicServerState.subtopics.Count; i++)
-            {
-    // stop if there is already an unsaved entry
-                if (State != TopicState.Unsaved)
-                {
-    // Check if all subtopics are saved
-                    if (TopicServerState.subtopics[i].name == Topic.subtopics[i].name && TopicServerState.subtopics[i].id == Topic.subtopics[i].id)
-                    {
-                        State = TopicState.Saved;
-                    }
-                    else
-                    {
-                        State = TopicState.Unsaved;
-                        return;
-                    }
-                }
-            }
+            State = TopicState.Saved;
         }
         else
         {
@@ -214,17 +180,21 @@
         return;
     }
 
-    protected async Task SubtopicChanged(int index)
+    protected void SubtopicChanged()
     {
-        if (TopicServerState.subtopics[index] != Topic.subtopics[index])
-        {
-            State = TopicState.Unsaved;
-        }
-        else
-        {
-            State = TopicState.Saved;
-        }
+        State = IsServerSubtopicsEqualToLocal() ? TopicState.Saved : TopicState.Unsaved;
         CheckSaveState();
+    }
+
+    protected bool IsServerSubtopicsEqualToLocal()
+    {
+        List<string> serverSubtopicList = new List<string>();
+        for (int i = 0; i < TopicServerState.Subtopic.Count; i++)
+        {
+            serverSubtopicList.Add(TopicServerState.Subtopic[i].Name);
+        }
+
+        return Enumerable.SequenceEqual(serverSubtopicList, Subtopics);
     }
 
 }

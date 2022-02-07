@@ -38,12 +38,13 @@ namespace Themenschaedel.Web.Services
         public async Task<LoginResponse> GetToken()
         {
             LoginResponse token = await _sessionStorage.GetItemAsync<LoginResponse>("Token");
+            if (token == null) token = await GetLocalStorageTokenAndSetSessionToken();
+            if (token == null) return null;
             if ((token.ValidUntil - DateTime.Now).TotalMinutes <= 5)
             {
                 await SetToken(await _sessionApi.RefreshToken());
                 token = await _sessionStorage.GetItemAsync<LoginResponse>("Token");
             }
-            if (token == null) await GetLocalStorageTokenAndSetSessionToken();
             return token;
         }
 
@@ -89,8 +90,8 @@ namespace Themenschaedel.Web.Services
 
         private async Task ClearToken()
         {
-            await _sessionStorage.SetItemAsync("Token", new LoginResponse { AccessToken = null, TokenType = null });
-            await _localStorage.SetItemAsync("Token", new LoginResponse { AccessToken = null, TokenType = null });
+            await _sessionStorage.RemoveItemAsync("Token");
+            await _localStorage.RemoveItemAsync("Token");
         }
 
         public async Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, bool keepLoggedIn)

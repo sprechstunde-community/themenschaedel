@@ -1,8 +1,9 @@
 ﻿@page "/Login"
 @using Themenschaedel.Web.Services.Interfaces
 @using Themenschaedel.Web.Services
-@using Themenschaedel.Shared.Props
 @using Blazored.Toast.Configuration
+@using Microsoft.AspNetCore.Components
+@using Themenschaedel.Shared.Models.Request
 @inject IJSRuntime JS;
 @inject NavigationManager NavigationManager;
 @layout EmptyLayout
@@ -25,11 +26,11 @@
                 <div class="formContainer">
                     <div class="formDiv form__input-field" style="transition-delay: 0.2s">
                         <i class="ti ti-user"></i>
-                        <InputText id="username" placeholder="Username" @bind-Value="tokenRequest.username" required/>
+                        <InputText id="username" placeholder="Username" @bind-Value="tokenRequest.Username" required/>
                     </div>
                     <div class="formDiv form__input-field" style="transition-delay: 0.4s">
                         <i class="ti ti-lock"></i>
-                        <InputText type="password" id="password" placeholder="Password" @bind-Value="tokenRequest.password" required/>
+                        <InputText type="password" id="password" placeholder="Password" @bind-Value="tokenRequest.Password" required/>
                     </div>
                     <div class="formDiv" style="transition-delay: 0.6s">
                         <button class="form__submit" type="submit">Login</button>
@@ -59,12 +60,12 @@
 @code{
 
     [Inject]
-    private IDeprecatedData ApiDeprecatedData { get; set; }
+    private IData _data { get; set; }
 
     [Inject]
     private IUserSession UserSession { get; set; }
 
-    TokenRequest tokenRequest = new TokenRequest();
+    UserLogin tokenRequest = new UserLogin();
 
     protected bool keepLoggedIn = false;
 
@@ -83,7 +84,7 @@
 
     protected async Task HandleValidSubmit()
     {
-        await ApiDeprecatedData.Login(tokenRequest.username, tokenRequest.password, keepLoggedIn);
+        await _data.Login(tokenRequest.Username, tokenRequest.Password, keepLoggedIn);
         await Task.Delay(1500);
         if (await UserSession.IsLoggedInAsync())
         {

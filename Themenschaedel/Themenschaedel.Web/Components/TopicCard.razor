@@ -1,24 +1,24 @@
-@using Themenschaedel.Shared.Props
+@using Themenschaedel.Shared.Models
 @using System.ComponentModel.DataAnnotations
 <div class="topic-view-card container">
     <div class="topic-view-card-title item-big-space">
-        <p>@topic.name</p>
+        <p>@topic.Name</p>
     </div>
     <div class="topic-view-card-times item">
-        <p>@topic.GetStartTimestamp() - @topic.GetEndTimestamp(startOfNextTopic)</p>
+        <p>@topic.Duration</p>
     </div>
     <div class="item">
-        Ad: @(topic.ad ? "Ja" : "Nein")
+        Ad: @(topic.Ad ? "Ja" : "Nein")
         <br/>
-        Community Thema: @(topic.ad ? "Ja" : "Nein")
+        Community Thema: @(topic.Ad ? "Ja" : "Nein")
     </div>
     <div class="item-small-space">
         <h4>Subtopics:</h4>
     </div>
     <div class="item">
-        @for (int i = 0; i < topic.subtopics.Count; i++)
+        @for (int i = 0; i < topic.Subtopic.Count; i++)
         {
-            @topic.subtopics[i].name
+            @topic.Subtopic[i].Name
             if (i + 1 != i)
             {
                 <br/>
@@ -34,7 +34,7 @@
 
     [Parameter]
     [Required]
-    public Topic topic { get; set; }
+    public TopicExtended topic { get; set; }
 
     [Parameter]
     public int startOfNextTopic { get; set; }

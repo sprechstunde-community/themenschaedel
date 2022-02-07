@@ -1,8 +1,8 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 using Sentry;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
@@ -35,17 +35,21 @@ namespace Themenschaedel.Web.Services
             try
             {
                 using (var requestMessage =
-                    new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}me"))
+                    new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/me"))
                 {
+                    LoginResponse loginResponse = await GetToken();
+
+                    if (loginResponse == null) return null;
+
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await GetToken()).AccessToken);
+                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
 
                     var response = await _httpClient.SendAsync(requestMessage);
 
                     if (response.IsSuccessStatusCode)
                     {
                         string json = response.Content.ReadAsStringAsync().Result;
-                        UserResponse user = JsonConvert.DeserializeObject<UserResponse>(json);
+                        UserResponse user = JsonSerializer.Deserialize<UserResponse>(json);
                         return user;
                     }
                     else
@@ -69,8 +73,12 @@ namespace Themenschaedel.Web.Services
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/logout"))
                 {
+                    LoginResponse loginResponse =  await GetToken();
+
+                    if (loginResponse == null) return;
+
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await GetToken()).AccessToken);
+                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
 
                     await _httpClient.SendAsync(requestMessage);
                 }
@@ -89,6 +97,7 @@ namespace Themenschaedel.Web.Services
                        new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/refresh_token"))
                 {
                     LoginResponse initialToken = await GetToken();
+                    if (initialToken == null) return null;
                     RefreshTokenRequest request = new RefreshTokenRequest()
                     {
                         RefreshToken = initialToken.RefreshToken,
@@ -100,7 +109,7 @@ namespace Themenschaedel.Web.Services
                     if (response.IsSuccessStatusCode)
                     {
                         string json = response.Content.ReadAsStringAsync().Result;
-                        Token token = JsonConvert.DeserializeObject<Token>(json);
+                        Token token = JsonSerializer.Deserialize<Token>(json);
                         LoginResponse loginResponse = new LoginResponse();
                         loginResponse = initialToken;
                         loginResponse.ValidUntil = token.ValidUntil;

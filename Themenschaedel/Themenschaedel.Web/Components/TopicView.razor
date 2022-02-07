@@ -1,4 +1,3 @@
-@using Themenschaedel.Shared.Props
 @using Humanizer;
 @inherits Themenschaedel.Components.TopicView
 
@@ -16,11 +15,11 @@
     {
         if (i + 1 != topics.Count)
         {
-            <TopicCard topic=topics[i] startOfNextTopic=topics[i].start></TopicCard>
+            <TopicCard topic=topics[i] startOfNextTopic=topics[i].TimestampStart></TopicCard>
         }
         else
         {
-            <TopicCard topic=topics[i] startOfNextTopic=episode.duration></TopicCard>
+            <TopicCard topic=topics[i] startOfNextTopic=episode.Duration></TopicCard>
         }
     }
 </div>

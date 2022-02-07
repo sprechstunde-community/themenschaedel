@@ -7,21 +7,21 @@
 <!-- thanks https://pavellaptev.medium.com/css-weekly-2-an-image-on-the-left-text-on-the-left-a5e59b2acdb5 -->
 <div class="episode-container">
     <div class="episode-container__container">
-        <img class="episode-container__image" src="@episode.image">
+        <img class="episode-container__image" src="@episode.Image">
         <div class="episode-container__text">
             <EpisodePills ClaimStatus=@episode.ClaimStatus StatusStyle="EpisodePills.Style.Default"></EpisodePills>
-            <h2>@episode.title</h2>
+            <h2>@episode.Title</h2>
             @((MarkupString)sanitizedDescription)
 
             <br/>
-            <p>Length: @TimeSpan.FromSeconds(episode.duration).Humanize(3, countEmptyUnits: true)</p>
+            <p>Length: @TimeSpan.FromSeconds(episode.Duration).Humanize(3, countEmptyUnits: true)</p>
         </div>
         @if (isLoggedIn && episode.ClaimStatus == EpisodeClaimStatus.not_claimed)
         {
             <button class="default-button" @onclick="ClaimEpisode"><i class="ti ti-bookmark"></i>Claim Episode</button>
         }
     </div>
-    @if (EpisodeMisc.GetClaimStatus(episode) != EpisodeClaimStatus.not_claimed)
+    @if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
     {
         <hr/>
     }
@@ -41,12 +41,12 @@
     public int Id { get; set; }
 
     [Inject]
-    private IData ApiData { get; set; }
+    private IData _data { get; set; }
 
     [Inject]
     private IUserSession UserSession { get; set; }
 
-    public EpisodeExtended episode = new EpisodeExtended();
+    public EpisodeClientExtra episode = new EpisodeClientExtra();
 
     public static string sanitizedDescription = "";
 
@@ -55,15 +55,17 @@
     
     protected override async Task OnInitializedAsync()
     {
-        episode = await ApiData.GetEpisode(Id);
+        episode = new EpisodeClientExtra(await _data.GetEpisode(Id));
+        isEditing = await _data.IsCurrentlyClaimedEpisode(episode.Id);
 
-    // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
-    // cannot contain any xss exploits.
+        // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
+        // cannot contain any xss exploits.
         HtmlSanitizer sanitizer = new HtmlSanitizer();
-    // Replace unrelated API stuff
-        string tempDesc = episode.description.Replace("<br><hr><p>See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
+        // Replace unrelated API stuff
+        string tempDesc = episode.Description.Replace("<br><hr><p>See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
         tempDesc = tempDesc.Replace("<br><hr><p> See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
         tempDesc = tempDesc.Replace("&nbsp;<br><hr><p>See <a target=\"_blank\" rel=\"noopener noreferrer\" href=\"https://acast.com/privacy\">acast.com/privacy</a> for privacy and opt-out information.</p>", "");
+        tempDesc = tempDesc.Replace("<hr><p style='color:grey; font-size:0.75em;'> See <a style='color:grey;' target='_blank' rel='noopener noreferrer' href='https://acast.com/privacy'>acast.com/privacy</a> for privacy and opt-out information.</p>", "");
         sanitizedDescription = sanitizer.Sanitize(tempDesc);
     }
 
@@ -79,12 +81,13 @@
     // ToDo: there needs to be a way for me to check which episodes a user has claimed with the API
     protected async Task ClaimEpisode()
     {
+        await _data.ClaimEpisode(episode.Id);
         isLoggedIn = await UserSession.IsLoggedInAsync();
         if (isLoggedIn)
         {
             isEditing = true;
             this.StateHasChanged();
-            episode.claimed = true;
+            episode.Claimed = true;
         }
     }
 

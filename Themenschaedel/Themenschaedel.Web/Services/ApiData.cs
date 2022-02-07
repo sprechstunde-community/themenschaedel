@@ -8,6 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Blazored.Toast.Services;
+using Meilisearch;
 using Sentry;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
@@ -51,7 +52,7 @@ namespace Themenschaedel.Web.Services
             }
         }
 
-        public async Task<Themenschaedel.Shared.Models.Episode> GetEpisode(int id)
+        public async Task<EpisodeExtendedExtra> GetEpisode(int id)
         {
             try
             {
@@ -156,7 +157,7 @@ namespace Themenschaedel.Web.Services
             return null;
         }
 
-        public async Task<List<TopicExtended>> PostTopic(List<TopicPostRequest> topic, List<PeopleInEpisode> people, int episodeID)
+        public async Task<List<TopicExtended>> PostTopic(List<TopicPostRequest> topic, List<PeopleInEpisode> people)
         {
             try
             {
@@ -165,7 +166,7 @@ namespace Themenschaedel.Web.Services
                 // Send Topic to API
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Post,
-                        $"{_httpClient.BaseAddress}episodes/{episodeID.ToString()}/topics"))
+                        $"{_httpClient.BaseAddress}topic"))
                 {
                     requestMessage.Headers.Authorization =
                         new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
@@ -208,9 +209,175 @@ namespace Themenschaedel.Web.Services
             return null;
         }
 
-        public async Task<List<Themenschaedel.Shared.Models.Search>> Search(string searchTerm)
+        public async Task<List<Search>> Search(string searchTerm)
         {
-            throw new NotImplementedException();
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+                searchResult.AddRange(await SearchTopics(searchTerm));
+                searchResult.AddRange(await SearchEpisodes(searchTerm));
+                searchResult.AddRange(await SearchSubtopics(searchTerm));
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+
+        private async Task<List<Search>> SearchTopics(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+                var response =
+                    await _httpClient.GetAsync(
+                        $"{_httpClient.BaseAddress}search/topics?q={searchTerm}&page=1&per_page=999");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    SearchResult<Topic> topics = JsonSerializer.Deserialize<SearchResult<Topic>>(json);
+
+                    foreach (Topic topic in topics.Hits)
+                    {
+                        searchResult.Add(new Search(await GetEpisode(topic.EpisodeId), topic));
+                    }
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _toastService.ShowError("Error 404: Backend server is offline.");
+                    SentrySdk.CaptureMessage("API: Error 404");
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+
+        private async Task<List<Search>> SearchEpisodes(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+
+                var response =
+                    await _httpClient.GetAsync(
+                        $"{_httpClient.BaseAddress}search/episodes?q={searchTerm}&page=1&per_page=999");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    SearchResult<Episode> ep = JsonSerializer.Deserialize<SearchResult<Episode>>(json);
+
+                    foreach (Episode episode in ep.Hits)
+                    {
+                        searchResult.Add(new Search(episode));
+                    }
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _toastService.ShowError("Error 404: Backend server is offline.");
+                    SentrySdk.CaptureMessage("API: Error 404");
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+
+        private async Task<List<Search>> SearchSubtopics(string searchTerm)
+        {
+            List<Search> searchResult = new List<Search>();
+            try
+            {
+
+                var response =
+                    await _httpClient.GetAsync(
+                        $"{_httpClient.BaseAddress}search/subtopics?q={searchTerm}&page=1&per_page=999");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    SearchResult<Subtopic> subtopics = JsonSerializer.Deserialize<SearchResult<Subtopic>>(json);
+
+                    foreach (Subtopic subtopic in subtopics.Hits)
+                    {
+                        Topic topic = await GetTopic(subtopic.TopicId);
+                        searchResult.Add(new Search(await GetEpisode(topic.EpisodeId), topic, subtopic));
+                    }
+                }
+
+                if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    _toastService.ShowError("Error 404: Backend server is offline.");
+                    SentrySdk.CaptureMessage("API: Error 404");
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return searchResult;
+        }
+
+        private async Task<Topic> GetTopic(int id)
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_httpClient.BaseAddress}topic/{id}");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    Topic ep = JsonSerializer.Deserialize<Topic>(json);
+                    return ep;
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+            return null;
+        }
+
+        public async Task<Episode> GetClaimedEpisode()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_httpClient.BaseAddress}Claim/");
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    Episode ep = JsonSerializer.Deserialize<Episode>(json);
+                    return ep;
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+            return null;
+        }
+
+        public async Task<bool> IsCurrentlyClaimedEpisode(int episodeId)
+        {
+            try
+            {
+                Episode ep = await GetClaimedEpisode();
+                if (ep == null) return false;
+                return ep.Id == episodeId;
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
         }
     }
 }

@@ -19,6 +19,32 @@ namespace Themenschaedel.Shared.Models.Request
             Subtopics = topic.Subtopics;
         }
 
+        public TopicPostRequest(TopicExtended topic)
+        {
+            Name = topic.Name;
+            TimestampStart = topic.TimestampStart;
+            TimestampEnd = topic.TimestampEnd;
+            Ad = topic.Ad;
+            CommunityContributed = topic.CommunityContributed;
+            foreach (Subtopic item in topic.Subtopic)
+            {
+                Subtopics.Add(new SubtopicPostRequest()
+                {
+                    Name = item.Name
+                });
+            }
+        }
+
+        public TopicPostRequest(TopicPostRequestClient topic)
+        {
+            Name = topic.Name;
+            TimestampStart = topic.TimestampStart;
+            TimestampEnd = topic.TimestampEnd;
+            Ad = topic.Ad;
+            CommunityContributed = topic.CommunityContributed;
+            Subtopics = topic.Subtopics;
+        }
+
         [JsonPropertyName("name")]
         public string Name { get; set; }
         [JsonPropertyName("start")]
@@ -31,6 +57,154 @@ namespace Themenschaedel.Shared.Models.Request
         public bool CommunityContributed { get; set; }
         [JsonPropertyName("subtopics")]
         public List<SubtopicPostRequest> Subtopics { get; set; } = new List<SubtopicPostRequest>();
+    }
+
+    public class TopicPostRequestClient : TopicPostRequest
+    {
+        public TopicPostRequestClient(){}
+
+        public TopicPostRequestClient(TopicPostRequest topic) : base(topic) { }
+        public TopicPostRequestClient(TopicExtended topic) : base(topic) { }
+
+        public string GetStartTimestamp()
+        {
+            TimeSpan t = TimeSpan.FromSeconds(TimestampStart);
+
+            string hour = t.Hours.ToString("D2");
+            string minutes = t.Minutes.ToString("D2");
+            string seconds = t.Seconds.ToString("D2");
+
+            if (hour != "00")
+            {
+                return $"{hour}:{minutes}:{seconds}";
+            }
+            else if (minutes != "00")
+            {
+                return $"{minutes}:{seconds}";
+            }
+            else
+            {
+                return $"{seconds}";
+            }
+        }
+
+        public string GetFullStartTimestamp()
+        {
+            TimeSpan t = TimeSpan.FromSeconds(TimestampStart);
+
+            string hour = t.Hours.ToString("D2");
+            string minutes = t.Minutes.ToString("D2");
+            string seconds = t.Seconds.ToString("D2");
+
+            return $"{hour}:{minutes}:{seconds}";
+        }
+
+        public TimeSpan GetStartTimespan() => TimeSpan.FromSeconds(TimestampStart);
+
+        public bool SetStartFromString(string time)
+        {
+            TimestampStart = 0;
+            string[] times = time.Split(':');
+            if (times.Length > 3 || times.Length < 1) return false;
+            try
+            {
+                if (times.Length == 3)
+                {
+                    TimestampStart += Int32.Parse(times[0]) * 3600;
+                    TimestampStart += Int32.Parse(times[1]) * 60;
+                    TimestampStart += Int32.Parse(times[2]);
+                }
+                else if (times.Length == 2)
+                {
+                    TimestampStart += Int32.Parse(times[1]) * 60;
+                    TimestampStart += Int32.Parse(times[2]);
+                }
+                else
+                {
+                    TimestampStart += Int32.Parse(times[0]);
+                }
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public string GetEndTimestamp(int endOfNextTopic)
+        {
+            int timestamp = 0;
+            if (TimestampEnd == null || TimestampEnd == 0)
+            {
+                timestamp = endOfNextTopic - 1;
+            }
+            else
+            {
+                timestamp = TimestampEnd;
+            }
+
+            TimeSpan t = TimeSpan.FromSeconds(timestamp);
+
+            string hour = t.Hours.ToString("D2");
+            string minutes = t.Minutes.ToString("D2");
+            string seconds = t.Seconds.ToString("D2");
+
+            if (hour != "00")
+            {
+                return $"{hour}:{minutes}:{seconds}";
+            }
+            else if (minutes != "00")
+            {
+                return $"{minutes}:{seconds}";
+            }
+            else
+            {
+                return $"{seconds}";
+            }
+        }
+
+        public string GetFullEndTimestamp()
+        {
+            TimeSpan t = TimeSpan.FromSeconds(TimestampEnd);
+
+            string hour = t.Hours.ToString("D2");
+            string minutes = t.Minutes.ToString("D2");
+            string seconds = t.Seconds.ToString("D2");
+
+            return $"{hour}:{minutes}:{seconds}";
+        }
+
+        public TimeSpan GetEndTimespan() => TimeSpan.FromSeconds(TimestampEnd);
+
+        public bool SetEndFromString(string time)
+        {
+            TimestampEnd = 0;
+            string[] times = time.Split(':');
+            if (times.Length > 3 || times.Length < 1) return false;
+            try
+            {
+                if (times.Length == 3)
+                {
+                    TimestampEnd += Int32.Parse(times[0]) * 3600;
+                    TimestampEnd += Int32.Parse(times[1]) * 60;
+                    TimestampEnd += Int32.Parse(times[2]);
+                }
+                else if (times.Length == 2)
+                {
+                    TimestampEnd += Int32.Parse(times[1]) * 60;
+                    TimestampEnd += Int32.Parse(times[2]);
+                }
+                else
+                {
+                    TimestampEnd += Int32.Parse(times[0]);
+                }
+            }
+            catch (Exception e)
+            {
+                return false;
+            }
+            return true;
+        }
     }
 
     public class SubtopicPostRequest
