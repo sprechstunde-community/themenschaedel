@@ -38,7 +38,7 @@ namespace Themenschaedel.Web.Services
             {
                 using (var requestMessage =
                        new HttpRequestMessage(HttpMethod.Post,
-                           $"{_httpClient.BaseAddress}episodes/${episodeID.ToString()}/claim"))
+                           $"{_httpClient.BaseAddress}claim/{episodeID.ToString()}"))
                 {
                     requestMessage.Headers.Authorization =
                         new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
@@ -351,7 +351,18 @@ namespace Themenschaedel.Web.Services
         {
             try
             {
-                var response = await _httpClient.GetAsync($"{_httpClient.BaseAddress}Claim/");
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Post,
+                           $"{_httpClient.BaseAddress}Claim"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+                
                 if (response.IsSuccessStatusCode)
                 {
                     string json = response.Content.ReadAsStringAsync().Result;

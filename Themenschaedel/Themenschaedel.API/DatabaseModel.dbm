@@ -3,7 +3,7 @@
 CAUTION: Do not modify this file unless you know what you are doing.
  Unexpected results may occur if the code is changed deliberately.
 -->
-<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="421,0" last-zoom="1" max-obj-count="13"
+<dbmodel pgmodeler-ver="0.9.4" use-changelog="false" last-position="16,148" last-zoom="1" max-obj-count="14"
 	 default-schema="public" default-owner="postgres"
 	 layers="Default layer"
 	 active-layers="0"
@@ -628,6 +628,37 @@ LANGUAGE plpgsql;]]></prepended-sql>
 <constraint name="unique_combined_episode_user" type="uq-constr" table="public.flags">
 	<columns names="id_episodes,id_users" ref-type="src-columns"/>
 </constraint>
+
+<table name="topic_ideas" layers="0" collapse-mode="2" max-obj-count="6" z-value="0">
+	<schema name="public"/>
+	<role name="postgres"/>
+	<position x="1679" y="638"/>
+	<column name="id" not-null="true"
+	 identity-type="ALWAYS">
+		<type name="integer" length="0"/>
+	</column>
+	<column name="idea">
+		<type name="text" length="0"/>
+	</column>
+	<column name="description">
+		<type name="text" length="0"/>
+	</column>
+	<column name="created_at">
+		<type name="timestamp" length="0"/>
+	</column>
+	<constraint name="topic_ideas_pk" type="pk-constr" table="public.topic_ideas">
+		<columns names="id" ref-type="src-columns"/>
+	</constraint>
+</table>
+
+<relationship name="users_has_many_topic_ideas" type="rel1n" layers="0"
+	 src-col-pattern="{sc}_{st}"
+	 pk-pattern="{dt}_pk" uq-pattern="{dt}_uq"
+	 src-fk-pattern="{st}_fk"
+	 custom-color="#83af1f"
+	 src-table="public.users"
+	 dst-table="public.topic_ideas"
+	 src-required="false" dst-required="false"/>
 
 <constraint name="episodes_fk" type="fk-constr" comparison-type="MATCH FULL"
 	 upd-action="CASCADE" del-action="SET NULL" ref-table="public.episodes" table="public.topic">
