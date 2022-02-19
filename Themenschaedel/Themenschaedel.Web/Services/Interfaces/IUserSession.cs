@@ -14,7 +14,7 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task<UserResponse> GetCurrentlyLoggedInUser();
         Task Logout();
         Task<bool> RecheckLoginAndClearIfInvalid();
-        Task<LoginResponse> GetToken();
+        Task<LoginResponseExtended> GetToken();
         Task<Settings> GetSettings();
         Task SetSettings(Settings settings);
     }

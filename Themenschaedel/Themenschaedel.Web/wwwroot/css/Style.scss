@@ -1554,6 +1554,21 @@ label {
   display: block;
 }
 
+.unsaved {
+    font-size: 40px;
+    filter: invert(20%) sepia(100%) saturate(7336%) hue-rotate(359deg) brightness(106%) contrast(115%);
+}
+
+.saved {
+    font-size: 40px;
+    filter: invert(51%) sepia(45%) saturate(1607%) hue-rotate(82deg) brightness(117%) contrast(124%);
+}
+
+.saving {
+    font-size: 40px;
+    filter: invert(8%) sepia(85%) saturate(7364%) hue-rotate(245deg) brightness(104%) contrast(149%);
+}
+
 .topic-view-card {
   display: flex;
   flex-wrap: wrap;
@@ -1567,21 +1582,6 @@ label {
   background-color: var(--topic-card);
   margin-top: 25px;
   align-items: center;
-
-  & .unsaved{
-    font-size: 40px;
-    filter: invert(20%) sepia(100%) saturate(7336%) hue-rotate(359deg) brightness(106%) contrast(115%);
-  }
-
-  & .saved{
-    font-size: 40px;
-    filter: invert(51%) sepia(45%) saturate(1607%) hue-rotate(82deg) brightness(117%) contrast(124%);
-  }
-
-  & .saving{
-    font-size: 40px;
-    filter: invert(8%) sepia(85%) saturate(7364%) hue-rotate(245deg) brightness(104%) contrast(149%);
-  }
 
   &-title {
     font-size: 25px;

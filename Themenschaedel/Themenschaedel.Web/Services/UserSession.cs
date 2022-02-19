@@ -35,15 +35,15 @@ namespace Themenschaedel.Web.Services
 
         #region async
 
-        public async Task<LoginResponse> GetToken()
+        public async Task<LoginResponseExtended> GetToken()
         {
-            LoginResponse token = await _sessionStorage.GetItemAsync<LoginResponse>("Token");
+            LoginResponseExtended token = await _sessionStorage.GetItemAsync<LoginResponseExtended>("Token");
             if (token == null) token = await GetLocalStorageTokenAndSetSessionToken();
             if (token == null) return null;
             if ((token.ValidUntil - DateTime.Now).TotalMinutes <= 5)
             {
                 await SetToken(await _sessionApi.RefreshToken());
-                token = await _sessionStorage.GetItemAsync<LoginResponse>("Token");
+                token = await _sessionStorage.GetItemAsync<LoginResponseExtended>("Token");
             }
             return token;
         }
@@ -55,15 +55,24 @@ namespace Themenschaedel.Web.Services
             await _sessionStorage.SetItemAsync("Settings", settings);
         }
 
-        private async Task<LoginResponse> GetLocalStorageTokenAndSetSessionToken()
+        private async Task<LoginResponseExtended> GetLocalStorageTokenAndSetSessionToken()
         {
-            LoginResponse token = await _localStorage.GetItemAsync<LoginResponse>("Token");
+            LoginResponseExtended token = await _localStorage.GetItemAsync<LoginResponseExtended>("Token");
             if (token != null && CurrentlyLoggedInUser == null)
             {
+                // This checks if the session is about to expire, if so logout the user and clear all tokens.
+                if ((token.SessionExpirationDate - DateTime.Now).TotalMinutes <= 1)
+                {
+                    await _sessionApi.Logout();
+                    await ClearToken();
+                    return null;
+                }
+
                 if ((token.ValidUntil - DateTime.Now).TotalMinutes <= 5)
                 {
+                    // This checks if the current localStorage Token will expire in less than 5 minutes, if so it will extend it, by refreshing the token
                     await SetToken(await _sessionApi.RefreshToken());
-                    token = await _sessionStorage.GetItemAsync<LoginResponse>("Token");
+                    token = await _sessionStorage.GetItemAsync<LoginResponseExtended>("Token");
                 }
                 else
                 {
@@ -73,10 +82,18 @@ namespace Themenschaedel.Web.Services
             return token;
         }
 
-        private async Task SetToken(LoginResponse token, bool keepLoggedIn = false)
+        private async Task SetToken(LoginResponse tokenResponse, bool keepLoggedIn = false)
         {
+            LoginResponseExtended token = new LoginResponseExtended(tokenResponse);
+
             if (keepLoggedIn)
             {
+                token.SessionExpirationDate = DateTime.MaxValue;
+                await _localStorage.SetItemAsync("Token", token);
+            }
+            else
+            {
+                token.SessionExpirationDate = DateTime.Now.AddHours(3);
                 await _localStorage.SetItemAsync("Token", token);
             }
 

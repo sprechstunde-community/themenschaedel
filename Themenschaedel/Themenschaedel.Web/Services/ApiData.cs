@@ -72,6 +72,37 @@ namespace Themenschaedel.Web.Services
             return null;
         }
 
+        public async Task<EpisodeExtendedExtra> GetClaimedEpisode(int id)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Get,
+                           $"{_httpClient.BaseAddress}episodes/{id}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    EpisodeExtendedExtra ep = JsonSerializer.Deserialize<EpisodeExtendedExtra>(json);
+                    return ep;
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return null;
+        }
+
         public async Task<EpisodeResponse> GetEpisodes(int count, int page)
         {
             try
@@ -354,7 +385,7 @@ namespace Themenschaedel.Web.Services
                 HttpResponseMessage response = null;
 
                 using (var requestMessage =
-                       new HttpRequestMessage(HttpMethod.Post,
+                       new HttpRequestMessage(HttpMethod.Get,
                            $"{_httpClient.BaseAddress}Claim"))
                 {
                     requestMessage.Headers.Authorization =
@@ -379,6 +410,8 @@ namespace Themenschaedel.Web.Services
 
         public async Task<bool> IsCurrentlyClaimedEpisode(int episodeId)
         {
+            if (!await _userSession.IsLoggedInAsync()) return false;
+
             try
             {
                 Episode ep = await GetClaimedEpisode();
@@ -389,6 +422,41 @@ namespace Themenschaedel.Web.Services
             {
                 return false;
             }
+        }
+
+        // ToDo: see kanban "Add extend time button"
+        public async Task AddExtraTimeToClaim()
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Get,
+                           $"{_httpClient.BaseAddress}Claim/extend_time"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    Episode ep = JsonSerializer.Deserialize<Episode>(json);
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+        }
+
+        // ToDo: see kanban "Add finalize claim button"
+        public Task FinalizeClaim()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -220,7 +220,7 @@ namespace Themenschaedel.API.Controllers
                 Episode claimedEpisode = await _claim.GetUserByClaimedEpisodeAsync(user.Id);
 
                 await _claim.AddExtraTimeToClaimAsync(user.Id);
-
+                
                 return Ok();
             }
             catch (TimeExtendedTooOftenException)

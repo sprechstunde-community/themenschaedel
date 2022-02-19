@@ -9,13 +9,16 @@ namespace Themenschaedel.Web.Services.Interfaces
     public interface IData
     {
         Task<EpisodeResponse> GetEpisodes(int count, int page);
+        Task<Episode> GetClaimedEpisode();
+        Task<EpisodeExtendedExtra> GetClaimedEpisode(int id);
         Task<EpisodeExtendedExtra> GetEpisode(int id);
         Task<LoginResponse> Login(string username, string password, bool keepLoggedIn);
         Task<List<TopicExtended>> GetTopics(int EpisodeID);
         Task ClaimEpisode(int episodeID);
         Task<List<TopicExtended>> PostTopic(List<TopicPostRequest> topic, List<PeopleInEpisode> people);
         Task<List<Themenschaedel.Shared.Models.Search>> Search(string searchTerm);
-        Task<Episode> GetClaimedEpisode();
         Task<bool> IsCurrentlyClaimedEpisode(int episodeId);
+        Task AddExtraTimeToClaim();
+        Task FinalizeClaim();
     }
 }

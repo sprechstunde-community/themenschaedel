@@ -89,7 +89,7 @@ namespace Themenschaedel.Web.Services
             }
         }
 
-        public async Task<LoginResponse> RefreshToken()
+        public async Task<LoginResponseExtended> RefreshToken()
         {
             try
             {
@@ -114,7 +114,7 @@ namespace Themenschaedel.Web.Services
                         loginResponse = initialToken;
                         loginResponse.ValidUntil = token.ValidUntil;
                         loginResponse.AccessToken = token.Value;
-                        return loginResponse;
+                        return new LoginResponseExtended(loginResponse);
                     }
                     else
                     {

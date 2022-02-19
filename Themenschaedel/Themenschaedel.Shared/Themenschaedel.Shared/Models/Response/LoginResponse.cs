@@ -7,6 +7,17 @@ namespace Themenschaedel.Shared.Models.Response
 {
     public class LoginResponse
     {
+        public LoginResponse(){}
+
+        public LoginResponse(LoginResponse reponse)
+        {
+            this.UserId = reponse.UserId;
+            RefreshToken = reponse.RefreshToken;
+            AccessToken = reponse.AccessToken;
+            TokenType = reponse.TokenType;
+            ValidUntil = reponse.ValidUntil;
+        }
+
         [JsonPropertyName("user_id")]
         public int UserId { get; set; }
         [JsonPropertyName("refresh_token")]
@@ -20,5 +31,13 @@ namespace Themenschaedel.Shared.Models.Response
 
         [JsonPropertyName("valid_until")]
         public DateTime ValidUntil { get; set; }
+    }
+
+    public class LoginResponseExtended : LoginResponse
+    {
+        public LoginResponseExtended() { }
+        public LoginResponseExtended(LoginResponse reponse) : base(reponse) { }
+
+        public DateTime SessionExpirationDate { get; set; }
     }
 }

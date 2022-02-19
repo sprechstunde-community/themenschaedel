@@ -11,6 +11,7 @@ using Themenschaedel.Web.Services.Interfaces;
 
 namespace Themenschaedel.Components
 {
+
     public partial class TopicEdit : ComponentBase
     {
         [Parameter] [Required] public int episodeId { get; set; }
@@ -18,6 +19,8 @@ namespace Themenschaedel.Components
 
         [Inject] protected IData _data { get; set; }
         [Inject] protected IToastService _toastService { get; set; }
+
+        private bool saving = false;
 
         protected List<TopicPostRequestClient> localTopics = new List<TopicPostRequestClient>();
         protected override async Task OnInitializedAsync()
@@ -31,13 +34,29 @@ namespace Themenschaedel.Components
             this.StateHasChanged();
         }
 
+        protected async Task SaveTopics()
+        {
+            await SendTopic();
+            this.StateHasChanged();
+        }
+
+        protected async Task AddExtraTimeToClaim()
+        {
+            await _data.AddExtraTimeToClaim();
+            this.StateHasChanged();
+        }
+
+        protected async Task FinalizeClaim()
+        {
+            await _data.FinalizeClaim();
+            this.StateHasChanged();
+        }
+
 
         protected async Task RemoveTopic(TopicPostRequestClient topic)
         {
             localTopics.Remove(topic);
             this.StateHasChanged();
-            if (String.IsNullOrEmpty(topic.Name)) _toastService.ShowSuccess($"Delted Topic: [Unnamed Topic].");
-            else _toastService.ShowSuccess($"Delted Topic: {topic.Name}.");
         }
 
         protected async Task PopulateTopics()
@@ -50,12 +69,19 @@ namespace Themenschaedel.Components
 
         protected async Task SendTopic()
         {
+            if (saving) return;
+
+            saving = true;
             List<TopicPostRequest> topics = new List<TopicPostRequest>();
             foreach (TopicPostRequestClient item in localTopics)
             {
                 topics.Add(new TopicPostRequest(item));
             }
-            await _data.PostTopic(topics, new List<PeopleInEpisode>());
+
+            if (topics.Count == 0) await _data.PostTopic(new List<TopicPostRequest>(), new List<PeopleInEpisode>());
+            else await _data.PostTopic(topics, new List<PeopleInEpisode>());
+            _toastService.ShowSuccess($"Topcis saved successfully.");
+            saving = false;
         }
     }
 }

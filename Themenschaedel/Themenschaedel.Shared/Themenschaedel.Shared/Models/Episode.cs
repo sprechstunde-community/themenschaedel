@@ -106,7 +106,9 @@ namespace Themenschaedel.Shared.Models
             Person = episodes.Person;
         }
 
+        [JsonPropertyName("topic")]
         public List<TopicExtended> Topic { get; set; } = new List<TopicExtended>();
+        [JsonPropertyName("person")]
         public List<Person> Person { get; set; } = new List<Person>();
     }
 

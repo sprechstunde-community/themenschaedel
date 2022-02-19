@@ -3,58 +3,35 @@
 @using System.ComponentModel.DataAnnotations
 @using Themenschaedel.Shared.Models.Request
 <div>
-    <EditForm class="topic-view-card container" Model="@Topic" OnValidSubmit="SendTopic" EditContext="InputChanged()">
-        <DataAnnotationsValidator/>
-        <ValidationSummary/>
-        <div class="item-small-space">
-            @switch (State)
-            {
-                case TopicState.Saved:
-                    <div data-tooltip="Saved">
-                        <i class="ti ti-square-check saved"></i>
-                    </div>
-                    break;
-                case TopicState.Saving:
-                    <div data-tooltip="Saving...">
-                        <i class="ti ti-clock saving"></i>
-                    </div>
-                    break;
-                case TopicState.Unsaved:
-                    <div data-tooltip="Unsaved">
-                        <i class="ti ti-square-x unsaved"></i>
-                    </div>
-                    break;
-            }
-        </div>
+    <EditForm class="topic-view-card container" Model="@Topic">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
         <div class="topic-view-card-title item-big-space">
-            Name: <InputText disabled="@IsSaving" id="name" @bind-Value="Topic.Name"/>
+            Name: <InputText id="name" @bind-Value="Topic.Name" />
         </div>
 
         <div class="topic-view-card-times item">
-            Start: <InputText disabled="@IsSaving" placeholder="00:00:00" id="start" @bind-Value="StartTimeProxy"/>
-            <br/>
-            End: <InputText disabled="@IsSaving" placeholder="00:00:00" id="end" @bind-Value="EndTimeProxy"/>
+            Start: <InputText placeholder="00:00:00" id="start" @bind-Value="StartTimeProxy" />
+            <br />
+            End: <InputText placeholder="00:00:00" id="end" @bind-Value="EndTimeProxy" />
         </div>
 
         <div class="item">
-            Webung? <InputCheckbox disabled="@IsSaving" id="ad" @bind-Value="Topic.Ad"/>
-            <br/>
-            Community Thema? <InputCheckbox disabled="@IsSaving" id="community_topic" @bind-Value="Topic.CommunityContributed"/>
+            Webung? <InputCheckbox id="ad" @bind-Value="Topic.Ad" />
+            <br />
+            Community Thema? <InputCheckbox id="community_topic" @bind-Value="Topic.CommunityContributed" />
         </div>
 
         <div class="item-small-space">
-            <div class="item">
-                <ChipsInput Chips="@Subtopics"
-                            OnChipsChanged="SubtopicChanged"
-                            EnableBackspaceRemove="false"
-                            ShowValidationErrors="true"
-                            AllowEmptyValue="false"
-                            AllowEmptyValueValidationMessage="No empty values are allowed" />
-            </div>
+            <ChipsInput Chips="@Subtopics"
+                        OnChipsChanged="SubtopicChanged"
+                        EnableBackspaceRemove="false"
+                        ShowValidationErrors="true"
+                        AllowEmptyValue="false"
+                        AllowEmptyValueValidationMessage="No empty values are allowed" />
         </div>
         <div class="item">
             <button @onclick="DeleteTopic" type="button" class="default-button"><i class="ti ti-trash"></i>Remove Topic</button>
-            <button disabled="@IsSaving" type="submit" class="default-button"><i class="ti ti-device-floppy"></i>Save Topic</button>
         </div>
     </EditForm>
 </div>
@@ -62,19 +39,9 @@
 
 @code {
 
-    public enum TopicState
-    {
-        Saved,
-        Unsaved,
-        Saving
-    }
-
     [Parameter]
     [Required]
     public TopicPostRequestClient Topic { get; set; }
-
-    [Parameter]
-    public EventCallback TopicCallback { get; set; }
 
     [Parameter]
     public EventCallback<TopicPostRequestClient> RemoveTopic { get; set; }
@@ -82,11 +49,7 @@
     [Inject]
     protected IToastService _toastService { get; set; }
 
-    private TopicExtended TopicServerState;
-
-    public TopicState State = TopicState.Saved;
     private List<string> Subtopics = new List<string>();
-    protected bool IsSaving => State == TopicState.Saving;
 
     protected string StartTimeProxy
     {
@@ -104,27 +67,15 @@
         set
         {
             bool worked = Topic.SetEndFromString(value);
-            if (!worked) _toastService.ShowError("En time is wrong!");
+            if (!worked) _toastService.ShowError("End time is wrong!");
         }
     }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        PopulateTopicServerState();
-        State = TopicState.Saved;
-    }
-
-    private void PopulateTopicServerState()
-    {
-        TopicServerState = new TopicExtended();
-        TopicServerState.Name = Topic.Name;
-        TopicServerState.Ad = Topic.Ad;
-        TopicServerState.TimestampEnd = Topic.TimestampEnd;
-        TopicServerState.TimestampStart = Topic.TimestampStart;
-        TopicServerState.CommunityContributed = Topic.CommunityContributed;
-        for (int i = 0; i < Topic.Subtopics.Count; i++)
+        for (int i = 0; i < this.Topic.Subtopics.Count; i++)
         {
-            TopicServerState.Subtopic.Add(new Subtopic() { Name = Topic.Subtopics[i].Name });
+            Subtopics.Add(this.Topic.Subtopics[i].Name);
         }
     }
 
@@ -133,68 +84,16 @@
         await RemoveTopic.InvokeAsync(Topic);
     }
 
-    protected async Task SendTopic()
-    {
-        State = TopicState.Saving;
-        this.StateHasChanged();
-        await TopicCallback.InvokeAsync();
-        State = TopicState.Saved;
-        PopulateTopicServerState();
-        this.StateHasChanged();
-    }
-
-    protected EditContext InputChanged()
-    {
-        CheckSaveState();
-        return null;
-    }
-
-    private void CheckSaveState()
-    {
-        if (State == TopicState.Saving) return;
-
-        if (TopicServerState.Name == Topic.Name &&
-            TopicServerState.Ad == Topic.Ad &&
-            TopicServerState.TimestampStart == Topic.TimestampStart &&
-            TopicServerState.TimestampEnd == Topic.TimestampEnd &&
-            TopicServerState.CommunityContributed == Topic.CommunityContributed
-            )
-        {
-            State = TopicState.Saved;
-        }
-        else
-        {
-            State = TopicState.Unsaved;
-            return;
-        }
-
-        if (IsServerSubtopicsEqualToLocal())
-        {
-            State = TopicState.Saved;
-        }
-        else
-        {
-            State = TopicState.Unsaved;
-            return;
-        }
-        return;
-    }
-
     protected void SubtopicChanged()
     {
-        State = IsServerSubtopicsEqualToLocal() ? TopicState.Saved : TopicState.Unsaved;
-        CheckSaveState();
-    }
-
-    protected bool IsServerSubtopicsEqualToLocal()
-    {
-        List<string> serverSubtopicList = new List<string>();
-        for (int i = 0; i < TopicServerState.Subtopic.Count; i++)
+        List<SubtopicPostRequest> subtopicPostRequest = new List<SubtopicPostRequest>();
+        for (int i = 0; i < Subtopics.Count; i++)
         {
-            serverSubtopicList.Add(TopicServerState.Subtopic[i].Name);
+            subtopicPostRequest.Add(new SubtopicPostRequest()
+            {
+                Name = Subtopics[i]
+            });
         }
-
-        return Enumerable.SequenceEqual(serverSubtopicList, Subtopics);
+        this.Topic.Subtopics = subtopicPostRequest;
     }
-
 }

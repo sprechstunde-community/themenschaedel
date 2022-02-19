@@ -55,8 +55,7 @@
     
     protected override async Task OnInitializedAsync()
     {
-        episode = new EpisodeClientExtra(await _data.GetEpisode(Id));
-        isEditing = await _data.IsCurrentlyClaimedEpisode(episode.Id);
+        episode = await GetEpisode(false);
 
         // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
         // cannot contain any xss exploits.
@@ -74,8 +73,35 @@
         if (firstRender)
         {
             isLoggedIn = await UserSession.IsLoggedInAsync();
+            if (isLoggedIn)
+            {
+                isEditing = await _data.IsCurrentlyClaimedEpisode(episode.Id);
+                if (isEditing)
+                {
+                    episode = await GetEpisode(true);
+                }
+            }
             this.StateHasChanged();
         }
+    }
+
+    private async Task<EpisodeClientExtra> GetEpisode(bool claimed = false)
+    {
+        EpisodeExtendedExtra episode = null;
+        if (claimed)
+        {
+            episode = await _data.GetClaimedEpisode(Id);
+        }
+        else
+        {
+            episode = await _data.GetEpisode(Id);
+        }
+
+        if (episode == null)
+        {
+            throw new InvalidOperationException("Episode does not exist.");
+        }
+        return new EpisodeClientExtra(episode);
     }
 
     // ToDo: there needs to be a way for me to check which episodes a user has claimed with the API

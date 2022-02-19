@@ -82,7 +82,6 @@ namespace Themenschaedel.API.Controllers
         public async Task<ActionResult<List<TopicExtended>>> PostTopicList([FromBody] TopicRequest request)
         {
             if (request.Topics == null) return BadRequest("Topic list is null!");
-            if (request.Topics.Count == 0) return BadRequest("Topic list is empty!");
 
             try
             {

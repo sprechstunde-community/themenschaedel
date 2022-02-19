@@ -6,7 +6,7 @@ namespace Themenschaedel.Web.Services.Interfaces
     public interface ISessionAPI
     {
         void DeleteSession(string token);
-        Task<LoginResponse> RefreshToken();
+        Task<LoginResponseExtended> RefreshToken();
         Task<UserResponse> GetCurrentUserData();
         Task Logout();
     }
