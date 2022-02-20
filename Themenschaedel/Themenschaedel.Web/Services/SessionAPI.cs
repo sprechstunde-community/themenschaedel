@@ -1,8 +1,11 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components;
 using Sentry;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
@@ -16,6 +19,8 @@ namespace Themenschaedel.Web.Services
         private readonly HttpClient _httpClient;
         private readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
 
+        public event EventHandler<LoginResponseExtended> NewTokenCreated;
+
         public SessionAPI(HttpClient httpClient, Blazored.SessionStorage.ISessionStorageService sessionStorage)
         {
             _httpClient = httpClient;
@@ -27,22 +32,34 @@ namespace Themenschaedel.Web.Services
             throw new System.NotImplementedException();
         }
 
-        private async Task<LoginResponse> GetToken() =>
-            await _sessionStorage.GetItemAsync<LoginResponse>("Token");
-
-        public async Task<UserResponse> GetCurrentUserData()
+        public async Task<UserResponse> GetCurrentUserData(LoginResponse token)
         {
+            UserResponse response = null;
+            try
+            {
+                response = await GetCurrentUserDataRequest(token);
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                LoginResponse refreshedToken = await RefreshToken(token);
+                response = await GetCurrentUserDataRequest(token);
+            }
+
+            return response;
+        }
+
+        private async Task<UserResponse> GetCurrentUserDataRequest(LoginResponse token)
+        {
+            bool unauthorizedRequest = false;
             try
             {
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/me"))
                 {
-                    LoginResponse loginResponse = await GetToken();
-
-                    if (loginResponse == null) return null;
+                    if (token == null) return null;
 
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                        new AuthenticationHeaderValue("Bearer", token.AccessToken);
 
                     var response = await _httpClient.SendAsync(requestMessage);
 
@@ -54,7 +71,7 @@ namespace Themenschaedel.Web.Services
                     }
                     else
                     {
-                        return null;
+                        if (response.StatusCode == HttpStatusCode.Unauthorized) unauthorizedRequest = true;
                     }
                 }
             }
@@ -63,22 +80,21 @@ namespace Themenschaedel.Web.Services
                 SentrySdk.CaptureException(e);
             }
 
+            if (unauthorizedRequest) throw new TokenDoesNotExistException();
             return null;
         }
 
-        public async Task Logout()
+        public async Task Logout(LoginResponse token)
         {
             try
             {
                 using (var requestMessage =
                     new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/logout"))
                 {
-                    LoginResponse loginResponse =  await GetToken();
-
-                    if (loginResponse == null) return;
+                    if (token == null) return;
 
                     requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", loginResponse.AccessToken);
+                        new AuthenticationHeaderValue("Bearer", token.AccessToken);
 
                     await _httpClient.SendAsync(requestMessage);
                 }
@@ -89,32 +105,38 @@ namespace Themenschaedel.Web.Services
             }
         }
 
-        public async Task<LoginResponseExtended> RefreshToken()
+        public async Task<LoginResponseExtended> RefreshToken(LoginResponse token)
         {
             try
             {
                 using (var requestMessage =
-                       new HttpRequestMessage(HttpMethod.Get, $"{_httpClient.BaseAddress}auth/refresh_token"))
+                       new HttpRequestMessage(HttpMethod.Post, $"{_httpClient.BaseAddress}auth/refresh_token"))
                 {
-                    LoginResponse initialToken = await GetToken();
-                    if (initialToken == null) return null;
+                    if (token == null) return null;
                     RefreshTokenRequest request = new RefreshTokenRequest()
                     {
-                        RefreshToken = initialToken.RefreshToken,
-                        UserId = initialToken.UserId
+                        RefreshToken = token.RefreshToken,
+                        UserId = token.UserId
                     };
+
+                    string jsonRequest = JsonSerializer.Serialize(request);
+
+                    StringContent stringContent = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                    requestMessage.Content = stringContent;
 
                     var response = await _httpClient.SendAsync(requestMessage);
 
                     if (response.IsSuccessStatusCode)
                     {
                         string json = response.Content.ReadAsStringAsync().Result;
-                        Token token = JsonSerializer.Deserialize<Token>(json);
+                        Token tokenResponse = JsonSerializer.Deserialize<Token>(json);
                         LoginResponse loginResponse = new LoginResponse();
-                        loginResponse = initialToken;
-                        loginResponse.ValidUntil = token.ValidUntil;
-                        loginResponse.AccessToken = token.Value;
-                        return new LoginResponseExtended(loginResponse);
+                        loginResponse = token;
+                        loginResponse.ValidUntil = tokenResponse.ValidUntil;
+                        loginResponse.AccessToken = tokenResponse.Value;
+                        LoginResponseExtended loginReponseExtended = new LoginResponseExtended(loginResponse);
+                        NewTokenCreated?.Invoke(null, loginReponseExtended);
+                        return loginReponseExtended;
                     }
                     else
                     {
@@ -129,5 +151,21 @@ namespace Themenschaedel.Web.Services
 
             return null;
         }
+    }
+
+
+    [Serializable]
+    public class TokenDoesNotExistException : Exception
+    {
+        public TokenDoesNotExistException()
+        { }
+
+        public TokenDoesNotExistException(string message)
+            : base(message)
+        { }
+
+        public TokenDoesNotExistException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
     }
 }

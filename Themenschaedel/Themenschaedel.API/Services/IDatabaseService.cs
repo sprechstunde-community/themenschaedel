@@ -58,7 +58,7 @@ namespace Themenschaedel.API.Services
         public Task<List<Claim>> GetAllExpiredClaimsAsync();
         public Task ClearAllExpiredClaimsAsync();
         public Task<bool> CheckIfUserHasClaimOnEpisodeAsync(int episodeId, int userId);
-        public Task<Episode> GetClaimedEpisodeByUserIdAsync(int userId);
+        public Task<EpisodeWithValidUntilClaim> GetClaimedEpisodeByUserIdAsync(int userId);
         public Task<Claim> GetClaimByUserIdAsync(int userId);
         public Task UpdateClaimsValidUntilAsync(int claimId, DateTime newValidUntilTime);
         public Task DeleteClaimByEpisodeIdAsync(int episodeId);

@@ -28,12 +28,12 @@ namespace Themenschaedel.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<Episode>> GetCurrentClaimedEpisode()
+        public async Task<ActionResult<EpisodeWithValidUntilClaim>> GetCurrentClaimedEpisode()
         {
             try
             {
                 User user = await _auth.GetUserFromValidToken(Request);
-                Episode claimedEpisode = await _claim.GetUserByClaimedEpisodeAsync(user.Id);
+                EpisodeWithValidUntilClaim claimedEpisode = await _claim.GetUserByClaimedEpisodeAsync(user.Id);
                 if (claimedEpisode == null) return BadRequest("Currently there are no claimed episodes by this user.");
                 return Ok(claimedEpisode);
             }
@@ -221,7 +221,7 @@ namespace Themenschaedel.API.Controllers
 
                 await _claim.AddExtraTimeToClaimAsync(user.Id);
                 
-                return Ok();
+                return Ok(await _claim.GetValidUntilByUserId(user.Id));
             }
             catch (TimeExtendedTooOftenException)
             {

@@ -8,7 +8,7 @@ namespace Themenschaedel.Web.Services.Interfaces
 {
     public interface IUserSession
     {
-        Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, bool keepLoggedIn);
+        Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, LoginDuration keepLoggedIn);
         bool IsLoggedIn();
         Task<bool> IsLoggedInAsync();
         Task<UserResponse> GetCurrentlyLoggedInUser();

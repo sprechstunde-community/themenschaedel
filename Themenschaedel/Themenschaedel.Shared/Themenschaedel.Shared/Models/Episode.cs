@@ -174,4 +174,9 @@ namespace Themenschaedel.Shared.Models
             }
         }
     }
+
+    public class EpisodeWithValidUntilClaim : Episode
+    {
+        public DateTime valid_until { get; set; }
+    }
 }

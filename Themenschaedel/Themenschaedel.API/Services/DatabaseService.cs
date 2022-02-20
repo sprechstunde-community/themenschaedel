@@ -516,14 +516,14 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<Episode> GetClaimedEpisodeByUserIdAsync(int userId)
+        public async Task<EpisodeWithValidUntilClaim> GetClaimedEpisodeByUserIdAsync(int userId)
         {
             _logger.LogInformation($"Returning claimed episode by user with id: {userId}.");
             var parameters = new { uId = userId };
-            var query = $"SELECT a.* FROM episodes a WHERE EXISTS (SELECT FROM claims WHERE  claims.id_episodes = a.id AND claims.id_user = @uId);";
+            var query = $"SELECT a.*, b.valid_until FROM episodes a LEFT JOIN claims b ON b.id_episodes = a.id WHERE EXISTS (SELECT FROM claims WHERE claims.id_episodes = a.id AND claims.id_user = @uId);";
             using (var connection = _context.CreateConnection())
             {
-                var episode = await connection.QuerySingleAsync<Episode>(query, parameters);
+                var episode = await connection.QuerySingleAsync<EpisodeWithValidUntilClaim>(query, parameters);
                 return episode;
             }
         }

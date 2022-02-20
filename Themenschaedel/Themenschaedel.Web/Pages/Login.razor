@@ -84,7 +84,7 @@
 
     protected async Task HandleValidSubmit()
     {
-        await _data.Login(tokenRequest.Username, tokenRequest.Password, keepLoggedIn);
+        await _data.Login(tokenRequest.Username, tokenRequest.Password, keepLoggedIn ? LoginDuration.KeepLoggedIn : LoginDuration.Temporary);
         await Task.Delay(1500);
         if (await UserSession.IsLoggedInAsync())
         {

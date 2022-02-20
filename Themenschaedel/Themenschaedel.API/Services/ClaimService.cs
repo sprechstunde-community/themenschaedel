@@ -52,6 +52,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
+        public async Task<DateTime> GetValidUntilByUserId(int userId)
+        {
+            Claim claim = await _database.GetClaimByUserIdAsync(userId);
+            return claim.ValidUntil;
+        }
+
         public async Task<ClaimResponse> ClaimEpisodeAsync(Episode episode, int userId)
         {
             List<TopicExtended> topics = await _database.GetTopicsAsync(episode.Id);
@@ -82,7 +88,7 @@ namespace Themenschaedel.API.Services
         public async Task DeleteClaimByEpisodeIdAsync(int episodeId) =>
             await _database.DeleteClaimByEpisodeIdAsync(episodeId);
 
-        public async Task<Episode> GetUserByClaimedEpisodeAsync(int userId) =>
+        public async Task<EpisodeWithValidUntilClaim> GetUserByClaimedEpisodeAsync(int userId) =>
             await _database.GetClaimedEpisodeByUserIdAsync(userId);
 
         public async Task<bool> HasUserClaimOnEpisodeAsync(int episodeId, int userId) =>

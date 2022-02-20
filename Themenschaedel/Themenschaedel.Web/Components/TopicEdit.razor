@@ -3,6 +3,7 @@
 @using Themenschaedel.Shared.Models
 @inherits Themenschaedel.Components.TopicEdit
 
+<p>Claim valid for: @ValidRemaining</p>
 <button class="default-button" @onclick="AddTopic"><i class="ti ti-plus"></i>Add Topic</button>
 <button class="default-button" @onclick="SaveTopics"><i class="ti ti-device-floppy"></i>Save Topics</button>
 <button class="default-button" @onclick="AddExtraTimeToClaim"><i class="ti ti-square-plus"></i>Add 30 minutes to claim</button>

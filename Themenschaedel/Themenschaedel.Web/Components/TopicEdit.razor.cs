@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Timers;
 using Blazored.Toast.Services;
 using Microsoft.AspNetCore.Components;
 using Themenschaedel.Shared.Models;
@@ -15,6 +16,7 @@ namespace Themenschaedel.Components
     public partial class TopicEdit : ComponentBase
     {
         [Parameter] [Required] public int episodeId { get; set; }
+        [Parameter] public EventCallback FinalizeTopic { get; set; }
         [Parameter] public EpisodeClientExtra episode { get; set; }
 
         [Inject] protected IData _data { get; set; }
@@ -23,9 +25,45 @@ namespace Themenschaedel.Components
         private bool saving = false;
 
         protected List<TopicPostRequestClient> localTopics = new List<TopicPostRequestClient>();
+
+        protected DateTime ClaimValidUntil;
+        protected string ValidRemaining;
+
+        protected static System.Timers.Timer ValidTimeRemainingTimer;
         protected override async Task OnInitializedAsync()
         {
             await PopulateTopics();
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                EpisodeWithValidUntilClaim claimedEpisode = await _data.GetClaimedEpisode();
+                ClaimValidUntil = claimedEpisode.valid_until;
+
+                ValidTimeRemainingTimer = new System.Timers.Timer(1000);
+                ValidTimeRemainingTimer.Elapsed += CountDownTimer;
+                ValidTimeRemainingTimer.Enabled = true;
+            }
+        }
+
+        public void CountDownTimer(Object source, ElapsedEventArgs e)
+        {
+            double timeLeftDouble = (ClaimValidUntil - DateTime.Now).TotalSeconds;
+            TimeSpan timeLeft = TimeSpan.FromSeconds(timeLeftDouble);
+            if (DateTime.Now < ClaimValidUntil)
+            {
+                ValidRemaining = string.Format("{0:D2}:{1:D2}:{2:D2}",
+                    timeLeft.Hours,
+                    timeLeft.Minutes,
+                    timeLeft.Seconds);
+            }
+            else
+            {
+                ValidTimeRemainingTimer.Enabled = false;
+            }
+            InvokeAsync(StateHasChanged);
         }
 
         protected async Task AddTopic()
@@ -42,13 +80,14 @@ namespace Themenschaedel.Components
 
         protected async Task AddExtraTimeToClaim()
         {
-            await _data.AddExtraTimeToClaim();
+            ClaimValidUntil = await _data.AddExtraTimeToClaim();
             this.StateHasChanged();
         }
 
         protected async Task FinalizeClaim()
         {
             await _data.FinalizeClaim();
+            await FinalizeTopic.InvokeAsync();
             this.StateHasChanged();
         }
 

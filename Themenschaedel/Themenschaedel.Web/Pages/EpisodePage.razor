@@ -3,6 +3,8 @@
 @using Humanizer
 @using Ganss.XSS
 @using Themenschaedel.Shared.Models
+@using System.Timers
+@inject NavigationManager _navigation;
 
 <!-- thanks https://pavellaptev.medium.com/css-weekly-2-an-image-on-the-left-text-on-the-left-a5e59b2acdb5 -->
 <div class="episode-container">
@@ -27,7 +29,7 @@
     }
     @if (isEditing && isLoggedIn)
     {
-        <TopicEdit episodeId=@Id episode=episode></TopicEdit>
+        <TopicEdit episodeId=@Id episode=episode FinalizeTopic="FinalizeTopic"></TopicEdit>
     }
     else if(episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
     {
@@ -52,7 +54,7 @@
 
     protected bool isLoggedIn = false;
     protected bool isEditing = false;
-    
+
     protected override async Task OnInitializedAsync()
     {
         episode = await GetEpisode(false);
@@ -103,8 +105,7 @@
         }
         return new EpisodeClientExtra(episode);
     }
-
-    // ToDo: there needs to be a way for me to check which episodes a user has claimed with the API
+    
     protected async Task ClaimEpisode()
     {
         await _data.ClaimEpisode(episode.Id);
@@ -115,6 +116,13 @@
             this.StateHasChanged();
             episode.Claimed = true;
         }
+    }
+
+    protected async Task FinalizeTopic()
+    {
+        isEditing = false;
+        this.StateHasChanged();
+        episode.Claimed = false;
     }
 
 

@@ -153,7 +153,7 @@ namespace Themenschaedel.Web.Services
             return null;
         }
 
-        public async Task<LoginResponse> Login(string username, string password, bool keepLoggedIn)
+        public async Task<LoginResponse> Login(string username, string password, LoginDuration keepLoggedIn)
         {
             try
             {
@@ -378,7 +378,7 @@ namespace Themenschaedel.Web.Services
             return null;
         }
 
-        public async Task<Episode> GetClaimedEpisode()
+        public async Task<EpisodeWithValidUntilClaim> GetClaimedEpisode()
         {
             try
             {
@@ -397,7 +397,7 @@ namespace Themenschaedel.Web.Services
                 if (response.IsSuccessStatusCode)
                 {
                     string json = response.Content.ReadAsStringAsync().Result;
-                    Episode ep = JsonSerializer.Deserialize<Episode>(json);
+                    EpisodeWithValidUntilClaim ep = JsonSerializer.Deserialize<EpisodeWithValidUntilClaim>(json);
                     return ep;
                 }
             }
@@ -414,7 +414,7 @@ namespace Themenschaedel.Web.Services
 
             try
             {
-                Episode ep = await GetClaimedEpisode();
+                EpisodeWithValidUntilClaim ep = await GetClaimedEpisode();
                 if (ep == null) return false;
                 return ep.Id == episodeId;
             }
@@ -423,16 +423,15 @@ namespace Themenschaedel.Web.Services
                 return false;
             }
         }
-
-        // ToDo: see kanban "Add extend time button"
-        public async Task AddExtraTimeToClaim()
+        
+        public async Task<DateTime> AddExtraTimeToClaim()
         {
             try
             {
                 HttpResponseMessage response = null;
 
                 using (var requestMessage =
-                       new HttpRequestMessage(HttpMethod.Get,
+                       new HttpRequestMessage(HttpMethod.Post,
                            $"{_httpClient.BaseAddress}Claim/extend_time"))
                 {
                     requestMessage.Headers.Authorization =
@@ -441,22 +440,59 @@ namespace Themenschaedel.Web.Services
                     response = await _httpClient.SendAsync(requestMessage);
                 }
 
-                if (!response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
                     string json = response.Content.ReadAsStringAsync().Result;
-                    Episode ep = JsonSerializer.Deserialize<Episode>(json);
+                    return JsonSerializer.Deserialize<DateTime>(json);
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
                 }
             }
             catch (Exception e)
             {
                 SentrySdk.CaptureException(e);
             }
-        }
 
-        // ToDo: see kanban "Add finalize claim button"
-        public Task FinalizeClaim()
+            return new DateTime();
+        }
+        
+        public async Task FinalizeClaim()
         {
-            throw new NotImplementedException();
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Post,
+                           $"{_httpClient.BaseAddress}Claim/submit"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _toastService.ShowSuccess("Topics submitted.");
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
         }
     }
 }

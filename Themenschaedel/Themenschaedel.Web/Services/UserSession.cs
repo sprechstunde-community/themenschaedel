@@ -6,6 +6,13 @@ using Themenschaedel.Web.Services.Interfaces;
 
 namespace Themenschaedel.Web.Services
 {
+    public enum LoginDuration
+    {
+        KeepLoggedIn,
+        Temporary,
+        None
+    }
+
     public class UserSession : Themenschaedel.Web.Services.Interfaces.IUserSession
     {
         private readonly ISessionAPI _sessionApi;
@@ -21,6 +28,11 @@ namespace Themenschaedel.Web.Services
             this._sessionApi = sessionApi;
             this._sessionStorage = sessionStorage;
             this._localStorage = localStorage;
+
+            _sessionApi.NewTokenCreated += async (s, e) =>
+            {
+                await SessionApiOnNewTokenCreated(s, e);
+            };
         }
 
         #region non-async
@@ -29,7 +41,6 @@ namespace Themenschaedel.Web.Services
         {
             throw new System.NotImplementedException();
         }
-
         #endregion non-async
 
 
@@ -42,7 +53,7 @@ namespace Themenschaedel.Web.Services
             if (token == null) return null;
             if ((token.ValidUntil - DateTime.Now).TotalMinutes <= 5)
             {
-                await SetToken(await _sessionApi.RefreshToken());
+                await SetToken(await _sessionApi.RefreshToken(token), LoginDuration.None);
                 token = await _sessionStorage.GetItemAsync<LoginResponseExtended>("Token");
             }
             return token;
@@ -63,7 +74,7 @@ namespace Themenschaedel.Web.Services
                 // This checks if the session is about to expire, if so logout the user and clear all tokens.
                 if ((token.SessionExpirationDate - DateTime.Now).TotalMinutes <= 1)
                 {
-                    await _sessionApi.Logout();
+                    await _sessionApi.Logout(token);
                     await ClearToken();
                     return null;
                 }
@@ -71,7 +82,7 @@ namespace Themenschaedel.Web.Services
                 if ((token.ValidUntil - DateTime.Now).TotalMinutes <= 5)
                 {
                     // This checks if the current localStorage Token will expire in less than 5 minutes, if so it will extend it, by refreshing the token
-                    await SetToken(await _sessionApi.RefreshToken());
+                    await SetToken(await _sessionApi.RefreshToken(token), LoginDuration.None);
                     token = await _sessionStorage.GetItemAsync<LoginResponseExtended>("Token");
                 }
                 else
@@ -82,19 +93,23 @@ namespace Themenschaedel.Web.Services
             return token;
         }
 
-        private async Task SetToken(LoginResponse tokenResponse, bool keepLoggedIn = false)
+        private async Task SetToken(LoginResponse tokenResponse, LoginDuration keepLoggedIn = LoginDuration.Temporary)
         {
             LoginResponseExtended token = new LoginResponseExtended(tokenResponse);
 
-            if (keepLoggedIn)
+
+            switch (keepLoggedIn)
             {
-                token.SessionExpirationDate = DateTime.MaxValue;
-                await _localStorage.SetItemAsync("Token", token);
-            }
-            else
-            {
-                token.SessionExpirationDate = DateTime.Now.AddHours(3);
-                await _localStorage.SetItemAsync("Token", token);
+                case LoginDuration.Temporary:
+                    token.SessionExpirationDate = DateTime.Now.AddHours(3);
+                    await _localStorage.SetItemAsync("Token", token);
+                    break;
+                case LoginDuration.KeepLoggedIn:
+                    token.SessionExpirationDate = DateTime.MaxValue;
+                    await _localStorage.SetItemAsync("Token", token);
+                    break;
+                case LoginDuration.None:
+                    break;
             }
 
             await _sessionStorage.SetItemAsync("Token", token);
@@ -111,7 +126,7 @@ namespace Themenschaedel.Web.Services
             await _localStorage.RemoveItemAsync("Token");
         }
 
-        public async Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, bool keepLoggedIn)
+        public async Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, LoginDuration keepLoggedIn)
         {
             await SetToken(authenticationToken, keepLoggedIn);
             loggedIn = true;
@@ -119,7 +134,7 @@ namespace Themenschaedel.Web.Services
 
         private async Task PopulateUserObject()
         {
-            this.CurrentlyLoggedInUser = await _sessionApi.GetCurrentUserData();
+            this.CurrentlyLoggedInUser = await _sessionApi.GetCurrentUserData(await GetToken());
             if (this.CurrentlyLoggedInUser == null)
             {
                 await RecheckLoginAndClearIfInvalid();
@@ -154,7 +169,7 @@ namespace Themenschaedel.Web.Services
 
         private async Task<bool> CheckToken()
         {
-            UserResponse currentUser = await _sessionApi.GetCurrentUserData();
+            UserResponse currentUser = await _sessionApi.GetCurrentUserData(await GetToken());
             if (currentUser == null) return false;
             if (String.IsNullOrEmpty(currentUser.Username)) return false;
             if (currentUser != CurrentlyLoggedInUser) return false;
@@ -176,10 +191,14 @@ namespace Themenschaedel.Web.Services
         {
             if (await RecheckLoginAndClearIfInvalid())
             {
-                await _sessionApi.Logout();
+                await _sessionApi.Logout(await GetToken());
             }
         }
 
+        private async Task SessionApiOnNewTokenCreated(object? sender, LoginResponseExtended e)
+        {
+            await SetToken(e, LoginDuration.None);
+        }
         #endregion async
     }
 }
