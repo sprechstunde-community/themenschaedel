@@ -1,6 +1,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Themenschaedel.Components
 @using Themenschaedel.Shared.Models
+@using Themenschaedel.Shared.Models.Request
 @inherits Themenschaedel.Components.TopicEdit
 
 <p>Claim valid for: @ValidRemaining</p>
@@ -10,7 +11,7 @@
 <button class="default-button" @onclick="FinalizeClaim"><i class="ti ti-upload"></i>Finalize</button>
 
 
-@for (int i = 0; i < localTopics.Count; i++)
+@foreach (TopicPostRequestClient topic in localTopics)
 {
-    <TopicEditCard Topic="localTopics[i]" RemoveTopic="RemoveTopic"></TopicEditCard>
+    <TopicEditCard Topic="topic" RemoveTopic="RemoveTopic"></TopicEditCard>
 }

@@ -8,6 +8,7 @@ using Blazored.Toast.Services;
 using Microsoft.AspNetCore.Components;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Web.Components;
 using Themenschaedel.Web.Services.Interfaces;
 
 namespace Themenschaedel.Components
@@ -94,7 +95,10 @@ namespace Themenschaedel.Components
 
         protected async Task RemoveTopic(TopicPostRequestClient topic)
         {
-            localTopics.Remove(topic);
+            int index = localTopics.FindIndex(x => x == topic);
+            localTopics[index].Subtopics = new List<SubtopicPostRequest>();
+            localTopics[index] = new TopicPostRequestClient();
+            localTopics.RemoveAt(index);
             this.StateHasChanged();
         }
 
