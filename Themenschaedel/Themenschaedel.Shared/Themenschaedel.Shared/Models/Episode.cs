@@ -15,7 +15,7 @@ namespace Themenschaedel.Shared.Models
 
     public class Episode
     {
-        public Episode(){}
+        public Episode() { }
 
         public Episode(Episode episode)
         {
@@ -73,7 +73,7 @@ namespace Themenschaedel.Shared.Models
 
     public class EpisodeExtended : Episode
     {
-        public EpisodeExtended(){}
+        public EpisodeExtended() { }
 
         public EpisodeExtended(EpisodeExtended episode) : base(episode)
         {
@@ -95,13 +95,14 @@ namespace Themenschaedel.Shared.Models
         public int Downvotes { get; set; }
         [JsonPropertyName("topic_count")]
         public Int64 topic_count { get; set; }
+
         [JsonPropertyName("upvoted")]
-        public bool Upvoted { get; set; }
+        public bool? Upvoted { get; set; } = null;
     }
 
     public class EpisodeExtendedExtra : EpisodeExtended
     {
-        public EpisodeExtendedExtra(){}
+        public EpisodeExtendedExtra() { }
 
         public EpisodeExtendedExtra(EpisodeExtendedExtra episodes) : base(episodes)
         {
@@ -117,7 +118,7 @@ namespace Themenschaedel.Shared.Models
 
     public class EpisodeClient : EpisodeExtended
     {
-        public EpisodeClient(){}
+        public EpisodeClient() { }
 
         public EpisodeClient(EpisodeExtended episode) : base(episode) { }
 
@@ -149,7 +150,7 @@ namespace Themenschaedel.Shared.Models
 
     public class EpisodeClientExtra : EpisodeExtendedExtra
     {
-        public EpisodeClientExtra(){}
+        public EpisodeClientExtra() { }
 
         public EpisodeClientExtra(EpisodeExtendedExtra EpisodeExtendedExtra) : base(EpisodeExtendedExtra) { }
 

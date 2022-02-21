@@ -1,8 +1,10 @@
 ﻿using Dapper;
+using Sentry;
 using Themenschaedel.Shared;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Request;
 using Themenschaedel.Shared.Models.Response;
+using User = Themenschaedel.Shared.Models.User;
 
 namespace Themenschaedel.API.Services
 {
@@ -100,7 +102,7 @@ namespace Themenschaedel.API.Services
             _logger.LogInformation($"Returning all episodes from database, page: {page} per page: {perPage}.");
             var parameters = new { Page = page, PerPage = perPage, uid = userId };
             var query = $"SELECT * FROM udf_GetEpisodesByPageNumberAndSize(@Page,@PerPage);";
-            if(userId != 0) query = $"SELECT * FROM udf_GetEpisodesByPageNumberAndSize(@Page,@PerPage,@uid);";
+            if (userId != 0) query = $"SELECT * FROM udf_GetEpisodesByPageNumberAndSize(@Page,@PerPage,@uid);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
@@ -333,7 +335,7 @@ namespace Themenschaedel.API.Services
             _logger.LogInformation($"Returning all unverified episodes from database.");
             var parameters = new { Page = page, PerPage = perPage, uId = userId };
             var query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage);";
-            if(userId != 0) query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage, @uId);";
+            if (userId != 0) query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage, @uId);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query, parameters);
@@ -768,6 +770,72 @@ namespace Themenschaedel.API.Services
             {
                 string processQuery = "SELECT id FROM episode_person ORDER BY id DESC LIMIT 1;";
                 return await connection.QuerySingleAsync<int>(processQuery);
+            }
+        }
+
+        public async Task VoteForEpisode(bool upvote, int episodeId, int userId)
+        {
+            bool? lastVote = null;
+            try
+            {
+                lastVote = await GetVoteId(episodeId, userId);
+            }
+            catch (InvalidOperationException e)
+            {
+                if (!e.Message.Contains("Sequence contains no elements"))
+                {
+                    SentrySdk.CaptureException(e);
+                    _logger.LogError($"An error occured while trying to get the a single entry from the vote table, where episode id is {episodeId} and user id is {userId}. Error:\n{e.Message}");
+                    throw;
+                }
+            }
+
+            if (lastVote == upvote) return;
+            if (lastVote != upvote) await UpdateVoteForEpisode(upvote, episodeId, userId);
+            else await InsertVoteForEpisode(upvote, episodeId, userId);
+        }
+
+        public async Task InsertVoteForEpisode(bool upvote, int episodeId, int userId)
+        {
+            _logger.LogInformation($"Inserting vote for episode with id: {episodeId}. Vote is by user with id: {userId}");
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { up = upvote, epId = episodeId, uId = userId, created_at = DateTime.Now };
+                string processQuery = "INSERT INTO votes (positive,created_at,id_episodes,id_user) VALUES (@up,@created_at,@epId,@uId);";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task UpdateVoteForEpisode(bool upvote, int episodeId, int userId)
+        {
+            _logger.LogInformation($"Updating vote for episode with id: {episodeId}. Vote is by user with id: {userId}");
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { up = upvote, epId = episodeId, uId = userId, created_at = DateTime.Now };
+                string processQuery = "UPDATE votes SET positive=@up WHERE id_episodes=@epId AND id_user=@uId;";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        public async Task DeleteVoteForEpisode(int episodeId, int userId)
+        {
+            _logger.LogInformation($"Deleting vote for episode with id: {episodeId}. Vote deletion is by user with id: {userId}");
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { epId = episodeId, uId = userId };
+                string processQuery = "DELETE FROM votes WHERE id_episodes=@epId AND id_user=@uId;";
+                await connection.ExecuteAsync(processQuery, parameters);
+            }
+        }
+
+        private async Task<bool> GetVoteId(int episodeId, int userId)
+        {
+            _logger.LogInformation($"Getting vote for episode with id: {episodeId} and user with id: {userId}.");
+            using (var connection = _context.CreateConnection())
+            {
+                var parameters = new { epId = episodeId, uId = userId };
+                string processQuery = "SELECT positive FROM votes WHERE id_episodes=@epId AND id_user=@uId LIMIT 1;";
+                return await connection.QuerySingleAsync<bool>(processQuery, parameters);
             }
         }
     }

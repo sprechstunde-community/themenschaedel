@@ -1,5 +1,11 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Sentry;
+using Themenschaedel.API.Services;
+using Themenschaedel.Shared.Models;
+using Themenschaedel.Shared.Models.Request;
+using Themenschaedel.Shared.Models.Response;
+using User = Themenschaedel.Shared.Models.User;
 
 namespace Themenschaedel.API.Controllers
 {
@@ -7,25 +13,25 @@ namespace Themenschaedel.API.Controllers
     [ApiController]
     public class VotesController : ControllerBase
     {
-        [HttpPost("{episodeId}")]
-        public async Task<ActionResult<ClaimResponse>> Post(int episodeId)
-        {
-            if (id == 0) return BadRequest("Id cannot be 0!");
-            if (id < 0) return BadRequest("Id cannot be smaller than 0!");
+        private readonly ILogger<VotesController> _logger;
+        private readonly IDatabaseService _database;
+        private readonly IAuthenticationService _auth;
 
+        public VotesController(ILogger<VotesController> logger, IDatabaseService databaseService, IAuthenticationService auth)
+        {
+            _logger = logger;
+            _database = databaseService;
+            _auth = auth;
+        }
+
+        [HttpPost("{episodeId}")]
+        public async Task<ActionResult> Post(int episodeId, [FromBody] VoteRequest request)
+        {
             try
             {
                 User user = await _auth.GetUserFromValidToken(Request);
-                EpisodeExtended episode = await _database.GetMinimalEpisodeAsync(id);
-                if (episode.Claimed) return BadRequest("Episode is already claimed!");
-
-                ClaimResponse response = await _claim.ClaimEpisodeAsync(episode, user.Id);
-
-                return Ok(response);
-            }
-            catch (EpisodeUnclaimedButAlreadyHasTopcisException e)
-            {
-                return BadRequest("Episode is already claimed!");
+                await _database.VoteForEpisode(request.Positive, episodeId, user.Id);
+                return Ok();
             }
             catch (TokenDoesNotExistException e)
             {
@@ -33,13 +39,29 @@ namespace Themenschaedel.API.Controllers
             }
             catch (Exception e)
             {
-                if (e.Message.Contains("23505") || e.Message.Contains("unique_user"))
-                {
-                    _logger.LogError($"User tried to claim episode wiht id {id}. But the user already claimed another episode.");
-                    return BadRequest("User already has another claimed episode!");
-                }
+                _logger.LogError($"Error while trying to add vote for episode with id: {episodeId}. Error:\n{e.Message}");
+                SentrySdk.CaptureException(e);
+            }
 
-                _logger.LogError($"Error while trying to claim episode with id: {id}. Error:\n{e.Message}");
+            return Problem();
+        }
+
+        [HttpDelete("{episodeId}")]
+        public async Task<ActionResult> Post(int episodeId)
+        {
+            try
+            {
+                User user = await _auth.GetUserFromValidToken(Request);
+                await _database.DeleteVoteForEpisode(episodeId, user.Id);
+                return Ok();
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                return Unauthorized();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error while trying to delete vote for episode with id: {episodeId}. Error:\n{e.Message}");
                 SentrySdk.CaptureException(e);
             }
 

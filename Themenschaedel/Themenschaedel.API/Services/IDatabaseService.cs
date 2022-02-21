@@ -62,7 +62,11 @@ namespace Themenschaedel.API.Services
         public Task<Claim> GetClaimByUserIdAsync(int userId);
         public Task UpdateClaimsValidUntilAsync(int claimId, DateTime newValidUntilTime);
         public Task DeleteClaimByEpisodeIdAsync(int episodeId);
-
         public Task ResetIdentityForTopicAndSubtopicsAsync();
+
+        // Votes
+        public Task VoteForEpisode(bool upvote, int episodeId, int userId);
+        public Task DeleteVoteForEpisode(int episodeId, int userId);
+
     }
 }
