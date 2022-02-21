@@ -59,7 +59,7 @@ namespace Themenschaedel.API.Controllers
 
                 EpisodeAlternateResponse episodeResponse = new EpisodeAlternateResponse();
 
-                episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page, user.Id);
+                episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page);
                 episodeResponse.Meta.EpisodeCount = await _databaseService.GetUnverifiedEpisodeCountAsync();
                 episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
 
