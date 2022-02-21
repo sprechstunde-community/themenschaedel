@@ -17,5 +17,7 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task<LoginResponseExtended> GetToken();
         Task<Settings> GetSettings();
         Task SetSettings(Settings settings);
+        Task SetLastSeenEpisodeNumber(int episodeNumber);
+        Task<int> GetLastSeenEpisodeNumber();
     }
 }

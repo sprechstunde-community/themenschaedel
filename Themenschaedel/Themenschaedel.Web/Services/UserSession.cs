@@ -46,6 +46,23 @@ namespace Themenschaedel.Web.Services
 
         #region async
 
+        public async Task SetLastSeenEpisodeNumber(int episodeNumber)
+        {
+            await _localStorage.SetItemAsync("LastSeenEpisode", episodeNumber);
+        }
+
+        public async Task<int> GetLastSeenEpisodeNumber()
+        {
+            try
+            {
+                return await _localStorage.GetItemAsync<int>("LastSeenEpisode");
+            }
+            catch (Exception e)
+            {
+                return 0;
+            }
+        }
+
         public async Task<LoginResponseExtended> GetToken()
         {
             LoginResponseExtended token = await _sessionStorage.GetItemAsync<LoginResponseExtended>("Token");

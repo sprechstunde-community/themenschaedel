@@ -17,5 +17,6 @@ namespace Themenschaedel.API.Services
         public string GetValidToken(HttpRequest request);
         public Task<User> GetUserFromValidToken(HttpRequest request);
         public Task<bool> CheckIfUserHasElivatedPermission(HttpRequest request);
+        public Task<bool> CheckIfUserHasElivatedPermissionByUserObject(User user);
     }
 }

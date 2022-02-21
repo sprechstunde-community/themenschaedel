@@ -62,7 +62,8 @@ namespace Themenschaedel.Web
             });
             
             services.AddScoped<Themenschaedel.Web.Services.Interfaces.IUserSession, Themenschaedel.Web.Services.UserSession>();
-            
+            services.AddScoped<IRefresher, EpisodeRefresher>();
+
             services.AddHttpClient<IData, ApiData>(client =>
             {
                 client.BaseAddress = new Uri("https://api.alyra.dev/api/");

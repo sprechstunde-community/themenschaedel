@@ -29,6 +29,7 @@
     }
     @if (isEditing && isLoggedIn)
     {
+        <button class="default-button" @onclick="RefreshEpisode"><i class="ti ti-refresh"></i>Refresh</button>
         <TopicEdit episodeId=@Id episode=episode FinalizeTopic="FinalizeTopic"></TopicEdit>
     }
     else if(episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
@@ -46,7 +47,13 @@
     private IData _data { get; set; }
 
     [Inject]
-    private IUserSession UserSession { get; set; }
+    private IUserSession _session { get; set; }
+
+    [Inject]
+    private IRefresher _refresh { get; set; }
+
+    [Inject]
+    private IToastService _toast { get; set; }
 
     public EpisodeClientExtra episode = new EpisodeClientExtra();
 
@@ -58,8 +65,15 @@
     protected override async Task OnInitializedAsync()
     {
         episode = await GetEpisode(false);
+        SanitizeDescription();
+    }
 
-        // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
+    protected void SanitizeDescription()
+    {
+        if (episode == null) return;
+        if (episode.Description == null) return;
+
+    // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
         // cannot contain any xss exploits.
         HtmlSanitizer sanitizer = new HtmlSanitizer();
         // Replace unrelated API stuff
@@ -70,19 +84,25 @@
         sanitizedDescription = sanitizer.Sanitize(tempDesc);
     }
 
+    protected async Task PopulateEpisode()
+    {
+        isLoggedIn = await _session.IsLoggedInAsync();
+        if (isLoggedIn)
+        {
+            isEditing = await _data.IsCurrentlyClaimedEpisode(episode.Id);
+            if (isEditing)
+            {
+                episode = await GetEpisode(true);
+                SanitizeDescription();
+            }
+        }
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            isLoggedIn = await UserSession.IsLoggedInAsync();
-            if (isLoggedIn)
-            {
-                isEditing = await _data.IsCurrentlyClaimedEpisode(episode.Id);
-                if (isEditing)
-                {
-                    episode = await GetEpisode(true);
-                }
-            }
+            await PopulateEpisode();
             this.StateHasChanged();
         }
     }
@@ -109,7 +129,7 @@
     protected async Task ClaimEpisode()
     {
         await _data.ClaimEpisode(episode.Id);
-        isLoggedIn = await UserSession.IsLoggedInAsync();
+        isLoggedIn = await _session.IsLoggedInAsync();
         if (isLoggedIn)
         {
             isEditing = true;
@@ -125,5 +145,12 @@
         episode.Claimed = false;
     }
 
+    protected async Task RefreshEpisode()
+    {
+        await PopulateEpisode();
+        this.StateHasChanged();
+        _refresh.FireRefresh();
+        _toast.ShowSuccess("Refreshed");
+    }
 
 }

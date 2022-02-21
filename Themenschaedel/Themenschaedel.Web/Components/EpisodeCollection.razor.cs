@@ -13,6 +13,7 @@ namespace Themenschaedel.Components
     {
         [Inject] private IJSRuntime JSRuntime { get; set; }
         [Inject] private IData _data { get; set; }
+        [Inject] private IUserSession _session { get; set; }
 
         public bool IsLoading { get; set; } = false;
 
@@ -26,12 +27,29 @@ namespace Themenschaedel.Components
 
         Random random = new Random();
 
+        public int LastSeenEpisodeNumber = 0;
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
             {
+                await PopulateLastSeenEpisodeNumber();
                 await LoadMore();
                 await InitJsListenerAsync();
+                await SetLastEpisodeNumber();
+            }
+        }
+
+        private async Task PopulateLastSeenEpisodeNumber()
+        {
+            LastSeenEpisodeNumber = await _session.GetLastSeenEpisodeNumber();
+        }
+
+        protected async Task SetLastEpisodeNumber()
+        {
+            if (Episodes.Count != 0)
+            {
+                await _session.SetLastSeenEpisodeNumber(Episodes[0].EpisodeNumber);
             }
         }
 

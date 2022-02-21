@@ -95,11 +95,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage)
+        public async Task<List<EpisodeExtended>> GetEpisodesAsync(int page, int perPage, int userId = 0)
         {
             _logger.LogInformation($"Returning all episodes from database, page: {page} per page: {perPage}.");
-            var parameters = new { Page = page, PerPage = perPage };
+            var parameters = new { Page = page, PerPage = perPage, uid = userId };
             var query = $"SELECT * FROM udf_GetEpisodesByPageNumberAndSize(@Page,@PerPage);";
+            if(userId != 0) query = $"SELECT * FROM udf_GetEpisodesByPageNumberAndSize(@Page,@PerPage,@uid);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtended>(query, parameters);
@@ -224,11 +225,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId, bool editorRequest = false)
+        public async Task<EpisodeExtendedExtra> GetEpisodeAsync(int episodeId, bool editorRequest = false, int userId = 0)
         {
             _logger.LogInformation($"Returning episode with id: {episodeId}.");
-            var parameters = new { epId = episodeId };
+            var parameters = new { epId = episodeId, uId = userId };
             var query = $"SELECT * FROM udf_GetEpisodes() WHERE id=@epId LIMIT 1";
+            if (userId != 0) query = $"SELECT * FROM udf_GetEpisodes(@uId) WHERE id=@epId LIMIT 1";
             using (var connection = _context.CreateConnection())
             {
                 EpisodeExtendedExtra episode = await connection.QuerySingleAsync<EpisodeExtendedExtra>(query, parameters);
@@ -326,11 +328,12 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage)
+        public async Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage, int userId = 0)
         {
             _logger.LogInformation($"Returning all unverified episodes from database.");
-            var parameters = new { Page = page, PerPage = perPage };
+            var parameters = new { Page = page, PerPage = perPage, uId = userId };
             var query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage);";
+            if(userId != 0) query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage, @uId);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query, parameters);

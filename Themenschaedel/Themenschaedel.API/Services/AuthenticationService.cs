@@ -359,5 +359,10 @@ namespace Themenschaedel.API.Services
             User user = await GetUserFromValidToken(request);
             return RoleMisc.UserHasElevatedPermission(user.RolesId);
         }
+
+        public async Task<bool> CheckIfUserHasElivatedPermissionByUserObject(User user)
+        {
+            return RoleMisc.UserHasElevatedPermission(user.RolesId);
+        }
     }
 }

@@ -82,6 +82,7 @@ namespace Themenschaedel.Shared.Models
             Upvotes = episode.Upvotes;
             Downvotes = episode.Downvotes;
             topic_count = episode.topic_count;
+            Upvoted = episode.Upvoted;
         }
 
         [JsonPropertyName("claimed")]
@@ -94,6 +95,8 @@ namespace Themenschaedel.Shared.Models
         public int Downvotes { get; set; }
         [JsonPropertyName("topic_count")]
         public Int64 topic_count { get; set; }
+        [JsonPropertyName("upvoted")]
+        public bool Upvoted { get; set; }
     }
 
     public class EpisodeExtendedExtra : EpisodeExtended

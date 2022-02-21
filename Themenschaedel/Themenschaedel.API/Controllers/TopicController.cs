@@ -102,7 +102,7 @@ namespace Themenschaedel.API.Controllers
                 await _database.ResetIdentityForPersonInEpisodeTableAsync();
                 await _database.InsertPeopleInEpisodeAsync(request.People, claimedEpisode.Id);
 
-                EpisodeExtendedExtra episode = await _database.GetEpisodeAsync(claimedEpisode.Id, true);
+                EpisodeExtendedExtra episode = await _database.GetEpisodeAsync(claimedEpisode.Id, true, user.Id);
 
                 return Ok(episode);
             }

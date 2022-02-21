@@ -54,11 +54,12 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
-                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+                User user = await _authenticationService.GetUserFromValidToken(Request);
+                if (!await _authenticationService.CheckIfUserHasElivatedPermissionByUserObject(user)) return Unauthorized();
 
                 EpisodeAlternateResponse episodeResponse = new EpisodeAlternateResponse();
 
-                episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page);
+                episodeResponse.Data = await _databaseService.GetEpisodeAwaitingVerificationAsync(page, per_page, user.Id);
                 episodeResponse.Meta.EpisodeCount = await _databaseService.GetUnverifiedEpisodeCountAsync();
                 episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
 
@@ -84,12 +85,28 @@ namespace Themenschaedel.API.Controllers
         public async Task<ActionResult<EpisodeResponse>> GetEpisodes(int page, int per_page)
         {
             if (page == 0) page = 1;
+            
+            int userId = 0;
+            try
+            {
+                User user = await _authenticationService.GetUserFromValidToken(Request);
+                userId = user.Id;
+            }
+            catch (TokenDoesNotExistException e)
+            {
+                // ignore lol -> could happen all the time
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+                _logger.LogError(e.Message);
+            }
 
             try
             {
                 EpisodeResponse episodeResponse = new EpisodeResponse();
 
-                episodeResponse.Data = await _databaseService.GetEpisodesAsync(page, per_page);
+                episodeResponse.Data = await _databaseService.GetEpisodesAsync(page, per_page, userId);
                 episodeResponse.Meta.EpisodeCount = await _databaseService.GetEpisodeCountAsync();
                 episodeResponse.Meta.EpisodeMaxPageCount = (int)Math.Ceiling((decimal)episodeResponse.Meta.EpisodeCount / per_page);
 
@@ -108,14 +125,16 @@ namespace Themenschaedel.API.Controllers
 
         // GET: api/<EpisodesController>
         [HttpGet("{episodeId}")]
-        public async Task<ActionResult<Episode>> GetEpisode(int episodeId)
+        public async Task<ActionResult> GetEpisode(int episodeId)
         {
             bool isEditingRequestedEpisode = false;
+            int userId = 0;
             try
             {
                 User user = await _authenticationService.GetUserFromValidToken(Request);
                 Episode claimedEpisode = await _claims.GetUserByClaimedEpisodeAsync(user.Id);
                 isEditingRequestedEpisode = claimedEpisode.Id == episodeId;
+                userId = user.Id;
             }
             catch (TokenDoesNotExistException e)
             {
@@ -129,9 +148,7 @@ namespace Themenschaedel.API.Controllers
 
             try
             {
-                Episode episode = await _databaseService.GetEpisodeAsync(episodeId, isEditingRequestedEpisode);
-
-                return Ok(episode);
+                return Ok(await _databaseService.GetEpisodeAsync(episodeId, isEditingRequestedEpisode, userId));
             }
             catch (InvalidOperationException e)
             {
@@ -151,9 +168,10 @@ namespace Themenschaedel.API.Controllers
         {
             try
             {
-                if (!await _authenticationService.CheckIfUserHasElivatedPermission(Request)) return Unauthorized();
+                User user = await _authenticationService.GetUserFromValidToken(Request);
+                if (!await _authenticationService.CheckIfUserHasElivatedPermissionByUserObject(user)) return Unauthorized();
 
-                EpisodeExtendedExtra episode = await _databaseService.GetEpisodeAsync(id, true);
+                EpisodeExtendedExtra episode = await _databaseService.GetEpisodeAsync(id, true, user.Id);
                 if (episode.Topic == null || episode.Topic.Count == 0)
                 {
                     return BadRequest("Episode has nothing to verify.");

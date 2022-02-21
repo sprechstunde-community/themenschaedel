@@ -22,6 +22,7 @@ namespace Themenschaedel.Components
 
         [Inject] protected IData _data { get; set; }
         [Inject] protected IToastService _toastService { get; set; }
+        [Inject] protected IRefresher _refresher { get; set; }
 
         private bool saving = false;
 
@@ -33,7 +34,12 @@ namespace Themenschaedel.Components
         protected static System.Timers.Timer ValidTimeRemainingTimer;
         protected override async Task OnInitializedAsync()
         {
-            await PopulateTopics();
+            PopulateTopics();
+            _refresher.Refresh += (sender, args) =>
+            {
+                PopulateTopics();
+                this.StateHasChanged();
+            };
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -102,8 +108,9 @@ namespace Themenschaedel.Components
             this.StateHasChanged();
         }
 
-        protected async Task PopulateTopics()
+        protected void PopulateTopics()
         {
+            localTopics = new List<TopicPostRequestClient>();
             for (int i = 0; i < episode.Topic.Count; i++)
             {
                 localTopics.Add(new TopicPostRequestClient(episode.Topic[i]));

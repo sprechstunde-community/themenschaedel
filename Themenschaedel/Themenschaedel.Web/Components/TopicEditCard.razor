@@ -2,6 +2,7 @@
 @using Themenschaedel.Shared.Models
 @using System.ComponentModel.DataAnnotations
 @using Themenschaedel.Shared.Models.Request
+@using Themenschaedel.Web.Services.Interfaces
 <div>
     <EditForm class="topic-view-card container" Model="@Topic">
         <DataAnnotationsValidator />
@@ -49,6 +50,9 @@
     [Inject]
     protected IToastService _toastService { get; set; }
 
+    [Inject]
+    protected IRefresher _refresher { get; set; }
+
     private List<string> Subtopics
     {
         get { return GetSubtopics(); }
@@ -73,6 +77,14 @@
             bool worked = Topic.SetEndFromString(value);
             if (!worked) _toastService.ShowError("End time is wrong!");
         }
+    }
+
+    protected override void OnInitialized()
+    {
+        _refresher.Refresh += (sender, args) =>
+        {
+            this.StateHasChanged();
+        };
     }
 
     private List<string> GetSubtopics()

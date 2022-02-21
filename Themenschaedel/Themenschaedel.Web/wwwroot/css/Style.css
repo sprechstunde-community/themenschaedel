@@ -294,13 +294,16 @@ body:before {
   }
 }
 
+.blazored-toast-container {
+  z-index: 1000 !important;
+}
+
 .main-container {
   display: flex;
   flex-direction: column;
   padding: 0 30px 30px;
   flex-grow: 1;
   overflow: hidden;
-  padding-top: 94px;
 }
 
 .anim {
@@ -735,7 +738,7 @@ body:before {
   min-height: 17px;
   border-radius: 4px;
 }
-.video-by:before {
+.video-by.new:before {
   content: "";
   background-color: #22b07d;
   width: 6px;
@@ -745,8 +748,8 @@ body:before {
   top: 26px;
   right: 5px;
 }
-.video-by.offline:before {
-  background-color: #ff7551;
+.video-by.old:before {
+  opacity: 0;
 }
 .video-time {
   position: absolute;

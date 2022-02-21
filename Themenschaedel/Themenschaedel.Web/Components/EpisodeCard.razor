@@ -1,5 +1,6 @@
 ﻿@using Themenschaedel.Shared.Models
 @using Humanizer
+@using System.ComponentModel.DataAnnotations
 @inject NavigationManager NavigationManager
 
 <style>
@@ -116,36 +117,52 @@
         }
 </style>
 
-<a href="episode/@item.Id">
-    <div class="video anim" style="@item.AnimationDelayCSS" @onclick="@(e => EpisodeClick())">
-        <div class="video-time">@(item.Duration/60)m</div>
+<a>
+    <div class="video anim" style="@item.AnimationDelayCSS">
+        <div class="video-time" href="episode/@item.Id">@(item.Duration/60)m</div>
         <div class="video-claim-status"><EpisodePills ClaimStatus=@item.ClaimStatus StatusStyle="EpisodePills.Style.Transparent"/></div>
         <div class="video-wrapper" @onclick="@(e => EpisodeClick())">
             <img class="thumbnail" src="@item.Image" />
-            <div class="author-img__wrapper video-author">
-                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-check feather feather-check" viewBox="0 0 24 24" stroke-width="4" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                   <path d="M5 12l5 5l10 -10"></path>
-                </svg>
-                <img class="author-img" src="">
-            </div>
         </div>
-        <div class="video-by">Andy William</div>
+        <div class="@unseenEpisode">@item.PublishedAt.Humanize().ToString()</div>
         <div class="video-name" @onclick="@(e => EpisodeClick())"><a href="episode/@item.Id">@((MarkupString)item.Title)</a></div>
-        <div class="video-view">@item.PublishedAt.Humanize().ToString()</div>
+        <div class="video-view"><i class="ti ti-arrow-narrow-up" @onclick="Test"></i>@item.Upvotes <i class="ti ti-arrow-narrow-down"></i>@item.Downvotes</div>
     </div>
 </a>
 
 
 @code {
 
+    [Required]
     [Parameter]
     public EpisodeClient item { get; set; }
 
+    [Parameter]
+    public int LastSeenEpisodeNumber { get; set; }
+
     protected const string cssThumbnailHover = "display: none;";
+    protected string unseenEpisode = "video-by old";
 
     protected void EpisodeClick()
     {
         NavigationManager.NavigateTo($"episode/{item.Id}");
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (item.EpisodeNumber > LastSeenEpisodeNumber)
+            {
+                unseenEpisode = "video-by new";
+                this.StateHasChanged();
+            }
+        }
+    }
+
+    protected void Test()
+    {
+        unseenEpisode = "video-by new";
+    }
+
 }
