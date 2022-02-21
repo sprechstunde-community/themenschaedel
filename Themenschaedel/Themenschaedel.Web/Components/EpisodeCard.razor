@@ -1,6 +1,9 @@
 ﻿@using Themenschaedel.Shared.Models
 @using Humanizer
 @using System.ComponentModel.DataAnnotations
+@using Themenschaedel.Shared.Models.Response
+@using Themenschaedel.Web.Services
+@using Themenschaedel.Web.Services.Interfaces
 @inject NavigationManager NavigationManager
 
 <style>
@@ -70,7 +73,7 @@
         z-index: 1;
         right: 8px;
     }
-    
+
     .video-claim-status {
         position: absolute;
         font-size: 12px;
@@ -87,7 +90,7 @@
     .video:hover .video-time {
         display: none;
     }
-        
+
     .video:hover .video-claim-status {
         display: none;
     }
@@ -120,18 +123,20 @@
 <a>
     <div class="video anim" style="@item.AnimationDelayCSS">
         <div class="video-time" href="episode/@item.Id">@(item.Duration/60)m</div>
-        <div class="video-claim-status"><EpisodePills ClaimStatus=@item.ClaimStatus StatusStyle="EpisodePills.Style.Transparent"/></div>
+        <div class="video-claim-status"><EpisodePills ClaimStatus=@item.ClaimStatus StatusStyle="EpisodePills.Style.Transparent" /></div>
         <div class="video-wrapper" @onclick="@(e => EpisodeClick())">
             <img class="thumbnail" src="@item.Image" />
         </div>
         <div class="@unseenEpisode">@item.PublishedAt.Humanize().ToString()</div>
         <div class="video-name" @onclick="@(e => EpisodeClick())"><a href="episode/@item.Id">@((MarkupString)item.Title)</a></div>
-        <div class="video-view"><i class="ti ti-arrow-narrow-up" @onclick="Test"></i>@item.Upvotes <i class="ti ti-arrow-narrow-down"></i>@item.Downvotes</div>
+        <div class="video-view"><i class="ti ti-arrow-narrow-up" style="cursor: pointer; @upArrowStyle" @onclick="Upvote"></i>@item.Upvotes <i class="ti ti-arrow-narrow-down" style="cursor: pointer; @downArrowStyle" @onclick="Downvote"></i>@item.Downvotes</div>
     </div>
 </a>
 
 
 @code {
+    [Inject] private IUserSession _session { get; set; }
+    [Inject] private IData _data { get; set; }
 
     [Required]
     [Parameter]
@@ -142,6 +147,8 @@
 
     protected const string cssThumbnailHover = "display: none;";
     protected string unseenEpisode = "video-by old";
+    protected string upArrowStyle = "";
+    protected string downArrowStyle = "";
 
     protected void EpisodeClick()
     {
@@ -150,19 +157,80 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (item.Upvoted != null)
         {
-            if (item.EpisodeNumber > LastSeenEpisodeNumber)
+            bool upvoted = (bool)item.Upvoted;
+            if (upvoted)
             {
-                unseenEpisode = "video-by new";
-                this.StateHasChanged();
+                upArrowStyle = "color:purple;";
             }
+            else
+            {
+                downArrowStyle = "color:purple;";
+            }
+            this.StateHasChanged();
+        }
+        if (item.EpisodeNumber > LastSeenEpisodeNumber)
+        {
+            unseenEpisode = "video-by new";
+            this.StateHasChanged();
         }
     }
 
-    protected void Test()
+    protected async Task Upvote()
     {
-        unseenEpisode = "video-by new";
+        if (item.Upvoted != null)
+        {
+            if ((bool)item.Upvoted)
+            {
+                await DeleteVote();
+                upArrowStyle = "";
+                downArrowStyle = "";
+                this.StateHasChanged();
+                return;
+            }
+        }
+
+        await Vote(true);
+        downArrowStyle = "";
+        upArrowStyle = "color:purple;";
+        this.StateHasChanged();
+    }
+
+    protected async Task Downvote()
+    {
+        if (item.Upvoted != null)
+        {
+            if (!(bool)item.Upvoted)
+            {
+                await DeleteVote();
+                upArrowStyle = "";
+                downArrowStyle = "";
+                this.StateHasChanged();
+                return;
+            }
+        }
+
+        await Vote(false);
+        upArrowStyle = "";
+        downArrowStyle = "color:purple;";
+        this.StateHasChanged();
+    }
+
+    protected async Task Vote(bool positive)
+    {
+        if (await _data.Vote(positive, item.Id))
+        {
+            EpisodeExtendedExtra ep = await _data.GetClaimedEpisode(item.Id);
+            item = new EpisodeClient(ep);
+        }
+    }
+
+    protected async Task DeleteVote()
+    {
+        await _data.DeleteVote(item.Id);
+        EpisodeExtendedExtra ep = await _data.GetClaimedEpisode(item.Id);
+        item = new EpisodeClient(ep);
     }
 
 }

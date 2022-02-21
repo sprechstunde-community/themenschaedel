@@ -21,5 +21,7 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task<bool> IsCurrentlyClaimedEpisode(int episodeId);
         Task<DateTime> AddExtraTimeToClaim();
         Task FinalizeClaim();
+        Task<bool> Vote(bool positive, int episodeId);
+        Task DeleteVote(int episodeId);
     }
 }

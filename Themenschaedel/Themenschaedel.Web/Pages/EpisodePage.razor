@@ -15,7 +15,7 @@
             <h2>@episode.Title</h2>
             @((MarkupString)sanitizedDescription)
 
-            <br/>
+            <br />
             <p>Length: @TimeSpan.FromSeconds(episode.Duration).Humanize(3, countEmptyUnits: true)</p>
         </div>
         @if (isLoggedIn && episode.ClaimStatus == EpisodeClaimStatus.not_claimed)
@@ -25,14 +25,14 @@
     </div>
     @if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
     {
-        <hr/>
+        <hr />
     }
     @if (isEditing && isLoggedIn)
     {
         <button class="default-button" @onclick="RefreshEpisode"><i class="ti ti-refresh"></i>Refresh</button>
         <TopicEdit episodeId=@Id episode=episode FinalizeTopic="FinalizeTopic"></TopicEdit>
     }
-    else if(episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
+    else if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
     {
         <TopicView episodeId=@Id episode=episode></TopicView>
     }
@@ -73,7 +73,7 @@
         if (episode == null) return;
         if (episode.Description == null) return;
 
-    // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
+        // Just to be extremely safe, the description (which contains HTML code), gets sanitized, so it
         // cannot contain any xss exploits.
         HtmlSanitizer sanitizer = new HtmlSanitizer();
         // Replace unrelated API stuff
@@ -96,6 +96,7 @@
                 SanitizeDescription();
             }
         }
+        this.StateHasChanged();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -125,17 +126,11 @@
         }
         return new EpisodeClientExtra(episode);
     }
-    
+
     protected async Task ClaimEpisode()
     {
         await _data.ClaimEpisode(episode.Id);
-        isLoggedIn = await _session.IsLoggedInAsync();
-        if (isLoggedIn)
-        {
-            isEditing = true;
-            this.StateHasChanged();
-            episode.Claimed = true;
-        }
+        await PopulateEpisode();
     }
 
     protected async Task FinalizeTopic()

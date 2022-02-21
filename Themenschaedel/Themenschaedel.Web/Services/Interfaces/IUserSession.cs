@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Response;
@@ -19,5 +20,7 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task SetSettings(Settings settings);
         Task SetLastSeenEpisodeNumber(int episodeNumber);
         Task<int> GetLastSeenEpisodeNumber();
+        Task<bool> IsLoggedInUnsafe(); // This is a workaroud, because JS calls cant be made at any time
+        event EventHandler UserLoggedIn;
     }
 }

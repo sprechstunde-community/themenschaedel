@@ -34,6 +34,7 @@ namespace Themenschaedel.Web.Services
 
         public async Task ClaimEpisode(int episodeID)
         {
+            HttpResponseMessage response = null;
             try
             {
                 using (var requestMessage =
@@ -43,7 +44,19 @@ namespace Themenschaedel.Web.Services
                     requestMessage.Headers.Authorization =
                         new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
 
-                    await _httpClient.SendAsync(requestMessage);
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _toastService.ShowSuccess("Claimed episode.");
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
                 }
             }
             catch (Exception e)
@@ -107,16 +120,29 @@ namespace Themenschaedel.Web.Services
         {
             try
             {
-                var response =
-                    await _httpClient.GetAsync(
-                        $"{_httpClient.BaseAddress}episodes?page={page.ToString()}&per_page={count.ToString()}");
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Get,
+                           $"{_httpClient.BaseAddress}episodes?page={page.ToString()}&per_page={count.ToString()}"))
+                {
+                    LoginResponseExtended token = await _userSession.GetToken();
+                    if (token != null)
+                    {
+                        requestMessage.Headers.Authorization =
+                            new AuthenticationHeaderValue("Bearer", token.AccessToken);
+                    }
+
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
                 if (response.IsSuccessStatusCode)
                 {
                     string json = response.Content.ReadAsStringAsync().Result;
                     EpisodeResponse ep = JsonSerializer.Deserialize<EpisodeResponse>(json);
                     return ep;
                 }
-
                 if (response.StatusCode == HttpStatusCode.NotFound)
                 {
                     _toastService.ShowError("Error 404: Backend server is offline.");
@@ -393,7 +419,7 @@ namespace Themenschaedel.Web.Services
 
                     response = await _httpClient.SendAsync(requestMessage);
                 }
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     string json = response.Content.ReadAsStringAsync().Result;
@@ -423,7 +449,7 @@ namespace Themenschaedel.Web.Services
                 return false;
             }
         }
-        
+
         public async Task<DateTime> AddExtraTimeToClaim()
         {
             try
@@ -460,7 +486,7 @@ namespace Themenschaedel.Web.Services
 
             return new DateTime();
         }
-        
+
         public async Task FinalizeClaim()
         {
             try
@@ -482,6 +508,83 @@ namespace Themenschaedel.Web.Services
                     _toastService.ShowSuccess("Topics submitted.");
                 }
                 else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+        }
+
+        public async Task<bool> Vote(bool positive, int episodeId)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Post,
+                           $"{_httpClient.BaseAddress}vote/{episodeId}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    VoteRequest request = new VoteRequest()
+                    {
+                        Positive = positive
+                    };
+                    string jsonRequest = JsonSerializer.Serialize(request);
+
+                    StringContent stringContent = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+                    requestMessage.Content = stringContent;
+
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                    else if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        _toastService.ShowError("Please login before trying to vote.");
+                    }
+
+                    return false;
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+            return true;
+        }
+
+        public async Task DeleteVote(int episodeId)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Delete,
+                           $"{_httpClient.BaseAddress}vote/{episodeId}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (!response.IsSuccessStatusCode)
                 {
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {

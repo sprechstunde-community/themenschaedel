@@ -239,8 +239,8 @@ namespace Themenschaedel.API.Services
                 if (episode.Verified || editorRequest)
                 {
                     episode.Topic = await GetTopicsAsync(episode.Id);
+                    episode.Person = await GetPeopleFeaturedInEpisodeByEpisodeIdAsync(episode.Id);
                 }
-                episode.Person = await GetPeopleFeaturedInEpisodeByEpisodeIdAsync(episode.Id);
                 return episode;
             }
         }
@@ -330,12 +330,11 @@ namespace Themenschaedel.API.Services
             }
         }
 
-        public async Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage, int userId = 0)
+        public async Task<List<EpisodeExtendedExtra>> GetEpisodeAwaitingVerificationAsync(int page, int perPage)
         {
             _logger.LogInformation($"Returning all unverified episodes from database.");
-            var parameters = new { Page = page, PerPage = perPage, uId = userId };
+            var parameters = new { Page = page, PerPage = perPage };
             var query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage);";
-            if (userId != 0) query = $"SELECT * FROM udf_episodes_unverified_GetRowsByPageNumberAndSize(@Page, @PerPage, @uId);";
             using (var connection = _context.CreateConnection())
             {
                 var episodes = await connection.QueryAsync<EpisodeExtendedExtra>(query, parameters);
@@ -792,7 +791,7 @@ namespace Themenschaedel.API.Services
 
             if (lastVote == upvote) return;
             if (lastVote != upvote) await UpdateVoteForEpisode(upvote, episodeId, userId);
-            else await InsertVoteForEpisode(upvote, episodeId, userId);
+            if (lastVote == null) await InsertVoteForEpisode(upvote, episodeId, userId);
         }
 
         public async Task InsertVoteForEpisode(bool upvote, int episodeId, int userId)

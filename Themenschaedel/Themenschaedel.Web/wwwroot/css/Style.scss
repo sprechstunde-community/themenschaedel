@@ -767,6 +767,10 @@ body {
     overflow: hidden;
     transition: 0.4s;
 
+    &.vote {
+        color: #ff8800;
+    }
+
     &-wrapper {
         position: relative;
     }

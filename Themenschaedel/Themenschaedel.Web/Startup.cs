@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Blazored.LocalStorage;
 using Blazored.SessionStorage;
 using Blazored.Toast;
+using Themenschaedel.Shared.Models;
 using Themenschaedel.Web.Services;
 using Themenschaedel.Web.Services.Interfaces;
 
@@ -63,6 +64,7 @@ namespace Themenschaedel.Web
             
             services.AddScoped<Themenschaedel.Web.Services.Interfaces.IUserSession, Themenschaedel.Web.Services.UserSession>();
             services.AddScoped<IRefresher, EpisodeRefresher>();
+            services.AddScoped<EpisodeCollectionRefresher>();
 
             services.AddHttpClient<IData, ApiData>(client =>
             {

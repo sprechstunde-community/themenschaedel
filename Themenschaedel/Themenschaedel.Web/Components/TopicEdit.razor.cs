@@ -23,6 +23,7 @@ namespace Themenschaedel.Components
         [Inject] protected IData _data { get; set; }
         [Inject] protected IToastService _toastService { get; set; }
         [Inject] protected IRefresher _refresher { get; set; }
+        [Inject] protected IUserSession _session { get; set; }
 
         private bool saving = false;
 
@@ -34,6 +35,10 @@ namespace Themenschaedel.Components
         protected static System.Timers.Timer ValidTimeRemainingTimer;
         protected override async Task OnInitializedAsync()
         {
+            _session.UserLoggedIn += (sender, args) =>
+            {
+                this.StateHasChanged();
+            };
             PopulateTopics();
             _refresher.Refresh += (sender, args) =>
             {

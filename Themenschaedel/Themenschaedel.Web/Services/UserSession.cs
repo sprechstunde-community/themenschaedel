@@ -18,6 +18,8 @@ namespace Themenschaedel.Web.Services
         private readonly ISessionAPI _sessionApi;
         private readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
         private readonly Blazored.LocalStorage.ILocalStorageService _localStorage;
+
+        public event EventHandler UserLoggedIn;
         public UserResponse CurrentlyLoggedInUser { get; set; }
 
         private bool loggedIn = false;
@@ -133,6 +135,7 @@ namespace Themenschaedel.Web.Services
             bool isLoggedIn = await IsLoggedInAsync();
             if (isLoggedIn)
             {
+                UserLoggedIn?.Invoke(null, null);
                 await PopulateUserObject();
             }
         }
@@ -141,6 +144,7 @@ namespace Themenschaedel.Web.Services
         {
             await _sessionStorage.RemoveItemAsync("Token");
             await _localStorage.RemoveItemAsync("Token");
+            loggedIn = false;
         }
 
         public async Task SetAuthenticationTokenAsync(LoginResponse authenticationToken, LoginDuration keepLoggedIn)
@@ -167,6 +171,8 @@ namespace Themenschaedel.Web.Services
                 {
                     if (CurrentlyLoggedInUser == null)
                     {
+                        loggedIn = true;
+                        UserLoggedIn?.Invoke(null, null);
                         await PopulateUserObject();
                     }
 
@@ -175,6 +181,11 @@ namespace Themenschaedel.Web.Services
             }
 
             return false;
+        }
+
+        public async Task<bool> IsLoggedInUnsafe()
+        {
+            return loggedIn;
         }
 
         public async Task<bool> RecheckLoginAndClearIfInvalid()
@@ -190,6 +201,8 @@ namespace Themenschaedel.Web.Services
             if (currentUser == null) return false;
             if (String.IsNullOrEmpty(currentUser.Username)) return false;
             if (currentUser != CurrentlyLoggedInUser) return false;
+            loggedIn = true;
+            UserLoggedIn?.Invoke(null, null);
 
             return true;
         }
@@ -208,6 +221,7 @@ namespace Themenschaedel.Web.Services
         {
             if (await RecheckLoginAndClearIfInvalid())
             {
+                loggedIn = false;
                 await _sessionApi.Logout(await GetToken());
             }
         }

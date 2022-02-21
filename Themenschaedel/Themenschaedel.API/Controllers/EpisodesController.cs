@@ -132,13 +132,17 @@ namespace Themenschaedel.API.Controllers
             try
             {
                 User user = await _authenticationService.GetUserFromValidToken(Request);
+                userId = user.Id;
                 Episode claimedEpisode = await _claims.GetUserByClaimedEpisodeAsync(user.Id);
                 isEditingRequestedEpisode = claimedEpisode.Id == episodeId;
-                userId = user.Id;
             }
             catch (TokenDoesNotExistException e)
             {
                 // ignore lol -> could happen all the time
+            }
+            catch (InvalidOperationException e)
+            {
+                // Ignore
             }
             catch (Exception e)
             {

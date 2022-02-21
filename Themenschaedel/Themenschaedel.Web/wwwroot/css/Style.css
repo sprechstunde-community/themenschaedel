@@ -696,6 +696,9 @@ body:before {
   overflow: hidden;
   transition: 0.4s;
 }
+.video.vote {
+  color: #ff8800;
+}
 .video-wrapper {
   position: relative;
 }

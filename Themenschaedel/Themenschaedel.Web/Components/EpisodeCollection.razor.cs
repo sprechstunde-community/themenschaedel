@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using Themenschaedel.Shared.Models;
 using Themenschaedel.Shared.Models.Response;
+using Themenschaedel.Web.Services;
 using Themenschaedel.Web.Services.Interfaces;
 
 namespace Themenschaedel.Components
