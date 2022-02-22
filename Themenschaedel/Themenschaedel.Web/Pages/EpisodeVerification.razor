@@ -1,0 +1,138 @@
+﻿@page "/verify"
+@using Themenschaedel.Shared.Models
+@using Humanizer
+@using Themenschaedel.Shared.Models.Response
+@using Themenschaedel.Web.Services.Interfaces
+@inherits Themenschaedel.Components.EpisodeCollection
+
+<div class="videos">
+    @foreach (EpisodeClient item in Episodes)
+    {
+        <EpisodeCard item="@item" LastSeenEpisodeNumber="LastSeenEpisodeNumber" />
+    }
+
+
+    @if (StopLoading)
+    {
+    }
+    @if (IsLoading)
+    {
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+        <SkeletonCard />
+    }
+    <div id="list-end">
+    </div>
+
+</div>
+
+
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; }
+    [Inject] private IData _data { get; set; }
+    [Inject] private IUserSession _session { get; set; }
+
+    public bool IsLoading { get; set; } = false;
+
+    public int PageSize = 32;
+
+    public int PageNumber = 1;
+
+    public bool StopLoading = false;
+
+    public List<EpisodeClient> Episodes { get; set; } = new List<EpisodeClient>();
+
+    Random random = new Random();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UserResponse user = await _session.GetCurrentlyLoggedInUser();
+            if (RoleMisc.UserHasElevatedPermission(user.RoleId))
+            {
+                await LoadMore();
+                await InitJsListenerAsync();
+            }
+        }
+    }
+
+    protected async Task InitJsListenerAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("ScrollList.Init", "list-end", DotNetObjectReference.Create(this));
+    }
+
+    [JSInvokable]
+    public async Task LoadMore()
+    {
+        if (!IsLoading)
+        {
+            IsLoading = true;
+
+            StateHasChanged();
+
+            //await Task.Delay(1000);
+            EpisodeAlternateResponse ep = await _data.GetUnclaimedEpisode(PageSize, PageNumber);
+            if (ep == null) return;
+            for (int j = 0; j < ep.Data.Count; j++)
+            {
+                EpisodeClient episodeClient = new EpisodeClient(ep.Data[j]);
+                episodeClient.Verified = false;
+                episodeClient.Claimed = false;
+                episodeClient.topic_count = 69;
+                episodeClient.AnimationDelay = _cssDelay + j * 100;
+
+                Episodes.Add(episodeClient);
+
+                if (Episodes[Episodes.Count - 1].Image == null || Episodes[Episodes.Count - 1].Image == "")
+                {
+                    Episodes[Episodes.Count - 1].Image = "assets/WhiteThemenschaedel.png";
+                    if (random.Next(1, 10001) > 9995)
+                    {
+                        Episodes[Episodes.Count - 1].Image = "assets/WhiteThemenschaedel3.png";
+                    }
+                    if (random.Next(1, 10001) > 9900)
+                    {
+                        Episodes[Episodes.Count - 1].Image = "assets/WhiteThemenschaedel2.png";
+                    }
+                }
+            }
+
+            PageNumber++;
+
+            IsLoading = false;
+
+            StateHasChanged();
+
+
+            //at the end of pages or results stop loading anymore
+            if (PageNumber > ep.Meta.EpisodeMaxPageCount)
+            {
+                await StopListener();
+            }
+        }
+    }
+
+    public async Task StopListener()
+    {
+        StopLoading = true;
+        IsLoading = false;
+        await JSRuntime.InvokeVoidAsync("ScrollList.RemoveListener");
+        StateHasChanged();
+    }
+
+
+    public void Dispose()
+    {
+        JSRuntime.InvokeVoidAsync("ScrollList.RemoveListener");
+    }
+
+
+
+    private const int _cssDelay = 0;
+}

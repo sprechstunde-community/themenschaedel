@@ -59,7 +59,7 @@ namespace Themenschaedel.Web
 
             services.AddHttpClient<ISessionAPI, SessionAPI>(client =>
             {
-                client.BaseAddress = new Uri("https://api.alyra.dev/api/");
+                client.BaseAddress = new Uri(Configuration["APIURL"]);
             });
             
             services.AddScoped<Themenschaedel.Web.Services.Interfaces.IUserSession, Themenschaedel.Web.Services.UserSession>();
@@ -68,7 +68,7 @@ namespace Themenschaedel.Web
 
             services.AddHttpClient<IData, ApiData>(client =>
             {
-                client.BaseAddress = new Uri("https://api.alyra.dev/api/");
+                client.BaseAddress = new Uri(Configuration["APIURL"]);
             });
         }
 

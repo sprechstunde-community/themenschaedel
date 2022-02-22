@@ -10,7 +10,8 @@ namespace Themenschaedel.Shared.Models
     {
         not_claimed,
         claimed,
-        done
+        done,
+        unverified
     }
 
     public class Episode
@@ -121,6 +122,7 @@ namespace Themenschaedel.Shared.Models
         public EpisodeClient() { }
 
         public EpisodeClient(EpisodeExtended episode) : base(episode) { }
+        public EpisodeClient(EpisodeClientExtra episode) : base(episode) { }
 
         //Data not from the API
         public string ThumbnailCSS { get; set; }
@@ -128,23 +130,7 @@ namespace Themenschaedel.Shared.Models
         public double AnimationDelay { get; set; }
         public string AnimationDelayCSS => $"--delay: {AnimationDelay.ToString()}ms";
 
-        public EpisodeClaimStatus ClaimStatus => GetClaimStatus();
-
-        public EpisodeClaimStatus GetClaimStatus()
-        {
-            if (Claimed)
-            {
-                return EpisodeClaimStatus.claimed;
-            }
-            else if (topic_count > 0)
-            {
-                return EpisodeClaimStatus.done;
-            }
-            else
-            {
-                return EpisodeClaimStatus.not_claimed;
-            }
-        }
+        public EpisodeClaimStatus ClaimStatus => EpisodeMisc.GetClaimStatus(this);
     }
 
 
@@ -153,6 +139,7 @@ namespace Themenschaedel.Shared.Models
         public EpisodeClientExtra() { }
 
         public EpisodeClientExtra(EpisodeExtendedExtra EpisodeExtendedExtra) : base(EpisodeExtendedExtra) { }
+        public EpisodeClientExtra(EpisodeClientExtra EpisodeExtendedExtra) : base(EpisodeExtendedExtra) { }
 
         //Data not from the API
         public string ThumbnailCSS { get; set; }
@@ -160,7 +147,7 @@ namespace Themenschaedel.Shared.Models
         public double AnimationDelay { get; set; }
         public string AnimationDelayCSS => $"--delay: {AnimationDelay.ToString()}ms";
 
-        public EpisodeClaimStatus ClaimStatus => GetClaimStatus();
+        public EpisodeClaimStatus ClaimStatus => EpisodeMisc.GetClaimStatus(this);
 
         public EpisodeClaimStatus GetClaimStatus()
         {
@@ -182,5 +169,48 @@ namespace Themenschaedel.Shared.Models
     public class EpisodeWithValidUntilClaim : Episode
     {
         public DateTime valid_until { get; set; }
+    }
+
+    public static class EpisodeMisc
+    {
+        public static EpisodeClaimStatus GetClaimStatus(EpisodeClient episode)
+        {
+            if (episode.Claimed)
+            {
+                return EpisodeClaimStatus.claimed;
+            }
+            else if (episode.topic_count > 0 && episode.Verified)
+            {
+                return EpisodeClaimStatus.done;
+            }
+            else if (episode.topic_count > 0 && !episode.Verified)
+            {
+                return EpisodeClaimStatus.unverified;
+            }
+            else
+            {
+                return EpisodeClaimStatus.not_claimed;
+            }
+        }
+
+        public static EpisodeClaimStatus GetClaimStatus(EpisodeClientExtra episode)
+        {
+            if (episode.Claimed)
+            {
+                return EpisodeClaimStatus.claimed;
+            }
+            else if (episode.topic_count > 0 && episode.Verified)
+            {
+                return EpisodeClaimStatus.done;
+            }
+            else if (episode.topic_count > 0 && !episode.Verified)
+            {
+                return EpisodeClaimStatus.unverified;
+            }
+            else
+            {
+                return EpisodeClaimStatus.not_claimed;
+            }
+        }
     }
 }

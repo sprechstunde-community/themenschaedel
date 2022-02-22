@@ -133,8 +133,15 @@ namespace Themenschaedel.API.Controllers
             {
                 User user = await _authenticationService.GetUserFromValidToken(Request);
                 userId = user.Id;
-                Episode claimedEpisode = await _claims.GetUserByClaimedEpisodeAsync(user.Id);
-                isEditingRequestedEpisode = claimedEpisode.Id == episodeId;
+                if (await _authenticationService.CheckIfUserHasElivatedPermissionByUserObject(user))
+                {
+                    isEditingRequestedEpisode = true;
+                }
+                else
+                {
+                    Episode claimedEpisode = await _claims.GetUserByClaimedEpisodeAsync(user.Id);
+                    isEditingRequestedEpisode = claimedEpisode.Id == episodeId;
+                }
             }
             catch (TokenDoesNotExistException e)
             {

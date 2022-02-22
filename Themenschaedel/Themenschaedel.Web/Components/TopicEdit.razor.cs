@@ -52,11 +52,15 @@ namespace Themenschaedel.Components
             if (firstRender)
             {
                 EpisodeWithValidUntilClaim claimedEpisode = await _data.GetClaimedEpisode();
-                ClaimValidUntil = claimedEpisode.valid_until;
+                if (claimedEpisode == null) return;
+                if (claimedEpisode.Id == episodeId)
+                {
+                    ClaimValidUntil = claimedEpisode.valid_until;
 
-                ValidTimeRemainingTimer = new System.Timers.Timer(1000);
-                ValidTimeRemainingTimer.Elapsed += CountDownTimer;
-                ValidTimeRemainingTimer.Enabled = true;
+                    ValidTimeRemainingTimer = new System.Timers.Timer(1000);
+                    ValidTimeRemainingTimer.Elapsed += CountDownTimer;
+                    ValidTimeRemainingTimer.Enabled = true;
+                }
             }
         }
 

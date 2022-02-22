@@ -95,8 +95,12 @@ namespace Themenschaedel.Web.Services
                        new HttpRequestMessage(HttpMethod.Get,
                            $"{_httpClient.BaseAddress}episodes/{id}"))
                 {
-                    requestMessage.Headers.Authorization =
-                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+                    LoginResponse token = await _userSession.GetToken();
+                    if (token != null)
+                    {
+                        requestMessage.Headers.Authorization =
+                            new AuthenticationHeaderValue("Bearer", token.AccessToken);
+                    }
 
                     response = await _httpClient.SendAsync(requestMessage);
                 }
@@ -589,6 +593,165 @@ namespace Themenschaedel.Web.Services
                     if (response.StatusCode == HttpStatusCode.BadRequest)
                     {
                         _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+        }
+
+        public async Task<EpisodeAlternateResponse> GetUnclaimedEpisode(int count, int page)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Get,
+                           $"{_httpClient.BaseAddress}episodes/all/unverified?page={page.ToString()}&per_page={count.ToString()}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    EpisodeAlternateResponse ep = JsonSerializer.Deserialize<EpisodeAlternateResponse>(json);
+                    return ep;
+                }
+                else
+                {
+                    switch (response.StatusCode)
+                    {
+                        case HttpStatusCode.Unauthorized:
+                            _toastService.ShowError("You are not allowed on to view unverified episodes!");
+                            break;
+                        case HttpStatusCode.NotFound:
+                            _toastService.ShowError("Error 404: Backend server is offline.");
+                            SentrySdk.CaptureMessage("API: Error 404");
+                            break;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+
+            return null;
+        }
+
+        public async Task VerifyEpisode(int episodeId)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Post,
+                           $"{_httpClient.BaseAddress}episodes/verify/{episodeId}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _toastService.ShowSuccess("Episode successfully verified.");
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                    else if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        _toastService.ShowError("Please login before trying to verify an episode.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+        }
+
+        public async Task UnverifyEpisode(int episodeId)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Delete,
+                           $"{_httpClient.BaseAddress}episodes/unverify/{episodeId}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _toastService.ShowSuccess("Verification successfully removed!");
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                    else if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        _toastService.ShowError("Please login before trying to unverify an episode.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                SentrySdk.CaptureException(e);
+            }
+        }
+
+        public async Task UnclaimEpisode(int episodeId)
+        {
+            try
+            {
+                HttpResponseMessage response = null;
+
+                using (var requestMessage =
+                       new HttpRequestMessage(HttpMethod.Delete,
+                           $"{_httpClient.BaseAddress}Claim/force/{episodeId}"))
+                {
+                    requestMessage.Headers.Authorization =
+                        new AuthenticationHeaderValue("Bearer", (await _userSession.GetToken()).AccessToken);
+
+                    response = await _httpClient.SendAsync(requestMessage);
+                }
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _toastService.ShowSuccess("Claim successfully removed!");
+                }
+                else
+                {
+                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                    {
+                        _toastService.ShowError(response.Content.ReadAsStringAsync().Result);
+                    }
+                    else if (response.StatusCode == HttpStatusCode.Unauthorized)
+                    {
+                        _toastService.ShowError("Please login before trying to unclaim an episode.");
                     }
                 }
             }

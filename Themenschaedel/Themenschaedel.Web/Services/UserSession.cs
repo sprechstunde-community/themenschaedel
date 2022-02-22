@@ -208,7 +208,22 @@ namespace Themenschaedel.Web.Services
         }
 
 
-        public async Task<UserResponse> GetCurrentlyLoggedInUser() => CurrentlyLoggedInUser;
+        public async Task<UserResponse> GetCurrentlyLoggedInUser()
+        {
+            if (CurrentlyLoggedInUser == null)
+            {
+                if (await IsLoggedInAsync())
+                {
+                    await PopulateUserObject();
+                    return CurrentlyLoggedInUser;
+                }
+            }
+            else
+            {
+                return CurrentlyLoggedInUser;
+            }
+            return CurrentlyLoggedInUser;
+        }
 
         private async Task ClearUserData()
         {

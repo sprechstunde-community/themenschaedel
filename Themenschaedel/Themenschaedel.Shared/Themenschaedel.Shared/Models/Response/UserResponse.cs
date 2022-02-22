@@ -16,6 +16,7 @@ namespace Themenschaedel.Shared.Models.Response
             this.Username = user.Username;
             this.Email = user.Email;
             this.CreatedAt = user.CreatedAt;
+            this.RoleId = user.RolesId;
         }
 
         [JsonPropertyName("id")]
@@ -32,6 +33,9 @@ namespace Themenschaedel.Shared.Models.Response
 
         [JsonPropertyName("created_at")]
         public DateTime CreatedAt { get; set; }
+
+        [JsonPropertyName("role_id")]
+        public int RoleId { get; set; }
     }
 
     [Serializable]

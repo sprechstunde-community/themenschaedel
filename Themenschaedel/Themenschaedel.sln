@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Themenschaedel.Components",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Themenschaedel.Test", "Themenschaedel.Test\Themenschaedel.Test.csproj", "{0F67C789-F4B8-4479-93A9-AF527D234190}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Themenschaedel.API", "Themenschaedel.API\Themenschaedel.API.csproj", "{53F3C173-2020-4ADE-AFC0-1CB91DF06914}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Themenschaedel.API", "Themenschaedel.API\Themenschaedel.API.csproj", "{53F3C173-2020-4ADE-AFC0-1CB91DF06914}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

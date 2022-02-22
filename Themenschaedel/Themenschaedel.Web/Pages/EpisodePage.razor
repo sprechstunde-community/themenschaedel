@@ -4,6 +4,7 @@
 @using Ganss.XSS
 @using Themenschaedel.Shared.Models
 @using System.Timers
+@using Themenschaedel.Shared.Models.Response
 @inject NavigationManager _navigation;
 
 <!-- thanks https://pavellaptev.medium.com/css-weekly-2-an-image-on-the-left-text-on-the-left-a5e59b2acdb5 -->
@@ -23,7 +24,18 @@
             <button class="default-button" @onclick="ClaimEpisode"><i class="ti ti-bookmark"></i>Claim Episode</button>
         }
     </div>
-    @if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
+    @if (isAdmin)
+    {
+        @if (episode.ClaimStatus == EpisodeClaimStatus.done)
+        {
+            <button class="default-button" @onclick="UnverifyEpisode"><i class="ti ti-circle-minus"></i>Unverify Episode</button>
+        }
+        @if (episode.ClaimStatus == EpisodeClaimStatus.claimed)
+        {
+            <button class="default-button" @onclick="UnclaimEpisode"><i class="ti ti-trash"></i>Unclaim Episode</button>
+        }
+    }
+    @if (episode.ClaimStatus == EpisodeClaimStatus.done)
     {
         <hr />
     }
@@ -32,8 +44,13 @@
         <button class="default-button" @onclick="RefreshEpisode"><i class="ti ti-refresh"></i>Refresh</button>
         <TopicEdit episodeId=@Id episode=episode FinalizeTopic="FinalizeTopic"></TopicEdit>
     }
-    else if (episode.ClaimStatus != EpisodeClaimStatus.not_claimed)
+    else if (episode.ClaimStatus == EpisodeClaimStatus.done)
     {
+        <TopicView episodeId=@Id episode=episode></TopicView>
+    }
+    else if (isVerifying)
+    {
+        <button class="default-button" @onclick="VerifyEpisode"><i class="ti ti-circle-check"></i>Verify Episode</button>
         <TopicView episodeId=@Id episode=episode></TopicView>
     }
 </div>
@@ -61,11 +78,26 @@
 
     protected bool isLoggedIn = false;
     protected bool isEditing = false;
+    protected bool isVerifying = false;
+    protected bool isAdmin = false;
+
+    private bool InitIsDone = false;
+    private bool PopulatedOnce = false;
 
     protected override async Task OnInitializedAsync()
     {
-        episode = await GetEpisode(false);
+        InitIsDone = false;
+        EpisodeClientExtra tempEpisode = await GetEpisode(false);
+        if (tempEpisode.ClaimStatus == EpisodeClaimStatus.unverified || tempEpisode.ClaimStatus == EpisodeClaimStatus.not_claimed)
+        {
+            episode = tempEpisode;
+        }
+        else
+        {
+            episode = await GetEpisode(true);
+        }
         SanitizeDescription();
+        InitIsDone = true;
     }
 
     protected void SanitizeDescription()
@@ -89,11 +121,26 @@
         isLoggedIn = await _session.IsLoggedInAsync();
         if (isLoggedIn)
         {
+            UserResponse user = await _session.GetCurrentlyLoggedInUser();
+            if (RoleMisc.UserHasElevatedPermission(user.RoleId))
+            {
+                isAdmin = true;
+            }
+
             isEditing = await _data.IsCurrentlyClaimedEpisode(episode.Id);
-            if (isEditing)
+            if (isEditing && episode.ClaimStatus == EpisodeClaimStatus.claimed)
             {
                 episode = await GetEpisode(true);
                 SanitizeDescription();
+            }
+            if (!episode.Verified && !isEditing && episode.ClaimStatus == EpisodeClaimStatus.unverified)
+            {
+                if (RoleMisc.UserHasElevatedPermission(user.RoleId))
+                {
+                    isVerifying = true;
+                    episode = await GetEpisode();
+                    _refresh.FireRefresh();
+                }
             }
         }
         this.StateHasChanged();
@@ -101,30 +148,39 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (InitIsDone && !PopulatedOnce)
         {
+            PopulatedOnce = true;
             await PopulateEpisode();
-            this.StateHasChanged();
         }
     }
 
     private async Task<EpisodeClientExtra> GetEpisode(bool claimed = false)
     {
-        EpisodeExtendedExtra episode = null;
-        if (claimed)
+        EpisodeClientExtra tempEpisode = null;
+        if (episode != null)
         {
-            episode = await _data.GetClaimedEpisode(Id);
+            tempEpisode = episode;
+        }
+        EpisodeExtendedExtra currentEpisode = null;
+        if (claimed || isVerifying)
+        {
+            currentEpisode = await _data.GetClaimedEpisode(Id);
         }
         else
         {
-            episode = await _data.GetEpisode(Id);
+            currentEpisode = await _data.GetEpisode(Id);
         }
 
-        if (episode == null)
+        if (currentEpisode == null && tempEpisode == null)
         {
             throw new InvalidOperationException("Episode does not exist.");
         }
-        return new EpisodeClientExtra(episode);
+        else if (currentEpisode == null && tempEpisode != null)
+        {
+            currentEpisode = tempEpisode;
+        }
+        return new EpisodeClientExtra(currentEpisode);
     }
 
     protected async Task ClaimEpisode()
@@ -135,9 +191,8 @@
 
     protected async Task FinalizeTopic()
     {
-        isEditing = false;
+        await _data.FinalizeClaim();
         this.StateHasChanged();
-        episode.Claimed = false;
     }
 
     protected async Task RefreshEpisode()
@@ -146,6 +201,27 @@
         this.StateHasChanged();
         _refresh.FireRefresh();
         _toast.ShowSuccess("Refreshed");
+    }
+
+    protected async Task VerifyEpisode()
+    {
+        await _data.VerifyEpisode(episode.Id);
+        episode = await GetEpisode(false);
+        this.StateHasChanged();
+    }
+
+    protected async Task UnverifyEpisode()
+    {
+        await _data.UnverifyEpisode(episode.Id);
+        episode = await GetEpisode(false);
+        this.StateHasChanged();
+    }
+
+    protected async Task UnclaimEpisode()
+    {
+        await _data.UnclaimEpisode(episode.Id);
+        episode = await GetEpisode(false);
+        this.StateHasChanged();
     }
 
 }

@@ -1,4 +1,7 @@
 ﻿@using Themenschaedel.Components.Controls
+@using Themenschaedel.Shared.Models
+@using Themenschaedel.Shared.Models.Response
+@using Themenschaedel.Web.Services.Interfaces
 @inherits Themenschaedel.Web.Shared.NavbarBase
 @inject NavigationManager NavigationManager
 
@@ -19,6 +22,16 @@
             SETTINGS
         </a>
     </div>
+    
+    @if (isAdmin)
+    {
+        <div class="side-menu">
+            <a class="sidebar-link discover is-active" href="/Settings" @onclick="() => VerifyClick()">
+                <i class="ti ti-circle-check sidebar-link is-active" fill="currentColor"></i>
+                VERIFY
+            </a>
+        </div>
+    }
 </div>
 <div class="side-wrapper">
     <div class="side-title">OFF-SITE</div>
@@ -39,7 +52,27 @@
 
 
 @code{
-    
+
+    [Inject]
+    private IUserSession _session { get; set; }
+
+    bool isAdmin = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UserResponse user = await _session.GetCurrentlyLoggedInUser();
+            if (user == null) return;
+            if (RoleMisc.UserHasElevatedPermission(user.RoleId))
+            {
+                isAdmin = true;
+                this.StateHasChanged();
+            }
+        }
+        
+    }
+
     protected void HomeClick()
     {
         NavigationManager.NavigateTo("/");
@@ -48,5 +81,10 @@
     protected void SettingsClick()
     {
         NavigationManager.NavigateTo("/Settings");
+    }
+
+    protected void VerifyClick()
+    {
+        NavigationManager.NavigateTo("/verify");
     }
 }

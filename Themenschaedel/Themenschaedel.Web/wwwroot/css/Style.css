@@ -141,6 +141,12 @@ body:before {
 .sidebar.collapse .side-menu svg {
   margin-right: 30px;
 }
+@media screen and (max-width: 625px) {
+  .sidebar {
+    visibility: hidden;
+    display: none;
+  }
+}
 
 @keyframes bottom {
   0% {
@@ -197,6 +203,11 @@ body:before {
   flex-direction: column;
   margin-left: 220px;
   flex-grow: 1;
+}
+@media screen and (max-width: 625px) {
+  .wrapper {
+    margin-left: 0px;
+  }
 }
 
 .header {
@@ -333,6 +344,11 @@ body:before {
   display: flex;
   align-items: center;
 }
+@media screen and (max-width: 575px) {
+  .main-blogs {
+    display: none;
+  }
+}
 .main-blog__author {
   display: flex;
   align-items: center;
@@ -382,6 +398,14 @@ body:before {
 }
 .main-blog + .main-blog .author-detail {
   margin-left: 0;
+}
+@media screen and (max-width: 575px) {
+  .main-blog, .main-blog + .main-blog {
+    display: none;
+  }
+  .main-blog {
+    display: none;
+  }
 }
 @media screen and (max-width: 905px) {
   .main-blog, .main-blog + .main-blog {
@@ -476,12 +500,12 @@ body:before {
 }
 @media only screen and (max-width: 600px) {
   .videos {
-    grid-template-columns: repeat(1, 1fr);
+    grid-template-columns: repeat(1, 0fr);
   }
 }
 @media only screen and (min-width: 600px) {
   .videos {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 0fr);
   }
 }
 @media only screen and (min-width: 768px) {
@@ -491,17 +515,17 @@ body:before {
 }
 @media only screen and (min-width: 992px) {
   .videos {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 @media only screen and (min-width: 1200px) {
   .videos {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(5, 1fr);
   }
 }
 @media only screen and (min-width: 2000px) {
   .videos {
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
 }
 @media only screen and (min-width: 2900px) {
@@ -617,6 +641,9 @@ body:before {
 }
 .tag.blue {
   background-color: dodgerblue;
+}
+.tag.lightblue {
+  background-color: rgba(30, 144, 255, 0.44);
 }
 .tag.purple {
   background-color: #9b0fff;
@@ -1360,6 +1387,16 @@ button.vjs-play-control.vjs-control.vjs-button {
     max-height: 100%;
   }
 }
+@media screen and (max-width: 475px) and (max-width: 625px) {
+  .container {
+    height: 100%;
+  }
+}
+@media only screen and (max-width: 475px) and (min-width: 600px) {
+  .container {
+    height: 100%;
+  }
+}
 ::-webkit-scrollbar {
   width: 6px;
   border-radius: 10px;
@@ -1552,8 +1589,8 @@ input[type=time]::-webkit-clear-button {
   border-color: rgba(55, 64, 70, 0.9) transparent transparent transparent;
   transition-duration: 0s;
   /* If the mouse leaves the element, 
-     the transition effects for the 
-     tooltip arrow are "turned off" */
+   the transition effects for the 
+   tooltip arrow are "turned off" */
   transform-origin: top;
   /* Orientation setting for the
      slide-down effect */

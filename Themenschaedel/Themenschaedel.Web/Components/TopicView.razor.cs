@@ -14,12 +14,18 @@ namespace Themenschaedel.Components
         [Parameter] [Required] public int episodeId { get; set; }
         [Parameter] public EpisodeClientExtra episode { get; set; }
 
+        [Inject] private IRefresher _refresh { get; set; }
+
         [Inject] protected IData _data { get; set; }
         
         protected List<TopicExtended> topics = new List<TopicExtended>();
 
-        protected override async Task OnInitializedAsync()
+        protected override void OnInitialized()
         {
+            _refresh.Refresh += (sender, args) =>
+            {
+                topics = episode.Topic;
+            };
             topics = episode.Topic;
         }
     }

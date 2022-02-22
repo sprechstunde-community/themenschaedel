@@ -13,7 +13,7 @@
         }
         else
         {
-            <div class="tag purple">
+            <div class="tag blue">
                 Claimed
             </div>
         }
@@ -43,6 +43,22 @@
         {
             <div class="tag red">
                 Done
+            </div>
+        }
+
+        break;
+
+    case EpisodeClaimStatus.unverified:
+        @if (StatusStyle == Style.Transparent)
+        {
+            <div class="transparent-tag lightblue">
+                Unverified
+            </div>
+        }
+        else
+        {
+            <div class="tag lightblue">
+                Unverified
             </div>
         }
 

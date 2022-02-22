@@ -23,5 +23,9 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task FinalizeClaim();
         Task<bool> Vote(bool positive, int episodeId);
         Task DeleteVote(int episodeId);
+        Task<EpisodeAlternateResponse> GetUnclaimedEpisode(int count, int page);
+        Task VerifyEpisode(int episodeId);
+        Task UnverifyEpisode(int episodeId);
+        Task UnclaimEpisode(int episodeId);
     }
 }
