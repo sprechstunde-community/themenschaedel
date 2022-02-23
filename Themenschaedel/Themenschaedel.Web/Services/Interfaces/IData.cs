@@ -27,5 +27,6 @@ namespace Themenschaedel.Web.Services.Interfaces
         Task VerifyEpisode(int episodeId);
         Task UnverifyEpisode(int episodeId);
         Task UnclaimEpisode(int episodeId);
+        Task RegisterUser(UserRegistration registerRequest);
     }
 }

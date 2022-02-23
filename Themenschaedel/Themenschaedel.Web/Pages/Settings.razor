@@ -21,7 +21,7 @@
 
             <div data-tooltip="Youtube">
                 <a onclick="">
-                    <i class="@spotifyCSS"></i>
+                    <i class="@youtubeCSS"></i>
                 </a>
             </div>
         </div>
@@ -33,7 +33,7 @@
     protected string spotifyCSS = "ti ti-brand-spotify platform-settings-icon spotify ";
     protected string youtubeCSS = "ti ti-brand-youtube platform-settings-icon youtube ";
 
-        private const string ACTIVE_CSS_STRING = "is-active";
+    private const string ACTIVE_CSS_STRING = "is-active";
 
     protected Themenschaedel.Shared.Models.Settings UserSetttings;
 
@@ -42,6 +42,7 @@
         if (firstRender)
         {
             UserSetttings = await _userSession.GetSettings();
+            if (UserSetttings == null) return;
             switch (UserSetttings.Platform)
             {
                 case Platforms.None:

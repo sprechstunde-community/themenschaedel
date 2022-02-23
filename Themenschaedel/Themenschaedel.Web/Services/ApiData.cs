@@ -760,5 +760,30 @@ namespace Themenschaedel.Web.Services
                 SentrySdk.CaptureException(e);
             }
         }
+
+        public async Task RegisterUser(UserRegistration registerRequest)
+        {
+            try
+            {
+                await _userSession.Logout();
+                string json = JsonSerializer.Serialize(registerRequest);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                Uri uriExecution = new Uri($"{_httpClient.BaseAddress}auth/register");
+                var response = await _httpClient.PostAsync(uriExecution, content);
+                if (response.IsSuccessStatusCode)
+                {
+                    _toastService.ShowSuccess("Registered succesfully.");
+                }
+                else
+                {
+                    _toastService.ShowError("Register failed.");
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Login failed");
+                SentrySdk.CaptureException(e);
+            }
+        }
     }
 }

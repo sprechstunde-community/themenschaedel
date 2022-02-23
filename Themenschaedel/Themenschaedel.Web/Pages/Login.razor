@@ -13,12 +13,12 @@
 
 <BlazoredToasts Position="ToastPosition.BottomRight"
                 Timeout="10"
-                ShowProgressBar="true"/>
+                ShowProgressBar="true" />
 
 <div id="container">
     <div id="inviteContainer">
         <div class="logoContainer">
-            <img class="logo" src="/assets/Themenschaedel2.png"/><img class="text" src="/assets/Logo.png"/>
+            <img class="logo" src="/assets/Themenschaedel2.png" /><img class="text" src="/assets/Logo.png" />
         </div>
         <div class="acceptContainer">
             <EditForm Model="@tokenRequest" OnValidSubmit="@HandleValidSubmit">
@@ -26,11 +26,11 @@
                 <div class="formContainer">
                     <div class="formDiv form__input-field" style="transition-delay: 0.2s">
                         <i class="ti ti-user"></i>
-                        <InputText id="username" placeholder="Username" @bind-Value="tokenRequest.Username" required/>
+                        <InputText id="username" disabled="@waiting" placeholder="Username" @bind-Value="tokenRequest.Username" required />
                     </div>
                     <div class="formDiv form__input-field" style="transition-delay: 0.4s">
                         <i class="ti ti-lock"></i>
-                        <InputText type="password" id="password" placeholder="Password" @bind-Value="tokenRequest.Password" required/>
+                        <InputText type="password" disabled="@waiting" id="password" placeholder="Password" @bind-Value="tokenRequest.Password" required />
                     </div>
                     <div class="formDiv" style="transition-delay: 0.6s">
                         <button class="form__submit" type="submit">Login</button>
@@ -43,21 +43,23 @@
                         <label for="KeepLoggedIn">Keep logged in</label>
                     </div>
                     <div class="formDiv" style="transition-delay: 1.2s; padding-top: 0px;">
-                        <a class="forgotPas" href="https://account.schaedel.rocks/register">
+                        <a class="forgotPas" @onclick="NavigateToRegister">
                             DON'T HAVE AN ACCOUNT?
                             <p style="font-size: 8px">Let's fix that!</p>
                         </a>
                     </div>
                 </div>
 
-                <DataAnnotationsValidator/>
-                <ValidationSummary/>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
             </EditForm>
         </div>
     </div>
 </div>
 
-@code{
+
+
+@code {
 
     [Inject]
     private IData _data { get; set; }
@@ -65,9 +67,14 @@
     [Inject]
     private IUserSession UserSession { get; set; }
 
+    [Inject]
+    private IToastService _toast { get; set; }
+
     UserLogin tokenRequest = new UserLogin();
 
     protected bool keepLoggedIn = false;
+
+    protected bool waiting = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -84,12 +91,19 @@
 
     protected async Task HandleValidSubmit()
     {
+        waiting = true;
         await _data.Login(tokenRequest.Username, tokenRequest.Password, keepLoggedIn ? LoginDuration.KeepLoggedIn : LoginDuration.Temporary);
         await Task.Delay(1500);
+        waiting = false;
         if (await UserSession.IsLoggedInAsync())
         {
             NavigationManager.NavigateTo($"/");
         }
+    }
+
+    protected async Task NavigateToRegister()
+    {
+        NavigationManager.NavigateTo($"/Register");
     }
 
 }

@@ -1,0 +1,91 @@
+﻿@page "/Register"
+@using Microsoft.AspNetCore.Components
+@using Themenschaedel.Shared.Models.Request
+@using Themenschaedel.Web.Services.Interfaces
+@using Blazored.Toast.Configuration
+@inject IJSRuntime JS;
+@inject NavigationManager NavigationManager;
+@layout EmptyLayout
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+<link rel="stylesheet" href="/css/login.css">
+
+<BlazoredToasts Position="ToastPosition.BottomRight"
+                Timeout="10"
+                ShowProgressBar="true" />
+
+<div id="container">
+    <div id="inviteContainer">
+        <div class="logoContainer">
+            <img class="logo" src="/assets/Themenschaedel2.png" /><img class="text" src="/assets/Logo.png" />
+        </div>
+        <div class="acceptContainer">
+            <EditForm Model="@registerRequest" OnValidSubmit="@HandleValidRegisterSubmit">
+                <h1>GREETINGS!</h1>
+                <div class="formContainer">
+                    <div class="formDiv form__input-field" style="transition-delay: 0.2s">
+                        <i class="ti ti-user"></i>
+                        <InputText id="username" placeholder="Username" @bind-Value="registerRequest.Username" required />
+                    </div>
+                    <div class="formDiv form__input-field" style="transition-delay: 0.4s">
+                        <i class="ti ti-user"></i>
+                        <InputText id="email" type="email" placeholder="Email" @bind-Value="registerRequest.Email" required />
+                    </div>
+                    <div class="formDiv form__input-field" style="transition-delay: 0.6s">
+                        <i class="ti ti-lock"></i>
+                        <InputText type="password" id="password" placeholder="Password" @bind-Value="registerRequest.Password" required />
+                    </div>
+                    <div class="formDiv" style="transition-delay: 0.8s">
+                        <button class="form__submit" type="submit">Register</button>
+                    </div>
+                    <div class="formDiv" style="transition-delay: 1s; padding-top: 0px;">
+                        <a class="forgotPas" @onclick="NavigateToLogin">
+                            HAVE AN ACCOUNT?
+                        </a>
+                    </div>
+                </div>
+
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Inject]
+    private IData _data { get; set; }
+
+    [Inject]
+    private IUserSession UserSession { get; set; }
+
+    [Inject]
+    private IToastService _toast { get; set; }
+
+    UserRegistration registerRequest = new UserRegistration();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (await UserSession.IsLoggedInAsync())
+            {
+                NavigationManager.NavigateTo($"/");
+            }
+            await JS.InvokeVoidAsync("loginAnimation");
+            await base.OnAfterRenderAsync(firstRender);
+        }
+    }
+
+    protected async Task HandleValidRegisterSubmit()
+    {
+        await _data.RegisterUser(registerRequest);
+        await Task.Delay(1500);
+    }
+
+    protected async Task NavigateToLogin()
+    {
+        NavigationManager.NavigateTo($"/Login");
+    }
+
+}

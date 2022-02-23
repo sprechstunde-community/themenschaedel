@@ -1,51 +1,51 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <UserSecretsId>c9d59e46-cf24-4a54-974b-2223078e9d33</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<UserSecretsId>c9d59e46-cf24-4a54-974b-2223078e9d33</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<UseRazorSourceGenerator>false</UseRazorSourceGenerator>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Content Remove="compilerconfig.json" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Remove="compilerconfig.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="compilerconfig.json" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="compilerconfig.json" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
-    <PackageReference Include="Blazored.SessionStorage" Version="2.2.0" />
-    <PackageReference Include="Blazored.Toast" Version="3.2.2" />
-    <PackageReference Include="Blazored.Typeahead" Version="4.6.0" />
-    <PackageReference Include="HtmlSanitizer" Version="7.1.475" />
-    <PackageReference Include="Humanizer" Version="2.14.1" />
-    <PackageReference Include="MeiliSearch" Version="0.10.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="Sentry.AspNetCore" Version="3.14.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Blazored.LocalStorage" Version="4.2.0" />
+		<PackageReference Include="Blazored.SessionStorage" Version="2.2.0" />
+		<PackageReference Include="Blazored.Toast" Version="3.2.2" />
+		<PackageReference Include="Blazored.Typeahead" Version="4.6.0" />
+		<PackageReference Include="HtmlSanitizer" Version="7.1.475" />
+		<PackageReference Include="Humanizer" Version="2.14.1" />
+		<PackageReference Include="MeiliSearch" Version="0.10.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+		<PackageReference Include="Sentry.AspNetCore" Version="3.14.1" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Themenschaedel.Components\Themenschaedel.Components.csproj" />
-    <ProjectReference Include="..\Themenschaedel.Shared\Themenschaedel.Shared\Themenschaedel.Shared.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Themenschaedel.Components\Themenschaedel.Components.csproj" />
+		<ProjectReference Include="..\Themenschaedel.Shared\Themenschaedel.Shared\Themenschaedel.Shared.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\assets\" />
-    <Folder Include="wwwroot\fonts" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="wwwroot\assets\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Update="wwwroot\assets\WhiteThemenschaedel.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\assets\WhiteThemenschaedel2.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Update="wwwroot\assets\WhiteThemenschaedel3.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Update="wwwroot\assets\WhiteThemenschaedel.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\assets\WhiteThemenschaedel2.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+		<Content Update="wwwroot\assets\WhiteThemenschaedel3.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
 </Project>
